@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>SimYourCode | Free robot simulator for FTC BIOBUZZ: test Java and Blocks code</title>
+<meta name="description" content="SimYourCode is a free, unofficial practice simulator for the 2026-2027 FIRST Tech Challenge game BIOBUZZ. Build a robot, write Java or Blocks code, and drive a full match in your browser. No ads, no sign-up.">
+<link rel="canonical" href="https://cabbage67.github.io/simyourcode/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1a1e14">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SimYourCode">
+<meta property="og:title" content="SimYourCode: free robot simulator for FTC BIOBUZZ">
+<meta property="og:description" content="Build a robot, write Java or Blocks code, and drive a full BIOBUZZ match in your browser. Free, no ads, no sign-up.">
+<meta property="og:url" content="https://cabbage67.github.io/simyourcode/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 3l25 14.5v29L32 61 7 46.5v-29z' fill='%23e0a100'/%3E%3Cpath d='M9 26h46v7H9zM9 40h46v6H9z' fill='%231b1f18'/%3E%3C/svg%3E">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"SimYourCode","url":"https://cabbage67.github.io/simyourcode/","applicationCategory":"EducationalApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free, unofficial practice simulator for the 2026-2027 FIRST Tech Challenge game BIOBUZZ. Build a robot, write Java or Blocks code, and drive a full match in the browser.","creator":{"@type":"Organization","name":"Team 18629 - Hydra"}}</script>
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: a scoreboard strip over a two-column bench. Field, driver station and gamepad on the left;
+   code editor and live instruments (telemetry, hardware, score, log) on the right. */
+:root {
+  --bg: #eef0ea; --surface: #fbfcf8; --sunk: #e4e7de; --ink: #1b1f18; --muted: #59624f; --line: #cdd2c4;
+  --honey: #e0a100; --honey-ink: #6b4a00; --on-honey: #201800;
+  --red: #c5382c; --blue: #2460c4; --good: #2c7a4b; --warn: #9a5c00; --bad: #b3261e;
+  --cat-control: #a56c00; --cat-drive: #2460c4; --cat-mech: #2c7a4b; --cat-output: #7448ad; --on-cat: #ffffff;
+  --tile: #b9bdb3; --tile-line: #a4a89e; --tile-text: #8c9086; --wall: #3a4036; --hive: #d8c58c;
+  --pollen: #f4c20d; --ball-edge: #3b3200; --body: #262b22; --part: #6c7466; --wheel: #12140d; --wheel-mark: #8d947f;
+  --petal: #d98bb0; --flower-core: #6b4a00; --meter-bg: #50564a;
+  --font-display: "Bahnschrift", "DIN Alternate", "Avenir Next Condensed", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #13160f; --surface: #1c2017; --sunk: #10130c; --ink: #eceee4; --muted: #a2aa96; --line: #343a2c;
+    --honey: #f0b400; --honey-ink: #f3c64d; --on-honey: #1d1600;
+    --red: #f0695c; --blue: #6ea0f5; --good: #5cc087; --warn: #e9a23b; --bad: #f2776c;
+    --cat-control: #e0a100; --cat-drive: #6ea0f5; --cat-mech: #5cc087; --cat-output: #b594e6; --on-cat: #10130c;
+    --tile: #474c42; --tile-line: #3b4037; --tile-text: #697062; --wall: #c5cbba; --hive: #5f5530;
+    --pollen: #f7cb2b; --ball-edge: #1a1500; --body: #10130c; --part: #7d8672; --wheel: #05060a; --wheel-mark: #9aa18c;
+    --petal: #c9749d; --flower-core: #f0b400; --meter-bg: #23271d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #13160f; --surface: #1c2017; --sunk: #10130c; --ink: #eceee4; --muted: #a2aa96; --line: #343a2c;
+  --honey: #f0b400; --honey-ink: #f3c64d; --on-honey: #1d1600;
+  --red: #f0695c; --blue: #6ea0f5; --good: #5cc087; --warn: #e9a23b; --bad: #f2776c;
+  --cat-control: #e0a100; --cat-drive: #6ea0f5; --cat-mech: #5cc087; --cat-output: #b594e6; --on-cat: #10130c;
+  --tile: #474c42; --tile-line: #3b4037; --tile-text: #697062; --wall: #c5cbba; --hive: #5f5530;
+  --pollen: #f7cb2b; --ball-edge: #1a1500; --body: #10130c; --part: #7d8672; --wheel: #05060a; --wheel-mark: #9aa18c;
+  --petal: #c9749d; --flower-core: #f0b400; --meter-bg: #23271d;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.page { max-width: 1440px; margin: 0 auto; padding-inline: 16px; padding-block: 12px 40px; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3, h4 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h2 { font-size: 26px; letter-spacing: 0.01em; }
+h3 { font-size: 17px; letter-spacing: 0.04em; text-transform: uppercase; }
+h4 { font-size: 16px; }
+p { margin: 0; }
+a { color: var(--honey-ink); text-underline-offset: 2px; }
+code, kbd { font-family: var(--font-mono); font-size: 0.9em; }
+kbd { background: var(--sunk); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; white-space: nowrap; }
+code { background: var(--sunk); border-radius: 4px; padding: 1px 4px; }
+:focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; }
+button, select, input, textarea { font: inherit; color: inherit; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-hex { width: 30px; height: 34px; background: var(--honey); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); flex: none; }
+.brand h1 { font-size: 24px; letter-spacing: 0.06em; text-transform: uppercase; }
+.brand small { display: block; font-family: var(--font-body); font-size: 12px; color: var(--muted); letter-spacing: 0; text-transform: none; font-weight: 400; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+.tab { border: 1px solid transparent; background: none; padding: 7px 14px; border-radius: 6px; font-family: var(--font-display); font-size: 16px; letter-spacing: 0.04em; cursor: pointer; }
+.tab:hover { background: var(--sunk); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+/* shared pieces */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.hint { color: var(--muted); font-size: 13px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 7px; padding: 7px 13px; cursor: pointer; font-weight: 600; }
+.btn:hover { border-color: var(--ink); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-go { background: var(--honey); border-color: var(--honey); color: var(--on-honey); }
+.btn-stop { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn-small { padding: 4px 9px; font-size: 13px; }
+.field-label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; min-width: 0; }
+.field-label select, .field-label input[type="text"] { text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--ink); }
+select, input[type="text"], input[type="number"] { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; max-width: 100%; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 6px 12px; cursor: pointer; font-weight: 600; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg .is-red[aria-pressed="true"] { background: var(--red); color: #fff; }
+.seg .is-blue[aria-pressed="true"] { background: var(--blue); color: #fff; }
+
+/* scoreboard */
+.scorebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; background: var(--ink); color: var(--bg); border-radius: 10px; padding: 8px 16px; }
+.hex { background: var(--honey); color: var(--on-honey); font-family: var(--font-display); font-size: 15px; letter-spacing: 0.08em; padding: 9px 22px; clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0 50%); min-width: 116px; text-align: center; }
+.sb-item { display: flex; flex-direction: column; line-height: 1.1; }
+.sb-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; }
+.sb-val { font-family: var(--font-display); font-size: 26px; font-variant-numeric: tabular-nums; min-height: 29px; display: flex; align-items: center; gap: 4px; }
+.sb-status { margin-left: auto; font-size: 13px; opacity: 0.85; max-width: 100%; }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.5); display: inline-block; }
+.dot-P { background: var(--pollen); } .dot-R { background: var(--red); } .dot-B { background: var(--blue); }
+.dot-none { border: 1px dashed currentColor; opacity: 0.5; }
+
+/* bench */
+.bench { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: 14px; align-items: start; }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.field-wrap { width: 100%; max-width: 100%; aspect-ratio: 1; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--sunk); }
+.field-wrap canvas { display: block; width: 100%; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+/* gamepad */
+.padgrid { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+.stick { width: 104px; height: 104px; border-radius: 50%; background: var(--sunk); border: 1px solid var(--line); position: relative; touch-action: none; flex: none; cursor: grab; }
+.stick .knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--ink); pointer-events: none; }
+.stick-cap { text-align: center; font-size: 11px; color: var(--muted); margin-top: 3px; }
+.padcol { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.cross { display: grid; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 34px); gap: 2px; }
+.pb { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px; touch-action: none; user-select: none; -webkit-user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; padding: 0; }
+.pb small { font-size: 9px; font-weight: 400; color: var(--muted); }
+.pb.is-down { background: var(--honey); color: var(--on-honey); border-color: var(--honey); }
+.pb.is-down small { color: var(--on-honey); }
+.pb-wide { width: 54px; height: 30px; }
+.cross .pb { border-radius: 50%; }
+.keys { font-size: 12.5px; color: var(--muted); line-height: 1.9; }
+
+/* editor */
+.progbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.progbar .grow { flex: 1 1 150px; }
+.progbar select, .progbar input { width: 100%; }
+.codewrap { position: relative; display: flex; height: 440px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--sunk); }
+.gutter { flex: none; width: 46px; margin: 0; padding: 10px 6px 10px 0; text-align: right; color: var(--muted); font: 13px/20px var(--font-mono); overflow: hidden; user-select: none; -webkit-user-select: none; border-right: 1px solid var(--line); }
+#code { flex: 1; min-width: 0; border: 0; resize: none; background: transparent; padding: 10px; font: 13px/20px var(--font-mono); tab-size: 4; white-space: pre; overflow: auto; outline-offset: -2px; }
+.errline { position: absolute; left: 0; right: 0; height: 20px; background: var(--bad); opacity: 0.2; pointer-events: none; }
+.console { border-radius: 8px; padding: 9px 12px; font-size: 13.5px; background: var(--sunk); border: 1px solid var(--line); overflow-wrap: anywhere; }
+.console.is-bad { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+.console.is-good { border-color: var(--good); }
+#genJava { margin: 0; max-height: 360px; overflow: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 12.5px/19px var(--font-mono); }
+
+/* blocks */
+.pal { display: flex; flex-direction: column; gap: 6px; }
+.pal-group { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.pal-title { width: 76px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.pal-btn { border: 0; border-radius: 6px; padding: 4px 9px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--on-cat); background: var(--c); }
+.pal-btn:hover { filter: brightness(1.12); }
+.pal-btn.is-off { opacity: 0.4; }
+.cat-control { --c: var(--cat-control); } .cat-drive { --c: var(--cat-drive); } .cat-mech { --c: var(--cat-mech); } .cat-output { --c: var(--cat-output); }
+.ws { border: 1px solid var(--line); background: var(--sunk); border-radius: 8px; padding: 10px; max-height: 520px; overflow: auto; }
+.ws-hat { display: inline-block; background: var(--honey); color: var(--on-honey); font-weight: 700; font-size: 13px; padding: 5px 14px 5px 12px; border-radius: 14px 14px 14px 4px; }
+.blk-list { display: flex; flex-direction: column; }
+.blk { border-left: 6px solid var(--c); background: var(--surface); border-radius: 6px; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-width: 0; }
+.blk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 5px 8px; }
+.blk-word { font-weight: 600; font-size: 13.5px; }
+.blk-tools { margin-left: auto; display: inline-flex; gap: 2px; }
+.blk-tools button { border: 0; background: none; width: 26px; height: 26px; border-radius: 5px; cursor: pointer; color: var(--muted); font-size: 14px; }
+.blk-tools button:hover:not(:disabled) { background: var(--sunk); color: var(--ink); }
+.blk-tools button:disabled { opacity: 0.3; cursor: default; }
+.blk-tools .del:hover:not(:disabled) { color: var(--bad); }
+.blk-body { margin: 0 6px 6px 14px; padding: 2px 6px; border-left: 2px dashed var(--c); }
+.blk-else { margin: 0 8px; font-weight: 700; font-size: 13px; color: var(--c); }
+.f-num { width: 68px; padding: 2px 5px; }
+.f-text { width: 120px; padding: 2px 5px; }
+.f-sel { padding: 2px 4px; }
+.f-cond { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.f-not { border: 1px dashed var(--line); background: none; border-radius: 6px; padding: 1px 7px; font-size: 12.5px; cursor: pointer; color: var(--muted); }
+.f-not[aria-pressed="true"] { border-style: solid; border-color: var(--bad); background: var(--bad); color: #fff; font-weight: 700; }
+.slot { border: 0; background: none; height: 9px; margin: 0; padding: 0; cursor: pointer; border-radius: 4px; font-size: 11px; color: var(--on-honey); text-align: left; position: relative; }
+.slot::after { content: ""; position: absolute; left: 0; right: 0; top: 3px; height: 3px; border-radius: 2px; background: transparent; }
+.slot:hover::after { background: var(--line); }
+.slot.is-on { height: 22px; background: var(--honey); padding: 0 10px; font-weight: 700; margin: 3px 0; }
+.slot.is-on::after { display: none; }
+
+/* instruments */
+.screen { margin: 0; min-height: 128px; max-height: 220px; overflow: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: 13px/1.55 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 4px 8px 4px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 0; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.bar { position: relative; width: 84px; height: 10px; background: var(--sunk); border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.bar i { position: absolute; top: 0; bottom: 0; background: var(--honey); }
+.bar.mid::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--muted); z-index: 1; }
+.total td { font-weight: 700; border-bottom: 0; font-size: 15px; }
+.log { list-style: none; margin: 0; padding: 0; max-height: 220px; overflow: auto; font-size: 13px; display: flex; flex-direction: column; gap: 4px; }
+.log li { padding-left: 10px; border-left: 3px solid var(--line); }
+.log .k-good { border-color: var(--good); } .log .k-foul { border-color: var(--bad); color: var(--bad); } .log .k-info { border-color: var(--honey); }
+.log time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+
+/* build */
+.build { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 14px; align-items: start; }
+.choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.choice button, .tool { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+.choice button[aria-pressed="true"], .tool.is-on { border-color: var(--honey); box-shadow: inset 0 0 0 1px var(--honey); background: color-mix(in srgb, var(--honey) 10%, var(--surface)); }
+.choice b, .tool b { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.02em; }
+.tools { display: flex; flex-direction: column; gap: 8px; }
+.tool { flex-direction: row; align-items: flex-start; gap: 10px; cursor: default; }
+.tool input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--honey); flex: none; cursor: pointer; }
+.tool label { cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.tool .uses { font-size: 12px; color: var(--muted); }
+.sliders { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+input[type="range"] { width: 100%; accent-color: var(--honey); }
+.preview-wrap { width: 100%; max-width: 380px; aspect-ratio: 1; margin: 0 auto; border-radius: 8px; overflow: hidden; background: var(--tile); border: 1px solid var(--line); }
+.preview-wrap canvas { display: block; width: 100%; height: 100%; }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; }
+.checks li { display: flex; gap: 8px; align-items: baseline; }
+.pill { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; border-radius: 10px; padding: 1px 8px; background: var(--good); color: #fff; flex: none; }
+.pill.info { background: var(--muted); }
+.name-in { width: 100%; font-family: var(--font-mono); font-size: 13px; }
+.name-in.is-bad { border-color: var(--bad); }
+
+/* reading pages */
+.read { max-width: 900px; display: flex; flex-direction: column; gap: 16px; }
+.read p, .read li { max-width: 68ch; }
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: flex; flex-direction: column; gap: 10px; }
+.steps > li { counter-increment: s; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; max-width: none; }
+.steps > li::before { content: counter(s); font-family: var(--font-display); font-size: 20px; width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; background: var(--honey); color: var(--on-honey); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.steps > li > div { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.read ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.notice { border: 1px solid var(--line); border-left: 5px solid var(--honey); background: var(--surface); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links a { display: inline-block; text-decoration: none; background: var(--ink); color: var(--bg); border-radius: 7px; padding: 8px 14px; font-weight: 600; }
+.foot { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; max-width: 100ch; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: 14px; max-width: calc(100% - 32px); z-index: 10; }
+
+/* hive decoration */
+body { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23e0a100' stroke-opacity='.16' stroke-width='1.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23e0a100' stroke-opacity='.09' stroke-width='1.5'/%3E%3C/svg%3E"); }
+.top { border-bottom: 0; padding-bottom: 0; }
+.stripe { height: 8px; border-radius: 4px; background: repeating-linear-gradient(135deg, var(--honey) 0 16px, var(--ink) 16px 32px); }
+.brand-hex { background: linear-gradient(var(--honey) 0 30%, var(--ink) 30% 43%, var(--honey) 43% 57%, var(--ink) 57% 70%, var(--honey) 70%); }
+.tab[aria-selected="true"] { background: var(--honey); color: var(--on-honey); }
+h3::before { content: ""; display: inline-block; width: 10px; height: 11px; margin-right: 8px; background: var(--honey); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.scorebar { background-image: repeating-linear-gradient(135deg, transparent 0 22px, rgba(224, 161, 0, 0.09) 22px 44px); }
+
+/* home */
+.home { gap: 22px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 24px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 28px; }
+.hero-text { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; min-width: 0; }
+.eyebrow { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--honey-ink); }
+.hero-title { font-size: clamp(38px, 6.4vw, 72px); line-height: 0.98; letter-spacing: 0.01em; text-transform: uppercase; }
+.hero-title span { background: var(--honey); color: var(--on-honey); padding: 0 0.18em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.hero-lead { font-size: 17px; max-width: 54ch; color: var(--muted); }
+.btn-big { padding: 11px 22px; font-size: 16px; font-family: var(--font-display); letter-spacing: 0.05em; }
+.hero-art { width: 100%; max-width: 340px; height: auto; justify-self: center; }
+.cell-line { fill: none; stroke: var(--honey); stroke-width: 3; }
+.cell-honey { fill: var(--honey); }
+.cell-soft { fill: var(--hive); }
+.cell-red { fill: var(--red); } .cell-blue { fill: var(--blue); }
+.art-pollen { fill: var(--pollen); stroke: var(--ball-edge); stroke-width: 1.5; }
+.art-body { fill: var(--pollen); stroke: var(--ink); stroke-width: 3; }
+.art-band { fill: none; stroke: var(--ink); stroke-width: 7; }
+.art-dark { fill: var(--ink); }
+.art-wing { fill: var(--surface); fill-opacity: 0.85; stroke: var(--ink); stroke-width: 2; }
+.art-feeler { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.plate { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; width: 100%; }
+.plate p { font-family: var(--font-display); font-size: 17px; letter-spacing: 0.03em; line-height: 1.35; }
+.plate-small { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.plate-hex { flex: none; width: 46px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--ink); color: var(--honey); font-family: var(--font-display); font-size: 16px; letter-spacing: 0.04em; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.facts li { background: var(--ink); color: var(--bg); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; line-height: 1.2; }
+.facts b { font-family: var(--font-display); font-size: 28px; color: var(--honey); font-variant-numeric: tabular-nums; }
+.facts span { font-size: 12.5px; opacity: 0.85; }
+.menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.menu-card { display: flex; align-items: center; gap: 14px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease; }
+.menu-card:hover { border-color: var(--honey); transform: translateY(-3px); }
+.menu-card > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.menu-card b { font-family: var(--font-display); font-size: 19px; letter-spacing: 0.03em; }
+.menu-hex { flex: none; width: 54px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: var(--honey); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.cursor-tool { position: fixed; left: 0; top: 0; z-index: 20; font-size: 30px; line-height: 1; pointer-events: none; will-change: transform; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35)); }
+.policy { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; scroll-margin-top: 12px; }
+.policy:focus { outline: none; }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 20px; }
+  .hero-art { max-width: 230px; order: -1; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .menu-card { transition: none; } .menu-card:hover { transform: none; } }
+
+/* ---- bubbly title band, appearance modes, code colours, build detail, tutorial ---- */
+:root {
+  --font-bubble: "Fredoka", "Baloo 2", ui-rounded, "Arial Rounded MT Bold", "Varela Round", "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", sans-serif;
+  --band: #1a1e14;
+  --hl-c: #6b7566; --hl-s: #1f7a3d; --hl-n: #b3541e; --hl-k: #8a2fb0; --hl-t: #0f6f8f; --hl-f: #2456c4; --hl-a: #8a6a00;
+  --hl-b0: #c0392b; --hl-b1: #a86a00; --hl-b2: #1f7ad1; --hl-b3: #1f9d55;
+}
+@supports (color: light-dark(#000, #fff)) {
+  :root {
+    --hl-c: light-dark(#6b7566, #8b957f); --hl-s: light-dark(#1f7a3d, #8fd68f); --hl-n: light-dark(#b3541e, #f2a65a);
+    --hl-k: light-dark(#8a2fb0, #d7a4f5); --hl-t: light-dark(#0f6f8f, #6fd0e8); --hl-f: light-dark(#2456c4, #8ab4ff); --hl-a: light-dark(#8a6a00, #e8c44a);
+    --hl-b0: light-dark(#c0392b, #ff8a80); --hl-b1: light-dark(#a86a00, #ffd33d); --hl-b2: light-dark(#1f7ad1, #79c0ff); --hl-b3: light-dark(#1f9d55, #7ee787);
+  }
+  :root[data-ink="honey"] { --text: light-dark(#7a5200, #f6cf5e); }
+  :root[data-ink="sky"] { --text: light-dark(#1d4f9c, #9cc2ff); }
+  :root[data-ink="mint"] { --text: light-dark(#1f6b41, #86dba9); }
+  :root[data-ink="rose"] { --text: light-dark(#a0285a, #f7a3c6); }
+  :root[data-ink="violet"] { --text: light-dark(#5b3aa0, #c9b0f7); }
+}
+:root[data-look="white"] {
+  --bg: #ffffff; --surface: #f6f7f2; --sunk: #eceee5; --ink: #1b1f18; --muted: #59624f; --line: #cdd2c4;
+  --honey: #e0a100; --honey-ink: #6b4a00; --on-honey: #201800;
+  --red: #c5382c; --blue: #2460c4; --good: #2c7a4b; --warn: #9a5c00; --bad: #b3261e;
+  --cat-control: #a56c00; --cat-drive: #2460c4; --cat-mech: #2c7a4b; --cat-output: #7448ad; --on-cat: #ffffff;
+  --tile: #b9bdb3; --tile-line: #a4a89e; --tile-text: #8c9086; --wall: #3a4036; --hive: #d8c58c;
+  --pollen: #f4c20d; --ball-edge: #3b3200; --body: #262b22; --part: #6c7466; --wheel: #12140d; --wheel-mark: #8d947f;
+  --petal: #d98bb0; --flower-core: #6b4a00; --meter-bg: #50564a;
+  color-scheme: light;
+}
+:root[data-look="black"] {
+  --bg: #000000; --surface: #15180f; --sunk: #0a0c06; --ink: #eceee4; --muted: #a2aa96; --line: #343a2c;
+  --honey: #f0b400; --honey-ink: #f3c64d; --on-honey: #1d1600;
+  --red: #f0695c; --blue: #6ea0f5; --good: #5cc087; --warn: #e9a23b; --bad: #f2776c;
+  --cat-control: #e0a100; --cat-drive: #6ea0f5; --cat-mech: #5cc087; --cat-output: #b594e6; --on-cat: #10130c;
+  --tile: #474c42; --tile-line: #3b4037; --tile-text: #697062; --wall: #c5cbba; --hive: #5f5530;
+  --pollen: #f7cb2b; --ball-edge: #1a1500; --body: #10130c; --part: #7d8672; --wheel: #05060a; --wheel-mark: #9aa18c;
+  --petal: #c9749d; --flower-core: #f0b400; --meter-bg: #23271d;
+  color-scheme: dark;
+}
+body { color: var(--text, var(--ink)); }
+
+.top { background: var(--band); border: 1px solid #000; border-radius: 14px; padding: 12px 18px; }
+.brand h1.logo { font-family: var(--font-bubble); font-weight: 800; font-size: 31px; letter-spacing: 0.01em; text-transform: none; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6), 0 5px 12px rgba(0, 0, 0, 0.35); }
+.w-y { color: #ffc91f; } .w-w { color: #ffffff; }
+.brand .logo small { color: rgba(255, 255, 255, 0.74); font-weight: 400; text-shadow: none; }
+.top .tab, .lookbtn { color: #ffffff; font-family: var(--font-bubble); font-weight: 600; letter-spacing: 0.01em; font-size: 16px; }
+.top .tab:hover, .lookbtn:hover { background: rgba(255, 255, 255, 0.14); }
+.top .tab[aria-selected="true"] { background: #ffc91f; color: #201800; }
+.lookbtn { background: none; border: 1px dashed rgba(255, 255, 255, 0.55); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.lookbtn[aria-expanded="true"] { background: #ffffff; color: #201800; border-style: solid; }
+h2 { font-family: var(--font-bubble); font-weight: 700; }
+.hero-title { font-family: var(--font-bubble); font-weight: 800; text-transform: none; line-height: 1.2; }
+.hero-title span { display: inline-block; line-height: 1.15; margin-top: 8px; border-radius: 10px; }
+.look-label { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); min-width: 96px; }
+.sw { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; padding: 0; background: var(--swc); }
+.sw[aria-pressed="true"] { outline: 3px solid var(--honey); outline-offset: 2px; }
+.sw-default { --swc: var(--ink); } .sw-honey { --swc: #d99a00; } .sw-sky { --swc: #3f7fe0; } .sw-mint { --swc: #35a56a; } .sw-rose { --swc: #e0558f; } .sw-violet { --swc: #8b63d9; }
+
+.why { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
+.why-title { font-size: clamp(26px, 4vw, 38px); }
+.why-title span { color: var(--honey-ink); }
+.why p { font-size: 17px; max-width: 74ch; }
+.c-honey { color: var(--honey-ink); } .c-blue { color: var(--blue); } .c-green { color: var(--good); } .c-red { color: var(--red); }
+.why-fun { font-family: var(--font-bubble); font-weight: 700; font-size: 20px; background: var(--honey); color: var(--on-honey); border-radius: 8px; padding: 1px 10px; white-space: nowrap; }
+
+/* code colours */
+.codebox { flex: 1; min-width: 0; position: relative; }
+#hl { position: absolute; inset: 0; margin: 0; padding: 10px; font: 13px/20px var(--font-mono); tab-size: 4; white-space: pre; overflow: hidden; pointer-events: none; color: var(--ink); background: none; }
+#hl code { display: inline-block; min-width: 100%; padding: 0 40px 0 0; background: none; border-radius: 0; font: inherit; }
+.codebox #code { position: absolute; inset: 0; width: 100%; height: 100%; flex: none; }
+.hl-on #code { color: transparent; caret-color: var(--ink); }
+.hl-on #code::selection { color: transparent; background: rgba(224, 161, 0, 0.38); }
+@media (forced-colors: active) { .hl-on #code { color: CanvasText; } #hl { visibility: hidden; } }
+.hc { color: var(--hl-c); } .hs { color: var(--hl-s); } .hn { color: var(--hl-n); } .hk { color: var(--hl-k); } .ht { color: var(--hl-t); } .hf { color: var(--hl-f); } .ha { color: var(--hl-a); }
+.hb0 { color: var(--hl-b0); } .hb1 { color: var(--hl-b1); } .hb2 { color: var(--hl-b2); } .hb3 { color: var(--hl-b3); }
+.hbx { color: #ffffff; background: var(--bad); }
+.hl-key { display: flex; flex-wrap: wrap; gap: 3px 14px; font: 12.5px/1.6 var(--font-mono); margin-top: 6px; }
+pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font: 13px/20px var(--font-mono); tab-size: 4; max-width: 100%; }
+
+/* blocks: stronger colour coding */
+.blk { background: color-mix(in srgb, var(--c) 13%, var(--surface)); border-top-color: color-mix(in srgb, var(--c) 42%, var(--line)); border-right-color: color-mix(in srgb, var(--c) 42%, var(--line)); border-bottom-color: color-mix(in srgb, var(--c) 42%, var(--line)); }
+.blk > .blk-row::before, .tag { font: 800 10px/1 var(--font-body); letter-spacing: 0.08em; background: var(--c); color: var(--on-cat); border-radius: 4px; padding: 3px 6px; }
+.blk.cat-control > .blk-row::before { content: "CONTROL"; } .blk.cat-drive > .blk-row::before { content: "DRIVE"; }
+.blk.cat-mech > .blk-row::before { content: "TOOLS"; } .blk.cat-output > .blk-row::before { content: "TELEMETRY"; }
+.blk .f-num, .blk .f-sel, .blk .f-text { border-color: color-mix(in srgb, var(--c) 55%, var(--line)); }
+.tag { display: inline-block; margin-right: 6px; vertical-align: 1px; }
+
+/* build detail */
+.cat-chip { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: var(--honey); color: var(--on-honey); border-radius: 10px; padding: 2px 10px; }
+.partkey { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; font-size: 13px; }
+.partkey i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 7px; border: 1px solid rgba(0, 0, 0, 0.45); vertical-align: -1px; }
+.pk-wheel { background: #12140d; } .pk-motor { background: #d2a52c; } .pk-rail { background: #9aa39a; } .pk-hub { background: #7f8892; } .pk-battery { background: #2d5da6; }
+.pk-intake { background: #2f9a5f; } .pk-launcher { background: #e8892b; } .pk-lift { background: #19a7b8; } .pk-servo { background: #8b63d9; } .pk-sensor { background: #e0559a; }
+
+/* moving honeycomb behind the page */
+#bgHive { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.page { position: relative; z-index: 1; }
+.bg-live body { background-image: none; }
+
+/* Robot Controller Console: op mode list, toolbar and editors */
+.rc { padding: 0 0 12px; border-radius: 6px; overflow: hidden; }
+.rc > * { margin-inline: 12px; }
+.rc > .rc-bar, .rc > .rc-tools { margin-inline: 0; }
+.rc-bar { background: #1f1f1f; color: #ffffff; display: flex; flex-wrap: wrap; align-items: stretch; gap: 4px 18px; padding: 0 12px; }
+.rc-name { font-family: var(--font-display); font-size: 15px; letter-spacing: 0.07em; text-transform: uppercase; color: #ffc91f; padding: 11px 0; }
+.rc-tabs { display: flex; }
+.rc-tab { background: none; border: 0; border-bottom: 3px solid transparent; color: #d4d4d4; padding: 10px 18px; cursor: pointer; font-weight: 600; font-size: 14.5px; }
+.rc-tab:hover { color: #ffffff; background: #2c2c2c; }
+.rc-tab[aria-selected="true"] { color: #ffffff; background: #353535; border-bottom-color: #ffc91f; }
+.rc-tools { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px; background: var(--sunk); border-bottom: 1px solid var(--line); margin-top: -10px; }
+.rc-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 3px; padding: 5px 10px; font-size: 13px; cursor: pointer; }
+.rc-btn:hover { border-color: var(--ink); }
+.rc-btn[aria-expanded="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.rc-panel { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--honey); border-radius: 3px; padding: 10px; background: color-mix(in srgb, var(--honey) 7%, var(--surface)); }
+.rc-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.rc-head > span:first-child { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.04em; }
+.oplist { max-height: 232px; overflow: auto; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
+.rc-table { font-size: 13px; }
+.rc-table th { position: sticky; top: 0; z-index: 1; background: var(--sunk); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.rc-table td { padding: 5px 8px; }
+.op-group td { background: color-mix(in srgb, var(--honey) 20%, var(--surface)); }
+.op-row.is-open td { background: color-mix(in srgb, var(--blue) 15%, var(--surface)); }
+.op-name { background: none; border: 0; padding: 0; color: var(--blue); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; text-align: left; }
+.op-row.is-open .op-name { color: var(--ink); text-decoration: none; }
+.op-pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 3px; padding: 1px 6px; color: var(--on-cat); background: var(--cat-drive); white-space: nowrap; }
+.op-pill.auto { background: var(--cat-mech); } .op-pill.blocks { background: var(--cat-output); } .op-pill.java { background: var(--cat-control); }
+.op-desc { color: var(--muted); font-size: 12.5px; min-width: 150px; }
+.ord { display: inline-flex; gap: 2px; }
+.ord button { width: 22px; height: 22px; padding: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 3px; cursor: pointer; font-size: 10px; line-height: 1; }
+.ord button:hover:not(:disabled) { border-color: var(--ink); }
+.ord button:disabled { opacity: 0.28; cursor: default; }
+.rc-edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.rc-edit input, .rc-edit select { width: 100%; border-radius: 3px; }
+.rc-grow { flex: 1 1 150px; } .rc-wide { flex: 1 1 100%; }
+.rc-file { font: 12px/1.4 var(--font-mono); color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 5px; overflow-wrap: anywhere; }
+.rc .codewrap, .rc .console, .rc #genJava { border-radius: 3px; }
+.rc .console { font-family: var(--font-mono); font-size: 12.5px; }
+
+/* blocks workspace with a category toolbox and flyout */
+.bk { display: grid; grid-template-columns: 118px auto minmax(0, 1fr); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; min-height: 300px; }
+.toolbox { background: var(--sunk); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+.tb-cat { display: flex; align-items: center; gap: 8px; border: 0; border-bottom: 1px solid var(--line); background: none; padding: 9px 10px; cursor: pointer; font-size: 13.5px; text-align: left; border-left: 4px solid transparent; }
+.tb-cat:hover { background: color-mix(in srgb, var(--c) 14%, transparent); }
+.tb-cat.is-on { background: color-mix(in srgb, var(--c) 24%, var(--surface)); border-left-color: var(--c); font-weight: 700; }
+.tb-dot { width: 12px; height: 12px; border-radius: 2px; background: var(--c); flex: none; }
+.flyout { display: flex; flex-direction: column; gap: 6px; padding: 8px; width: 172px; background: color-mix(in srgb, var(--c) 11%, var(--surface)); border-right: 1px solid var(--line); }
+.flyout .pal-btn { text-align: left; padding: 6px 9px; border-radius: 4px; }
+.bk .ws { border: 0; border-radius: 0; max-height: 520px; }
+@media (max-width: 620px) {
+  .bk { grid-template-columns: minmax(0, 1fr); }
+  .toolbox { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); }
+  .tb-cat { border-bottom: 0; border-left: 0; border-bottom: 3px solid transparent; }
+  .tb-cat.is-on { border-bottom-color: var(--c); }
+  .flyout { width: auto; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+/* match countdown over the field */
+.field-wrap { position: relative; }
+.count { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.45); pointer-events: none; }
+.count span { font-family: var(--font-bubble); font-weight: 800; font-size: clamp(90px, 22vw, 200px); line-height: 1; color: #ffc91f; text-shadow: 0 6px 0 rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 201, 31, 0.6); }
+.count span.pop { animation: countPop 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+@keyframes countPop { 0% { transform: scale(2.2); opacity: 0; } 22% { transform: scale(1); opacity: 1; } 80% { transform: scale(0.94); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.25; } }
+
+/* dragging blocks */
+.blk-row { cursor: grab; user-select: none; -webkit-user-select: none; }
+.blk-row input, .blk-row select { cursor: auto; }
+.blk-grip { color: var(--muted); font-size: 15px; line-height: 1; padding: 2px 1px; touch-action: none; cursor: grab; }
+.flyout .pal-btn { cursor: grab; touch-action: none; }
+.is-dragging, .is-dragging * { cursor: grabbing !important; }
+.is-dragging .slot { height: 14px; }
+.is-dragging .slot::after { background: var(--line); top: 5px; }
+.is-dragging .slot.is-on { height: 22px; }
+.slot.is-target { height: 34px; margin: 3px 0; border-radius: 6px; background: color-mix(in srgb, var(--honey) 32%, transparent); outline: 2px dashed var(--honey); outline-offset: -2px; transition: height 0.12s ease; }
+.slot.is-target::after { display: none; }
+.blk.is-lifted { opacity: 0.35; }
+.drag-ghost { position: fixed; left: 0; top: 0; z-index: 30; pointer-events: none; background: var(--c); color: var(--on-cat); font-weight: 700; font-size: 13px; padding: 7px 11px; border-radius: 6px; box-shadow: 0 10px 22px rgba(0, 0, 0, 0.4); rotate: -3deg; white-space: nowrap; }
+.blk.snap { animation: snapIn 0.36s cubic-bezier(0.2, 0.9, 0.3, 1.25); }
+@keyframes snapIn {
+  0% { transform: translateY(-16px) scale(1.07); box-shadow: 0 14px 26px rgba(224, 161, 0, 0.6); }
+  55% { transform: translateY(3px) scale(0.98); box-shadow: 0 0 0 4px rgba(224, 161, 0, 0.45); }
+  100% { transform: none; box-shadow: 0 0 0 0 rgba(224, 161, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .blk.snap, .count span.pop { animation: none; } .slot.is-target { transition: none; } }
+
+.foot { display: flex; flex-direction: column; gap: 6px; }
+.foot p { max-width: 100ch; }
+.foot-own { font-size: 13.5px; color: var(--ink); }
+.foot-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; max-width: 110ch; }
+
+/* tutorial */
+.tutnav { align-self: flex-start; flex-wrap: wrap; }
+.tutnav button { font-family: var(--font-bubble); font-size: 15px; }
+.tutnav button[aria-pressed="true"] { background: var(--honey); color: var(--on-honey); }
+.lesson { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.read .lesson ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+.catkey, .blocklist, .blocklist ul { list-style: none; padding-left: 0; }
+.read .blocklist ul { padding-left: 22px; border-left: 2px dashed var(--line); margin: 4px 0 4px 6px; }
+@media (max-width: 560px) { .partkey { grid-template-columns: minmax(0, 1fr); } .brand h1.logo { font-size: 25px; } .why { padding: 16px; } }
+
+@media (max-width: 1020px) {
+  .bench, .build { grid-template-columns: minmax(0, 1fr); }
+  .tabs { margin-left: 0; }
+}
+@media (max-width: 560px) {
+  .two, .choice, .sliders { grid-template-columns: minmax(0, 1fr); }
+  .brand h1 { font-size: 20px; }
+  .codewrap { height: 360px; }
+  .pal-title { width: 100%; }
+  .sb-status { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<canvas id="bgHive" aria-hidden="true"></canvas>
+<div class="page">
+  <header class="top">
+    <div class="brand">
+      <span class="brand-hex" aria-hidden="true"></span>
+      <h1 class="logo"><span class="w-y">Sim</span><span class="w-w">Your</span><span class="w-y">Code</span><small>Unofficial BIOBUZZ practice simulator for FIRST Tech Challenge teams</small></h1>
+    </div>
+    <nav class="tabs" aria-label="Sections">
+      <button class="tab" type="button" data-view="home" aria-selected="true">Home</button>
+      <button class="tab" type="button" data-view="drive" aria-selected="false">Drive &amp; Code</button>
+      <button class="tab" type="button" data-view="build" aria-selected="false">Build Bot</button>
+      <button class="tab" type="button" data-view="learn" aria-selected="false">Step by Step</button>
+      <button class="tab" type="button" data-view="tutorial" aria-selected="false">Tutorial</button>
+      <button class="tab" type="button" data-view="manual" aria-selected="false">Game Manual</button>
+      <button class="tab" type="button" data-view="legal" aria-selected="false">Policies</button>
+    </nav>
+    <button type="button" class="lookbtn" id="btnLook" aria-expanded="false" aria-controls="lookPanel">Appearance</button>
+  </header>
+  <div class="stripe" aria-hidden="true"></div>
+  <div class="card look" id="lookPanel" hidden>
+    <div class="card-head"><h3>Appearance</h3><span class="hint">Your choice is remembered on this device only.</span></div>
+    <div class="row">
+      <span class="look-label">Background</span>
+      <div class="seg" role="group" aria-label="Background mode">
+        <button type="button" data-look="auto" aria-pressed="true">Match my device</button>
+        <button type="button" data-look="white" aria-pressed="false">White mode</button>
+        <button type="button" data-look="black" aria-pressed="false">Black mode</button>
+      </div>
+    </div>
+    <div class="row">
+      <span class="look-label">Sound</span>
+      <div class="seg" role="group" aria-label="Sound effects">
+        <button type="button" data-sound="on" aria-pressed="true">On</button>
+        <button type="button" data-sound="off" aria-pressed="false">Off</button>
+      </div>
+      <span class="hint">Clicks, block snaps and the match countdown.</span>
+    </div>
+    <div class="row">
+      <span class="look-label">Font colour</span>
+      <button type="button" class="sw sw-default" data-ink="" aria-pressed="true" aria-label="Standard font colour" title="Standard"></button>
+      <button type="button" class="sw sw-honey" data-ink="honey" aria-pressed="false" aria-label="Honey font colour" title="Honey"></button>
+      <button type="button" class="sw sw-sky" data-ink="sky" aria-pressed="false" aria-label="Sky blue font colour" title="Sky"></button>
+      <button type="button" class="sw sw-mint" data-ink="mint" aria-pressed="false" aria-label="Mint green font colour" title="Mint"></button>
+      <button type="button" class="sw sw-rose" data-ink="rose" aria-pressed="false" aria-label="Rose font colour" title="Rose"></button>
+      <button type="button" class="sw sw-violet" data-ink="violet" aria-pressed="false" aria-label="Violet font colour" title="Violet"></button>
+      <span class="hint" id="lookMsg">Each colour has a darker version for white mode and a lighter one for black mode, so text stays easy to read.</span>
+    </div>
+  </div>
+
+  <!-- ===================== HOME ===================== -->
+  <section id="view-home" class="col home">
+    <div class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">2026&ndash;2027 season &middot; Unofficial practice field</p>
+        <h2 class="hero-title">Build it.<br>Code it.<br><span>Drive it.</span></h2>
+        <p class="hero-lead">A free practice field for the BIOBUZZ season. Design a robot, write Java or Blocks, and run a full match in your browser before you ever touch the real field.</p>
+        <div class="row">
+          <button type="button" class="btn btn-go btn-big" data-go="drive">Start driving</button>
+          <button type="button" class="btn btn-big" data-go="build">Build a bot</button>
+        </div>
+        <div class="plate">
+          <span class="plate-hex" aria-hidden="true">H</span>
+          <p><span class="plate-small">Founded by</span> <b>Bruno</b><br><span class="plate-small">A project of Team</span> <b>18629 &ndash; Hydra</b></p>
+        </div>
+      </div>
+      <svg class="hero-art" viewBox="0 0 250 228" role="img" aria-labelledby="heroArtTitle">
+        <title id="heroArtTitle">A bee resting on a honeycomb. Some cells hold yellow pollen, one holds red nectar and one holds blue nectar.</title>
+        <defs><polygon id="hx" points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15"/></defs>
+        <use href="#hx" class="cell-line" transform="translate(60,40)"/>
+        <use href="#hx" class="cell-honey" transform="translate(115,40)"/>
+        <use href="#hx" class="cell-line" transform="translate(170,40)"/>
+        <use href="#hx" class="cell-honey" transform="translate(87.5,88)"/>
+        <use href="#hx" class="cell-soft" transform="translate(142.5,88)"/>
+        <use href="#hx" class="cell-blue" transform="translate(197.5,88)"/>
+        <use href="#hx" class="cell-red" transform="translate(60,136)"/>
+        <use href="#hx" class="cell-soft" transform="translate(115,136)"/>
+        <use href="#hx" class="cell-honey" transform="translate(170,136)"/>
+        <use href="#hx" class="cell-line" transform="translate(87.5,184)"/>
+        <use href="#hx" class="cell-honey" transform="translate(142.5,184)"/>
+        <circle class="art-pollen" cx="60" cy="40" r="11"/><circle class="art-pollen" cx="170" cy="40" r="11"/><circle class="art-pollen" cx="87.5" cy="184" r="11"/>
+        <g transform="translate(138,108) rotate(-18)">
+          <ellipse class="art-wing" cx="-4" cy="-24" rx="19" ry="11" transform="rotate(-24 -4 -24)"/>
+          <ellipse class="art-wing" cx="12" cy="-25" rx="17" ry="10" transform="rotate(18 12 -25)"/>
+          <path class="art-dark" d="M-25 0 L-37 -5 L-37 5 Z"/>
+          <ellipse class="art-body" cx="0" cy="0" rx="27" ry="17"/>
+          <path class="art-band" d="M-9 -15 V15 M6 -16 V16"/>
+          <circle class="art-dark" cx="27" cy="0" r="11"/>
+          <path class="art-feeler" d="M31 -9 Q38 -22 45 -19 M34 -6 Q44 -14 49 -9"/>
+        </g>
+      </svg>
+    </div>
+
+    <ul class="facts" aria-label="BIOBUZZ at a glance">
+      <li><b>0:30</b><span>AUTO, code only</span></li>
+      <li><b>2:00</b><span>TELEOP, you drive</span></li>
+      <li><b>20</b><span>points per HIVE TIP</span></li>
+      <li><b>8 + 8</b><span>motors and servos allowed</span></li>
+    </ul>
+
+    <div class="why">
+      <h2 class="why-title">Why <span>this</span> website?</h2>
+      <p>This website is not like others, where the program is <b class="c-red">laggy</b> and the confusion sends you down a rabbit hole of knowledge. This one is <b class="c-honey">simple</b> and <b class="c-honey">organized</b>, and it is <b class="c-blue">convenient for new programmers</b>.</p>
+      <p>Everything here is <b class="c-green">free</b>, with <b class="c-green">no ads</b> and <b class="c-green">no sketchy links</b>, so you never have to worry about picking up a virus.</p>
+      <p>Here you can learn the <b class="c-blue">basics of programming</b> so your team is ready for this season's game, <b class="c-honey">BIOBUZZ</b>. <span class="why-fun">Have fun on this simulator!</span></p>
+    </div>
+
+    <h3>Where do you want to go?</h3>
+    <div class="menu">
+      <button type="button" class="menu-card" data-go="drive"><span class="menu-hex" aria-hidden="true">&#127918;</span><span><b>Drive &amp; Code</b><span class="hint">The field, the gamepad and the code editor. Run one program or play a whole match.</span></span></button>
+      <button type="button" class="menu-card" data-go="build"><span class="menu-hex" aria-hidden="true">&#128295;</span><span><b>Build Bot</b><span class="hint">Pick a drivetrain, motors and tools, then name every device like a real robot.</span></span></button>
+      <button type="button" class="menu-card" data-go="learn"><span class="menu-hex" aria-hidden="true">&#128203;</span><span><b>Step by Step</b><span class="hint">Ten short steps from your first look at the field to a full match.</span></span></button>
+      <button type="button" class="menu-card" data-go="tutorial"><span class="menu-hex" aria-hidden="true">&#127891;</span><span><b>Tutorial</b><span class="hint">New to coding? Lessons on driving, Blocks and Java, sorted by category.</span></span></button>
+      <button type="button" class="menu-card" data-go="manual"><span class="menu-hex" aria-hidden="true">&#128214;</span><span><b>Game Manual</b><span class="hint">The official manual links, a scoring quick reference and the rules that catch new teams.</span></span></button>
+      <button type="button" class="menu-card" data-go="legal"><span class="menu-hex" aria-hidden="true">&#128737;&#65039;</span><span><b>Policies</b><span class="hint">Privacy, terms, cookies and accessibility, in plain words.</span></span></button>
+    </div>
+  </section>
+
+  <!-- ===================== DRIVE & CODE ===================== -->
+  <section id="view-drive" class="col" hidden>
+    <div class="scorebar" aria-live="off">
+      <div class="hex" id="phase">READY</div>
+      <div class="sb-item"><span class="sb-label">Clock</span><span class="sb-val" id="clock">0:30</span></div>
+      <div class="sb-item"><span class="sb-label">Your score</span><span class="sb-val" id="score">0</span></div>
+      <div class="sb-item"><span class="sb-label">Hive tips</span><span class="sb-val" id="tips">0</span></div>
+      <div class="sb-item"><span class="sb-label">Holding (max 4)</span><span class="sb-val" id="held"></span></div>
+      <div class="sb-status" id="dsStatus">Pick a program and press Run.</div>
+    </div>
+
+    <div class="bench">
+      <div class="col">
+        <div class="field-wrap" id="fieldWrap"><canvas id="field" width="600" height="600" role="img" aria-label="Top-down view of the BIOBUZZ field with your robot"></canvas><div class="count" id="countOverlay" role="status" aria-live="assertive" hidden><span id="countNum">3</span></div></div>
+        <div class="legend">
+          <span><i class="dot dot-P"></i>POLLEN</span><span><i class="dot dot-R"></i>Red NECTAR</span><span><i class="dot dot-B"></i>Blue NECTAR</span>
+          <span>Solid HIVE cell = facing up. The bar inside shows how close it is to tipping.</span>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Driver Station</h3><span class="hint">Run one program, or play a whole match.</span></div>
+          <div class="row">
+            <div class="seg" role="group" aria-label="Alliance">
+              <button type="button" id="allianceRed" class="is-red" aria-pressed="true">Red</button>
+              <button type="button" id="allianceBlue" class="is-blue" aria-pressed="false">Blue</button>
+            </div>
+            <label class="field-label" style="flex:1 1 200px">Start spot<select id="startSel"></select></label>
+            <div class="seg" role="group" aria-label="Simulation speed">
+              <button type="button" class="speed" data-s="1" aria-pressed="true">1&times;</button>
+              <button type="button" class="speed" data-s="2" aria-pressed="false">2&times;</button>
+              <button type="button" class="speed" data-s="4" aria-pressed="false">4&times;</button>
+            </div>
+          </div>
+          <div class="row">
+            <button type="button" class="btn btn-go" id="btnRun">&#9654; Run open program</button>
+            <button type="button" class="btn btn-stop" id="btnStop">&#9632; Stop</button>
+            <button type="button" class="btn" id="btnReset">&#8634; Reset field</button>
+          </div>
+          <div class="row" style="align-items:flex-end">
+            <label class="field-label" style="flex:1 1 140px">Match autonomous<select id="autoSel"></select></label>
+            <label class="field-label" style="flex:1 1 140px">Match TeleOp<select id="teleSel"></select></label>
+            <button type="button" class="btn btn-go" id="btnMatch">Play full match (2:38)</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Gamepad 1</h3><span class="hint">Drag the sticks, click the buttons, use the keyboard, or plug in a real controller.</span></div>
+          <div class="padgrid">
+            <div class="padcol">
+              <div class="row"><button type="button" class="pb pb-wide" data-pad="left_trigger">LT<small>Z</small></button><button type="button" class="pb pb-wide" data-pad="left_bumper">LB<small>Q</small></button></div>
+              <div><div class="stick" id="stickL" aria-label="Left stick"><span class="knob"></span></div><div class="stick-cap">Left stick &middot; W A S D</div></div>
+            </div>
+            <div class="padcol">
+              <div class="cross" aria-label="D-pad">
+                <span></span><button type="button" class="pb" data-pad="dpad_up">&#9650;<small>T</small></button><span></span>
+                <button type="button" class="pb" data-pad="dpad_left">&#9664;<small>F</small></button><span></span><button type="button" class="pb" data-pad="dpad_right">&#9654;<small>H</small></button>
+                <span></span><button type="button" class="pb" data-pad="dpad_down">&#9660;<small>G</small></button><span></span>
+              </div>
+              <div class="stick-cap">D-pad</div>
+            </div>
+            <div class="padcol">
+              <div class="cross" aria-label="Face buttons">
+                <span></span><button type="button" class="pb" data-pad="y">Y<small>I</small></button><span></span>
+                <button type="button" class="pb" data-pad="x">X<small>J</small></button><span></span><button type="button" class="pb" data-pad="b">B<small>L</small></button>
+                <span></span><button type="button" class="pb" data-pad="a">A<small>K</small></button><span></span>
+              </div>
+              <div class="stick-cap">Buttons</div>
+            </div>
+            <div class="padcol">
+              <div class="row"><button type="button" class="pb pb-wide" data-pad="right_bumper">RB<small>E</small></button><button type="button" class="pb pb-wide" data-pad="right_trigger">RT<small>C</small></button></div>
+              <div><div class="stick" id="stickR" aria-label="Right stick"><span class="knob"></span></div><div class="stick-cap">Right stick &middot; arrow keys</div></div>
+            </div>
+          </div>
+          <p class="keys">Keyboard: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> left stick &middot; <kbd>&larr;</kbd><kbd>&rarr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd> right stick &middot; <kbd>Q</kbd>/<kbd>E</kbd> bumpers &middot; <kbd>Z</kbd>/<kbd>C</kbd> triggers &middot; <kbd>I</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd> = Y X A B &middot; <kbd>T</kbd><kbd>F</kbd><kbd>G</kbd><kbd>H</kbd> D-pad. Click outside the code box first so the keys go to the robot.</p>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="card rc">
+          <div class="rc-bar">
+            <span class="rc-name">Robot Controller Console</span>
+            <div class="rc-tabs" role="group" aria-label="Programming tool">
+              <button type="button" class="rc-tab" id="tabBlocks" aria-selected="false">Blocks</button>
+              <button type="button" class="rc-tab" id="tabJava" aria-selected="true">OnBotJava</button>
+            </div>
+          </div>
+          <div class="rc-tools">
+            <button type="button" class="rc-btn" id="btnNewBlocks">Create New Blocks Op Mode</button>
+            <button type="button" class="rc-btn" id="btnNewJava">Create New Java Op Mode</button>
+            <button type="button" class="rc-btn" id="btnExamples" aria-expanded="false" aria-controls="exPanel">Examples</button>
+            <button type="button" class="rc-btn" id="btnCopyOp">Copy Selected</button>
+            <button type="button" class="rc-btn" id="btnDelete">Delete Selected</button>
+          </div>
+          <div class="rc-panel" id="exPanel" hidden>
+            <div class="rc-head"><span>Example Op Modes</span><span class="hint">Written for the bot you have right now. Press Add to copy one into your list.</span></div>
+            <div class="tablewrap oplist"><table class="rc-table"><thead><tr><th>Name</th><th>Type</th><th>What it does</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
+          </div>
+          <div class="rc-head"><span id="opTitle">My Op Modes</span><span class="hint">Click a name to open it. The arrows change the order of op modes and of whole groups.</span></div>
+          <div class="tablewrap oplist"><table class="rc-table"><thead><tr><th>Order</th><th>Op Mode Name</th><th>Runs in</th><th>What it does</th></tr></thead><tbody id="opBody"></tbody></table></div>
+          <div class="rc-edit">
+            <label class="field-label rc-grow">Op Mode name<input type="text" id="progName" maxlength="40" autocomplete="off"></label>
+            <label class="field-label">Runs in<select id="modeSel"><option value="teleop">TeleOp</option><option value="auto">Autonomous</option></select></label>
+            <label class="field-label">Group<input type="text" id="progGroup" maxlength="24" autocomplete="off" list="groupList"></label>
+            <datalist id="groupList"></datalist>
+            <label class="field-label rc-wide">Description<input type="text" id="progDesc" maxlength="140" autocomplete="off" placeholder="What does this op mode do?"></label>
+          </div>
+          <div class="rc-file" id="filePath"></div>
+
+          <div id="javaPane">
+            <div class="codewrap">
+              <pre class="gutter" id="gutter" aria-hidden="true">1</pre>
+              <div class="codebox">
+                <pre id="hl" aria-hidden="true"><code id="hlIn"></code></pre>
+                <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" wrap="off" aria-label="Java code"></textarea>
+              </div>
+              <div class="errline" id="errLine" hidden></div>
+            </div>
+            <p class="hl-key" aria-label="What the code colours mean"><span class="hk">keywords</span><span class="ht">Types</span><span class="hf">methods()</span><span class="hs">"text"</span><span class="hn">numbers</span><span class="ha">@notes</span><span class="hc">// comments</span><span><span class="hb0">{</span><span class="hb1">(</span><span class="hb2">[</span><span class="hb3">{</span> brackets match by colour <span class="hb3">}</span><span class="hb2">]</span><span class="hb1">)</span><span class="hb0">}</span></span></p>
+          </div>
+          <div id="blocksPane" class="col" hidden>
+            <p class="hint">Pick a category on the left, then click a block to add it at the yellow marker. Click any thin gap between blocks to move the marker there.</p>
+            <div id="blocksRoot" class="col"></div>
+            <div class="row">
+              <button type="button" class="btn btn-small" id="btnViewJava" aria-expanded="false">Show the Java these blocks make</button>
+              <button type="button" class="btn btn-small" id="btnToJava">Copy into a new Java program</button>
+            </div>
+            <pre id="genJava" hidden></pre>
+          </div>
+          <div class="console" id="console" role="status">No problems found yet. Errors in your code show up here with a line number.</div>
+        </div>
+
+        <div class="two">
+          <div class="card">
+            <div class="card-head"><h3>Telemetry</h3><span class="hint">Driver Station screen</span></div>
+            <pre class="screen" id="telemetry">Nothing yet. Use telemetry.addData(...) then telemetry.update().</pre>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Motors &amp; servos</h3><span class="hint">Live</span></div>
+            <div class="tablewrap"><table><thead><tr><th>Name</th><th>Output</th><th class="num">Reading</th></tr></thead><tbody id="hwBody"></tbody></table></div>
+          </div>
+        </div>
+        <div class="two">
+          <div class="card">
+            <div class="card-head"><h3>Score sheet</h3><span class="hint" id="scoreHint">If the match ended now</span></div>
+            <div class="tablewrap"><table><tbody id="scoreBody"></tbody></table></div>
+            <p class="hint" id="rpHint"></p>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Match log</h3><span class="hint">Tips, fouls and hints</span></div>
+            <ul class="log" id="log"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== BUILD BOT ===================== -->
+  <section id="view-build" class="col" hidden>
+    <h2>Build your bot</h2>
+    <p class="hint">Every choice changes how the robot behaves on the field and which device names your code can use. Changing the bot resets the field.</p>
+    <div class="build">
+      <div class="col">
+        <div class="card">
+          <div class="card-head"><h3>Identity</h3><span class="cat-chip">Category 1</span></div>
+          <label class="field-label">Bot name<input type="text" id="botName" maxlength="24" autocomplete="off"></label>
+          <p class="hint">The alliance colour (red or blue) is picked on the Drive &amp; Code tab and shows as the outline of your robot.</p>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Drivetrain</h3><span class="cat-chip">Category 2</span></div>
+          <div class="choice" role="group" aria-label="Drivetrain type">
+            <button type="button" id="driveMecanum" aria-pressed="true"><b>Mecanum</b><span class="hint">4 motors. Drives, turns and slides sideways.</span></button>
+            <button type="button" id="driveTank" aria-pressed="false"><b>Tank</b><span class="hint">2 motors. Simple and strong, but no sideways moves.</span></button>
+          </div>
+          <div class="sliders">
+            <label class="field-label">Drive motor<select id="motorSel"></select></label>
+            <label class="field-label">Wheel size<select id="wheelSel"></select></label>
+          </div>
+          <p class="hint">A faster motor or a bigger wheel means more speed but less pushing power and less precise moves.</p>
+          <div class="tool" id="realisticBox">
+            <input type="checkbox" id="realistic">
+            <label for="realistic"><b>Real-life motor mounting</b><span class="hint">On a real robot the left motors face the opposite way, so they spin backwards until your code reverses them. Turn this off for an easier start.</span></label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Chassis size</h3><span class="cat-chip">Category 3</span></div>
+          <div class="sliders">
+            <label class="field-label">Width: <span id="widthOut"></span><input type="range" id="widthRange" min="12" max="18" step="0.5"></label>
+            <label class="field-label">Length: <span id="lengthOut"></span><input type="range" id="lengthRange" min="12" max="18" step="0.5"></label>
+          </div>
+          <p class="hint">A small robot slips through gaps; a wide one has a wider intake and is steadier. Nothing may start bigger than 18 in.</p>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Scoring tools</h3><span class="cat-chip">Category 4</span></div>
+          <p class="hint">Tick the mechanisms you want. Each one uses motors and servos from your limit of 8 + 8.</p>
+          <div class="tools" id="toolList"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Sensors</h3><span class="cat-chip">Category 5</span></div>
+          <p class="hint">Sensors let your code see where the robot is, which is what makes autonomous accurate.</p>
+          <div class="tools" id="sensorList"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-head"><h3>Preview</h3><span class="hint">Top view, front at the top. Dashed square = 18 in starting size.</span></div>
+          <div class="preview-wrap"><canvas id="preview" width="400" height="400" role="img" aria-label="Top view of your robot"></canvas></div>
+          <h4>Colour key</h4>
+          <ul class="partkey">
+            <li><i class="pk-wheel"></i>Wheels</li><li><i class="pk-motor"></i>Drive motors</li>
+            <li><i class="pk-rail"></i>Frame rails</li><li><i class="pk-hub"></i>Control Hub (IMU is the white chip)</li>
+            <li><i class="pk-battery"></i>Battery</li><li><i class="pk-intake"></i>Intake roller</li>
+            <li><i class="pk-launcher"></i>Launcher flywheel</li><li><i class="pk-lift"></i>Lift</li>
+            <li><i class="pk-servo"></i>Servos (feeder and gate)</li><li><i class="pk-sensor"></i>Distance sensor</li>
+          </ul>
+          <h4>Spec sheet</h4>
+          <ul class="checks" id="checks"></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Robot configuration</h3><span class="hint">These are the names your code uses in <code>hardwareMap.get(...)</code></span></div>
+          <div class="tablewrap"><table><thead><tr><th>Part</th><th>Type</th><th>Name in code</th></tr></thead><tbody id="hwNames"></tbody></table></div>
+          <p class="hint" id="nameMsg">Names start with a letter and use only letters, numbers and _ (no spaces).</p>
+          <div class="row"><button type="button" class="btn btn-small" id="btnResetBot">Reset to the starter bot</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== STEP BY STEP ===================== -->
+  <section id="view-learn" class="read" hidden>
+    <h2>Step by step: from zero to a full match</h2>
+    <p>Follow these in order the first time. Each one takes a couple of minutes.</p>
+    <ol class="steps">
+      <li><div><h4>Look at the field</h4>
+        <p>Open <b>Drive &amp; Code</b>. You are looking down at the 12 ft &times; 12 ft field. The red alliance stands on the left, blue on the right. In the middle is the HIVE structure with a red HIVE and a blue HIVE. Yellow balls are POLLEN, red and blue balls are NECTAR. The four pink shapes on the walls are FLOWERS, and the row of small circles beside each one shows what is stacked inside it.</p></div></li>
+      <li><div><h4>Build a bot</h4>
+        <p>Open <b>Build Bot</b>. Pick a drivetrain, a motor, a wheel size and the tools you want. The preview and the checklist update as you click. The <b>Robot configuration</b> table lists the device names, exactly like the configuration screen on a real Robot Controller. Your code must use these names.</p></div></li>
+      <li><div><h4>Open an example program</h4>
+        <p>Back on <b>Drive &amp; Code</b>, look at the <b>Robot Controller Console</b>. The <b>Blocks</b> and <b>OnBotJava</b> tabs each list your op modes, sorted into groups. You start with four examples. Press <b>Examples</b> for more, each with a name and a line saying what it does. Examples are written for the bot you have right now, so add a fresh one after you change your bot.</p></div></li>
+      <li><div><h4>Run it and drive</h4>
+        <p>Open a TeleOp program and press <b>&#9654; Run open program</b>. Click anywhere outside the code box, then drive with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> and the arrow keys, or drag the on-screen sticks. With the example TeleOp: <kbd>E</kbd> runs the intake, hold <kbd>C</kbd> to spin the launcher and tap <kbd>K</kbd> to shoot, <kbd>T</kbd>/<kbd>G</kbd> move the lift and <kbd>J</kbd> opens the gate. Press <b>&#9632; Stop</b> when you are done.</p></div></li>
+      <li><div><h4>Watch the instruments</h4>
+        <p><b>Telemetry</b> is the Driver Station screen: whatever your code sends with <code>telemetry.addData</code>. <b>Motors &amp; servos</b> shows the power going to each motor, its encoder count and each servo position, live. If the robot does something odd, look here first, just as you would on a real robot.</p></div></li>
+      <li><div><h4>Change the code</h4>
+        <p>Edit the Java in the box, or click blocks in a Blocks program, then press Run again. Try changing <code>LAUNCH_POWER</code> and see how far the shot goes. If you make a mistake, the box under the editor tells you the line and what is wrong. Your work is saved in this browser automatically.</p></div></li>
+      <li><div><h4>Score your first HIVE TIP</h4>
+        <p>Your upward CELL starts with 3 NECTAR in it. Launch 3 POLLEN into that CELL and the HIVE tips: 20 points, and your human player gets to enter one more NECTAR. After a tip the other CELL faces up and needs 8 POLLEN (or 3 POLLEN and 3 NECTAR) to tip again. Drive around to the other side to reach it.</p></div></li>
+      <li><div><h4>Write an autonomous</h4>
+        <p>In AUTO the gamepad is switched off and your code has 30 seconds. Open the example Autonomous and read it top to bottom: it uses <b>encoders</b> to drive exact distances and the <b>IMU</b> to turn exact angles. Run it, then change the distances and watch what happens. Use the <b>Start spot</b> list to try other starting places.</p></div></li>
+      <li><div><h4>Play a full match</h4>
+        <p>Choose a <b>Match autonomous</b> and a <b>Match TeleOp</b>, then press <b>Play full match</b>. The clock runs 30 s of AUTO, an 8 s pause, then 2:00 of TELEOP. With 60 s left your remaining NECTAR arrives and NECTAR may go into FLOWERS. Finish by parking in your LOADING ZONE. The <b>Score sheet</b> shows where every point came from.</p></div></li>
+      <li><div><h4>Take it to the real robot</h4>
+        <p>The Java here is written the way the FTC SDK expects, so you can paste it into OnBot Java or Android Studio. Then tune it: real wheels slip, batteries sag, and every number (launch power, inches, degrees) will need small changes. That tuning is part of the competition.</p></div></li>
+    </ol>
+
+    <h3>Java the simulator understands</h3>
+    <ul>
+      <li><code>LinearOpMode</code> with <code>runOpMode()</code>, and iterative <code>OpMode</code> with <code>init()</code> and <code>loop()</code>.</li>
+      <li><code>waitForStart()</code>, <code>opModeIsActive()</code>, <code>sleep(ms)</code>, <code>idle()</code>, <code>getRuntime()</code>, <code>ElapsedTime</code>.</li>
+      <li><code>hardwareMap.get(DcMotor.class, "name")</code> for <code>DcMotor</code>, <code>Servo</code>, <code>IMU</code> and <code>DistanceSensor</code>.</li>
+      <li>Motors: <code>setPower</code>, <code>setDirection</code>, <code>setMode</code> (all four run modes), <code>setTargetPosition</code>, <code>getCurrentPosition</code>, <code>isBusy</code>, <code>setZeroPowerBehavior</code>, <code>setVelocity</code>.</li>
+      <li>Servos: <code>setPosition</code>, <code>getPosition</code>, <code>setDirection</code>. Sensors: <code>imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)</code>, <code>imu.resetYaw()</code>, <code>distance.getDistance(DistanceUnit.INCH)</code>.</li>
+      <li><code>gamepad1</code> sticks, triggers, bumpers, D-pad and A/B/X/Y. <code>telemetry.addData</code>, <code>addLine</code>, <code>update</code>.</li>
+      <li>Variables, <code>if</code>/<code>else</code>, <code>while</code>, <code>for</code>, your own methods, arrays, <code>Math</code>, <code>Range.clip</code>, <code>String.format</code>.</li>
+      <li>Not supported yet: <code>switch</code>, your own classes and enums, lambdas, and vision (AprilTags).</li>
+    </ul>
+
+    <h3>How the motors and servos are imitated</h3>
+    <ul>
+      <li>Motors take time to speed up and slow down, and they brake or coast depending on <code>ZeroPowerBehavior</code>.</li>
+      <li>Every motor has an encoder with the real ticks-per-turn for the motor you chose. <code>RUN_TO_POSITION</code> works like the real thing, and forgetting <code>setTargetPosition</code> first gives the same error.</li>
+      <li>Mecanum wheels strafe about 15% slower than they drive, like real ones.</li>
+      <li>Servos take about a third of a second to swing end to end. The launcher wheel loses speed with every shot and needs a moment to recover.</li>
+      <li>The lift has hard stops at 0 and 26 inches. The robot can hold 4 pieces at most.</li>
+    </ul>
+
+    <h3>Safety and privacy</h3>
+    <div class="notice">
+      <p><b>Nothing you do here leaves your device.</b> The site has no accounts, no passwords, no server, no database, no ads and no tracking. It loads no code or fonts from other websites.</p>
+      <ul>
+        <li>Your Java is read by a small interpreter built for this site. It is never run as real browser code, so a program can only touch the pretend robot, never your files, camera, or other websites.</li>
+        <li>Programs that loop forever cannot freeze the page: each one gets a limited number of steps per frame, and <b>Stop</b> always works.</li>
+        <li>Everything you type is shown as plain text, so pasted code cannot inject scripts into the page.</li>
+        <li>Saved programs live only in this browser's storage. They are checked and cleaned every time they are loaded.</li>
+      </ul>
+      <p class="hint">No website can promise it is impossible to attack. This one keeps the risk low by having nothing to steal and nowhere to send it.</p>
+    </div>
+  </section>
+
+  <!-- ===================== TUTORIAL ===================== -->
+  <section id="view-tutorial" class="read" hidden>
+    <h2>Tutorial for new programmers</h2>
+    <p>Never coded a robot before? Pick a category and work down the lessons. Keep the <b>Drive &amp; Code</b> tab handy so you can try each idea straight away.</p>
+    <div class="seg tutnav" role="group" aria-label="Tutorial category">
+      <button type="button" data-tut="drive" aria-pressed="true">Category 1 &middot; Driving</button>
+      <button type="button" data-tut="blocks" aria-pressed="false">Category 2 &middot; Blocks</button>
+      <button type="button" data-tut="java" aria-pressed="false">Category 3 &middot; Java</button>
+    </div>
+
+    <div id="tut-drive" class="col">
+      <article class="lesson"><h3>Lesson 1: the Driver Station</h3>
+        <p>The Driver Station is the panel under the field. On a real robot it is the phone or tablet the drivers hold.</p>
+        <ul>
+          <li><b>Red / Blue</b> picks your alliance. <b>Start spot</b> picks where the robot begins.</li>
+          <li><b>&#9654; Run open program</b> starts the program showing in the editor. There is no clock, so practise as long as you like.</li>
+          <li><b>&#9632; Stop</b> ends the program. Motors switch off, just like the real STOP button.</li>
+          <li><b>&#8634; Reset field</b> puts every piece and the robot back.</li>
+          <li><b>1&times; 2&times; 4&times;</b> speeds up time, which is handy for testing an autonomous quickly.</li>
+        </ul></article>
+      <article class="lesson"><h3>Lesson 2: the controls</h3>
+        <p>The example TeleOp uses these controls. Click outside the code box first so your keys go to the robot.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Keyboard</th><th>Gamepad</th><th>What the example TeleOp does</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>W</kbd> <kbd>S</kbd></td><td>Left stick up / down</td><td>Drive forward / backward</td></tr>
+            <tr><td><kbd>A</kbd> <kbd>D</kbd></td><td>Left stick left / right</td><td>Slide sideways (mecanum only)</td></tr>
+            <tr><td><kbd>&larr;</kbd> <kbd>&rarr;</kbd></td><td>Right stick left / right</td><td>Turn</td></tr>
+            <tr><td><kbd>E</kbd> / <kbd>Q</kbd></td><td>Right / left bumper</td><td>Intake pulls in / pushes out</td></tr>
+            <tr><td>hold <kbd>C</kbd></td><td>Right trigger</td><td>Spin the launcher wheel</td></tr>
+            <tr><td><kbd>K</kbd></td><td>A</td><td>Feed one piece into the launcher</td></tr>
+            <tr><td><kbd>T</kbd> / <kbd>G</kbd></td><td>D-pad up / down</td><td>Raise / lower the lift</td></tr>
+            <tr><td><kbd>J</kbd></td><td>X</td><td>Open the gate to drop one piece</td></tr>
+          </tbody>
+        </table></div></article>
+      <article class="lesson"><h3>Lesson 3: your first drive</h3>
+        <ol>
+          <li>Open <b>Drive &amp; Code</b>, pick the <b>OnBotJava</b> tab and click <b>Full TeleOp</b> in the op mode list.</li>
+          <li>Press <b>&#9654; Run open program</b>. The yellow badge changes to PRACTICE.</li>
+          <li>Hold <kbd>C</kbd> for a second, then tap <kbd>K</kbd> three times. Three POLLEN fly into your HIVE and it tips.</li>
+          <li>Drive to a FLOWER with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>, touch it with the front of the robot and hold <kbd>E</kbd> to collect POLLEN.</li>
+          <li>Finish by parking in the taped LOAD box of your colour.</li>
+        </ol></article>
+      <article class="lesson"><h3>Lesson 4: read the instruments</h3>
+        <ul>
+          <li><b>Telemetry</b> shows messages from your code. Use it to check what the robot thinks is happening.</li>
+          <li><b>Motors &amp; servos</b> shows the power on every motor, its encoder count and each servo position.</li>
+          <li><b>Score sheet</b> shows where every point comes from. <b>Match log</b> explains tips, fouls and hints.</li>
+        </ul></article>
+    </div>
+
+    <div id="tut-blocks" class="col" hidden>
+      <article class="lesson"><h3>Lesson 1: what a block is</h3>
+        <p>A block is one instruction for the robot. Blocks run from top to bottom, one after another. The colour tells you what kind of instruction it is.</p>
+        <ul class="catkey">
+          <li><span class="tag cat-control">CONTROL</span> decides when and how often things happen: repeat, if / else, wait.</li>
+          <li><span class="tag cat-drive">DRIVE</span> moves the wheels: drive, strafe, turn, stop.</li>
+          <li><span class="tag cat-mech">TOOLS</span> works the intake, launcher, lift, and any single motor or servo.</li>
+          <li><span class="tag cat-output">TELEMETRY</span> shows a message on the Driver Station screen.</li>
+        </ul></article>
+      <article class="lesson"><h3>Lesson 2: placing blocks</h3>
+        <ol>
+          <li>Press <b>Create New Blocks Op Mode</b>.</li>
+          <li>Click a category on the left (Control, Drive, Tools or Telemetry), then click a block. It lands at the yellow <b>next block goes here</b> marker.</li>
+          <li>Click any thin gap between blocks to move the marker there. Click a gap inside a <i>repeat</i> or <i>if</i> block to put blocks inside it.</li>
+          <li>Use <b>&uarr; &darr;</b> to reorder, <b>&#10697;</b> to copy and <b>&#10005;</b> to delete.</li>
+        </ol></article>
+      <article class="lesson"><h3>Lesson 3: drive a square</h3>
+        <p>Set <b>Runs in</b> to Autonomous, then build this:</p>
+        <ul class="blocklist">
+          <li><span class="tag cat-control">CONTROL</span> repeat <b>4</b> times
+            <ul><li><span class="tag cat-drive">DRIVE</span> drive forward <b>24</b> inches at power <b>0.6</b></li>
+            <li><span class="tag cat-drive">DRIVE</span> turn <b>left 90</b> degrees at power <b>0.5</b></li></ul></li>
+        </ul>
+        <p>Press Run. The robot should end up back where it started. If it does not, that is normal on a real robot too: change the numbers until it does.</p></article>
+      <article class="lesson"><h3>Lesson 4: make decisions</h3>
+        <p>TeleOp programs sit inside <b>repeat while the OpMode is running</b> and check the gamepad again and again.</p>
+        <ul class="blocklist">
+          <li><span class="tag cat-control">CONTROL</span> repeat while the OpMode is running
+            <ul><li><span class="tag cat-drive">DRIVE</span> drive with the gamepad sticks</li>
+            <li><span class="tag cat-control">CONTROL</span> if gamepad button pressed: <b>right bumper</b>
+              <ul><li><span class="tag cat-mech">TOOLS</span> intake <b>pull in</b></li></ul></li>
+            <li><b>else</b>
+              <ul><li><span class="tag cat-mech">TOOLS</span> intake <b>off</b></li></ul></li></ul></li>
+        </ul></article>
+      <article class="lesson"><h3>Lesson 5: from Blocks to Java</h3>
+        <p>Press <b>Show the Java these blocks make</b>. Every block becomes one or two lines of Java, with the same colours you will see in the Java editor. When you are ready, <b>Copy into a new Java program</b> and keep going by hand.</p></article>
+    </div>
+
+    <div id="tut-java" class="col" hidden>
+      <article class="lesson"><h3>Lesson 1: the shape of an OpMode</h3>
+        <p>Every program has the same three parts: set up, wait for START, then loop.</p>
+<pre class="java">@TeleOp(name = "My First OpMode")
+public class MyFirstOpMode extends LinearOpMode {
+
+    private DcMotor frontLeft;
+
+    @Override
+    public void runOpMode() {
+        // 1. Set up: connect to the hardware by name.
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+
+        telemetry.addData("Status", "Ready");
+        telemetry.update();
+
+        // 2. Wait for the driver to press START.
+        waitForStart();
+
+        // 3. Loop until STOP is pressed.
+        while (opModeIsActive()) {
+            frontLeft.setPower(-gamepad1.left_stick_y);
+            telemetry.addData("Power", frontLeft.getPower());
+            telemetry.update();
+        }
+    }
+}</pre></article>
+      <article class="lesson"><h3>Lesson 2: reading the colours</h3>
+        <ul>
+          <li><span class="hk">Keywords</span> such as <span class="hk">if</span>, <span class="hk">while</span> and <span class="hk">double</span> are words Java already knows.</li>
+          <li><span class="ht">Types</span> such as <span class="ht">DcMotor</span> and <span class="ht">Servo</span> start with a capital letter.</li>
+          <li><span class="hf">Methods</span> are actions, and always have brackets after them: <span class="hf">setPower</span>(1).</li>
+          <li><span class="hs">"Text"</span> is in quotes. <span class="hn">Numbers</span> and <span class="hn">true</span> / <span class="hn">false</span> share a colour.</li>
+          <li><span class="hc">// Comments</span> are notes for people. The robot ignores them.</li>
+          <li>Brackets come in pairs. Each pair shares a colour, so you can see which <span class="hb0">{</span> belongs to which <span class="hb0">}</span>. A red bracket has no partner.</li>
+        </ul></article>
+      <article class="lesson"><h3>Lesson 3: variables</h3>
+        <p>A variable is a named box that holds a value. You must say what type of value goes in it.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Type</th><th>Holds</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">int</td><td>Whole numbers</td><td class="mono">int shots = 3;</td></tr>
+            <tr><td class="mono">double</td><td>Decimal numbers</td><td class="mono">double power = 0.75;</td></tr>
+            <tr><td class="mono">boolean</td><td>true or false</td><td class="mono">boolean ready = true;</td></tr>
+            <tr><td class="mono">String</td><td>Text</td><td class="mono">String name = "Hydra";</td></tr>
+          </tbody>
+        </table></div>
+        <p>Watch out: <code>7 / 2</code> is <b>3</b> because both are whole numbers. Write <code>7 / 2.0</code> to get 3.5.</p></article>
+      <article class="lesson"><h3>Lesson 4: motors, servos and the gamepad</h3>
+<pre class="java">// Motors take a power from -1.0 (full reverse) to 1.0 (full forward).
+intake.setPower(1.0);
+
+// Servos take a position from 0.0 to 1.0.
+gate.setPosition(0.5);
+
+// Buttons are true or false. Sticks and triggers are numbers.
+if (gamepad1.a) {
+    feeder.setPosition(1.0);
+} else {
+    feeder.setPosition(0.0);
+}
+launcher.setPower(gamepad1.right_trigger);</pre>
+        <p>The names (<code>intake</code>, <code>gate</code>, <code>feeder</code>) must match the <b>Robot configuration</b> table on the Build Bot tab exactly, capital letters included.</p></article>
+      <article class="lesson"><h3>Lesson 5: fixing errors</h3>
+        <div class="tablewrap"><table>
+          <thead><tr><th>The message says</th><th>What to check</th></tr></thead>
+          <tbody>
+            <tr><td>Missing semicolon</td><td>Every instruction ends with <code>;</code></td></tr>
+            <tr><td>I don't know what "x" is</td><td>Spelling and capitals, or you forgot to declare the variable.</td></tr>
+            <tr><td>"m" is null</td><td>You used a motor before <code>hardwareMap.get(...)</code> gave it a value.</td></tr>
+            <tr><td>There is no device named&hellip;</td><td>The name in quotes must match the Build Bot table.</td></tr>
+            <tr><td>The class is missing its closing }</td><td>Count your brackets. The colours help: every opener needs a closer of the same colour.</td></tr>
+            <tr><td>The robot spins instead of driving straight</td><td>Reverse the left motors with <code>setDirection</code>, as the examples do.</td></tr>
+          </tbody>
+        </table></div></article>
+    </div>
+  </section>
+
+  <!-- ===================== GAME MANUAL ===================== -->
+  <section id="view-manual" class="read" hidden>
+    <h2>BIOBUZZ game manual</h2>
+    <div class="notice">
+      <p><b>The official Competition Manual is the only source of rules.</b> It belongs to <i>FIRST</i>, so this site links to it instead of copying it. Read it before you compete, and check the Team Updates every week.</p>
+      <div class="links">
+        <a href="https://ftc-resources.firstinspires.org/ftc/game/manual" target="_blank" rel="noopener noreferrer">Open the official Competition Manual (PDF)</a>
+        <a href="https://www.firstinspires.org/programs/ftc/game-and-season" target="_blank" rel="noopener noreferrer">BIOBUZZ Game &amp; Season page</a>
+        <a href="https://ftc-resources.firstinspires.org/ftc/field/eventfieldguide" target="_blank" rel="noopener noreferrer">Event Field Setup Guide</a>
+      </div>
+      <p class="hint"><b>Copyright and trademarks.</b> The <i>2026&ndash;2027 FIRST&reg; Tech Challenge Competition Manual: BIOBUZZ&trade; presented by RTX</i> and the <i>Event Field Setup Guide</i> are &copy; <i>FIRST</i> (For Inspiration and Recognition of Science and Technology). All rights reserved by <i>FIRST</i>. <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; are trademarks of <i>FIRST</i>. This practice site is made by fans. It is not affiliated with, sponsored by, or endorsed by <i>FIRST</i>, RTX or any field vendor.</p>
+    </div>
+
+    <h3>Quick reference, in our own words</h3>
+    <p class="hint">Based on manual version TU04 and Field Setup Guide V1.0. If anything here disagrees with the manual, the manual is right.</p>
+
+    <h4>The match</h4>
+    <ul>
+      <li>Two alliances of two robots each. This simulator gives you one robot on an empty field.</li>
+      <li><b>AUTO</b> 30 seconds: robots run on code only. Then an <b>8 second</b> pause with no powered movement. Then <b>TELEOP</b> 2 minutes with drivers.</li>
+      <li>Robots collect POLLEN and NECTAR, launch them into their HIVE to tip it, place them in FLOWERS and GARDENS, and finish in their LOADING ZONE.</li>
+    </ul>
+
+    <h4>The pieces and the field</h4>
+    <ul>
+      <li><b>POLLEN</b>: yellow balls about 2.8 in across, 40 per match. <b>NECTAR</b>: red or blue balls about 3.6 in across, 8 per alliance.</li>
+      <li>At the start: 4 POLLEN in each FLOWER, 4 in each GARDEN, 4 pre-loaded in each robot, 3 NECTAR in each alliance's upward CELL, and 5 NECTAR waiting with each alliance's human player.</li>
+      <li><b>HIVE</b>: each alliance has one, with two CELLS on a pivot. One CELL faces up at a time. Field staff set it to tip at 8 POLLEN, or at 3 POLLEN plus 3 NECTAR.</li>
+      <li><b>FLOWER</b>: four on the walls. Pieces go in at the top (about 21.5 in high). Only POLLEN may be taken out, and only from the bottom.</li>
+      <li><b>GARDEN</b>: a thin taped strip in one corner per alliance (red on tile A1, blue on tile F6). <b>LOADING ZONE</b>: a 23 in by 11 in taped box against each alliance wall (red on A5, blue on F2).</li>
+    </ul>
+
+    <h4>Points</h4>
+    <div class="tablewrap"><table>
+      <thead><tr><th>What you do</th><th class="num">AUTO</th><th class="num">TELEOP</th></tr></thead>
+      <tbody>
+        <tr><td>LEAVE: robot no longer touching the wall at the end of AUTO</td><td class="num">3</td><td class="num">&ndash;</td></tr>
+        <tr><td>PARK: robot at least partly in its LOADING ZONE at the end of the period</td><td class="num">5</td><td class="num">5</td></tr>
+        <tr><td>HIVE TIP, each time</td><td class="num">20</td><td class="num">20</td></tr>
+        <tr><td>Each piece left in your upward CELL at the end</td><td class="num">&ndash;</td><td class="num">2</td></tr>
+        <tr><td>Each piece in a FLOWER you own</td><td class="num">&ndash;</td><td class="num">2</td></tr>
+        <tr><td>Bottom NECTAR bonus (your NECTAR is the lowest in a FLOWER)</td><td class="num">&ndash;</td><td class="num">5</td></tr>
+        <tr><td>Each piece in your GARDEN at the end</td><td class="num">&ndash;</td><td class="num">1</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li>You <b>own</b> a FLOWER when the highest NECTAR in it is your colour. The owner scores every piece in it, whoever put it there.</li>
+      <li>Ranking points at most events: SWARM for 16 combined LEAVE + PARK points, POLLINATOR 1 for 4 tips, POLLINATOR 2 for 7 tips, plus 3 for a win or 1 for a tie.</li>
+    </ul>
+
+    <h4>Rules that catch new teams</h4>
+    <ul>
+      <li><b>G407</b>: control at most 4 pieces at once. <b>G408</b>: never control the other alliance's NECTAR.</li>
+      <li><b>G410</b>: NECTAR may only go into FLOWERS in the last 60 seconds. Earlier is a major foul for each one.</li>
+      <li><b>G417 / G418</b>: only LAUNCHING into the upward CELL may tip a HIVE; do not push or hold it. Use FLOWERS only from the top (in) and bottom (POLLEN out).</li>
+      <li><b>G402</b>: in AUTO, stay on your own half (columns A&ndash;C for red, D&ndash;F for blue). <b>G403 / G404</b>: no powered movement in the 8 second pause or after the final buzzer.</li>
+      <li><b>G426</b>: your human player may enter one NECTAR each time your HIVE tips, and all the rest once 60 seconds remain.</li>
+      <li><b>R102</b>: the robot starts inside an 18 in cube. <b>R105</b>: it may grow to 18 &times; 24 in and 29 in tall. <b>R503</b>: at most 8 motors and 8 servos.</li>
+    </ul>
+
+    <h4>What this simulator simplifies</h4>
+    <ul>
+      <li>The view is flat, from above. Heights are handled with numbers (lift height, FLOWER opening) instead of 3D.</li>
+      <li>The exact FLOWER positions along the walls are our best estimate from the public documents. Measure the real field, or use the official CAD model, before you rely on distances.</li>
+      <li>The bottom piece in a FLOWER sits in the retrieval opening and is treated as not scoring. Tipping is worked out from the 8 POLLEN and 3 + 3 calibration points.</li>
+      <li>There are no partner or opponent robots, no referees and no penalties in the score. Fouls appear as warnings in the Match log.</li>
+    </ul>
+  </section>
+
+  <!-- ===================== POLICIES ===================== -->
+  <section id="view-legal" class="read" hidden>
+    <h2>Policies</h2>
+    <p>Written in plain words so students, mentors and parents can all read them. Last updated 11 October 2026.</p>
+    <div class="row" role="group" aria-label="Jump to a policy">
+      <button type="button" class="btn btn-small" data-jump="pol-privacy">Privacy Policy</button>
+      <button type="button" class="btn btn-small" data-jump="pol-terms">Terms of Service</button>
+      <button type="button" class="btn btn-small" data-jump="pol-cookies">Cookie Policy</button>
+      <button type="button" class="btn btn-small" data-jump="pol-access">Accessibility</button>
+    </div>
+
+    <article class="policy" id="pol-privacy" tabindex="-1">
+      <h3>Privacy Policy</h3>
+      <p><b>The short version: this site does not collect, send or sell any information about you.</b></p>
+      <ul>
+        <li><b>No accounts.</b> You never give a name, email address, password, age or school.</li>
+        <li><b>No tracking.</b> There are no analytics, no advertising and no social media trackers.</li>
+        <li><b>Your work stays with you.</b> The programs you write and the robot you build are saved only inside your own browser, on your own device. The makers of this site cannot see them.</li>
+        <li><b>Nothing from other websites.</b> The site loads no outside code, fonts or images. Links on the Game Manual tab open other websites, which have their own policies.</li>
+        <li><b>Young users.</b> The site is safe for students of any age because it asks for no personal information. Please do not type real names, addresses or other private details into your code or program names.</li>
+        <li><b>The hosting service.</b> Like any web host, the service that delivers this page may keep basic technical records, such as the time of a visit. Team 18629 &ndash; Hydra does not receive or use those records.</li>
+      </ul>
+      <p>If this policy changes, the date at the top of this page changes with it.</p>
+    </article>
+
+    <article class="policy" id="pol-terms" tabindex="-1">
+      <h3>Terms of Service</h3>
+      <p>By using SimYourCode you agree to these terms.</p>
+      <ul>
+        <li><b>What it is for.</b> The site is a free learning tool for practising robot code and driving. Use it for education, team practice and fun.</li>
+        <li><b>Not official.</b> The site is made by Team 18629 &ndash; Hydra. It is not affiliated with, sponsored by or endorsed by <i>FIRST</i>. The official Competition Manual and Team Updates are the only source of rules.</li>
+        <li><b>No guarantees.</b> The site is provided as it is. The simulation is simplified, so scores, distances and robot behaviour here will differ from a real field. Always test on your real robot.</li>
+        <li><b>Your code is yours.</b> You own whatever you write here. Keep your own copy of anything important, because browser storage can be cleared.</li>
+        <li><b>Play fair.</b> Do not try to break, overload or misuse the site, and do not use it to harm others.</li>
+        <li><b>Names and marks.</b> <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; belong to <i>FIRST</i>. The site's own design and code belong to its makers.</li>
+        <li><b>Responsibility.</b> As far as the law allows, the makers are not responsible for any loss that comes from using the site, including lost work or match results.</li>
+        <li><b>Changes.</b> The site and these terms may be updated or taken offline at any time.</li>
+      </ul>
+    </article>
+
+    <article class="policy" id="pol-cookies" tabindex="-1">
+      <h3>Cookie Policy</h3>
+      <p><b>This site sets no cookies.</b> There is nothing to accept or decline.</p>
+      <p>To remember your work between visits it uses your browser's <b>local storage</b>, which stays on your device and is never sent anywhere. It holds only:</p>
+      <ul>
+        <li>your programs (Java code and Blocks),</li>
+        <li>your robot design and device names,</li>
+        <li>which program was open, your match picks and the simulation speed,</li>
+        <li>your appearance choices (white or black mode and font colour) and whether sound is on.</li>
+      </ul>
+      <p>You can erase all of it at any time with the button below, or by clearing site data in your browser settings.</p>
+      <div class="row">
+        <button type="button" class="btn btn-small" id="btnErase">Erase my saved data</button>
+        <span class="hint" id="eraseMsg" role="status"></span>
+      </div>
+    </article>
+
+    <article class="policy" id="pol-access" tabindex="-1">
+      <h3>Accessibility</h3>
+      <p>We want every student to be able to use this site. This is what is in place today, and what is not yet.</p>
+      <ul>
+        <li><b>Alt text.</b> Every picture has a text description: the field view, the robot preview and the Home page artwork. Decorative shapes and emoji are hidden from screen readers so they are not read out as noise.</li>
+        <li><b>Keyboard.</b> Every button, list and text box can be reached with <kbd>Tab</kbd> and shows a clear outline when focused. The robot can be driven entirely from the keyboard.</li>
+        <li><b>Colour.</b> The site follows your light or dark setting and keeps text contrast high. Game pieces are also named in text, so colour is never the only clue in the score sheet or match log.</li>
+        <li><b>Motion.</b> If your device is set to reduce motion, the tool that follows the cursor on the Home page is switched off.</li>
+        <li><b>Sound.</b> Sound effects are extras: nothing depends on hearing them, every one has a matching message on screen, and they can be switched off under Appearance.</li>
+        <li><b>Small screens.</b> The layout stacks into one column on phones, and the on-screen gamepad works by touch.</li>
+        <li><b>Known limits.</b> The field is a live picture, so a screen reader cannot follow the robot as it moves. The Telemetry, Motors &amp; servos, Score sheet and Match log panels give the same information as text. Dragging the on-screen sticks needs a pointer; the keyboard keys do the same job.</li>
+      </ul>
+      <p>If something is hard to use, tell a member of Team 18629 &ndash; Hydra so it can be fixed.</p>
+    </article>
+  </section>
+
+  <footer class="foot">
+    <p class="foot-own"><b>&copy; 2026 Bruno and Team 18629 &ndash; Hydra.</b> All rights reserved. The design, text, artwork, sound effects and code of SimYourCode belong to its makers.</p>
+    <p>SimYourCode is an unofficial learning tool. It is not affiliated with, sponsored by or endorsed by any organisation or company named on this site.</p>
+    <ul class="foot-list">
+      <li><i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; are trademarks of For Inspiration and Recognition of Science and Technology (<i>FIRST</i>). The game, its rules and the Competition Manual are &copy; <i>FIRST</i>; see the Game Manual tab for the official documents.</li>
+      <li>RTX is a trademark of RTX Corporation, the presenting sponsor of the BIOBUZZ season.</li>
+      <li>REV Robotics, Control Hub, HD Hex and Core Hex are trademarks of REV Robotics LLC. goBILDA and Yellow Jacket are trademarks of goBILDA. They are named only so you can pick parts that match your real robot.</li>
+      <li>Java is a registered trademark of Oracle and/or its affiliates. Qualcomm is a trademark of Qualcomm Incorporated; it appears only inside the standard FTC package names in the example code. No part of the FTC software kit is included in this site.</li>
+      <li>The match-start call is the traditional &ldquo;charge&rdquo; bugle tune, which is in the public domain. Every sound on this site is generated in your browser; no recordings are used.</li>
+      <li>All other product and company names belong to their owners.</li>
+    </ul>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
+
+<script src="sound.js"></script>
+<script src="interp.js"></script>
+<script src="world.js"></script>
+<script src="blocks.js"></script>
+<script src="app.js"></script>
+<script src="home.js"></script>
+<script src="extras.js"></script>
+<script src="bg.js"></script>
+</body>
+</html>
