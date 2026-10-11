@@ -15,9 +15,19 @@ let pid = 1;
 
 /* ---------- storage ---------- */
 const cleanName = (s, def) => (typeof s === 'string' ? s.replace(/[\u0000-\u001f<>]/g, '').slice(0, 40).trim() : '') || def || 'My program';
+/* Blocks programs saved before the editor changed to FTC-style blocks cannot be opened by it,
+   so each one is kept as a Java op mode with the same behaviour. */
+function convertLegacy(p) {
+  const name = cleanName(p.name), mode = p.mode === 'auto' ? 'auto' : 'teleop', group = cleanGroup(p.group);
+  let code;
+  try { code = BBZ.Blocks.legacyJava({ name, mode, group, blocks: BBZ.Blocks.legacySanitize(p.blocks) }, state.robot); }
+  catch (e) { code = '// This op mode was made with the old Blocks editor and could not be converted:\n// ' + String(e && e.message ? e.message : e).replace(/[\r\n]/g, ' ') + '\n'; }
+  return { id: pid++, name: cleanName(name.slice(0, 26) + ' (was Blocks)'), lang: 'java', mode, group, desc: cleanDesc(p.desc), code: code.slice(0, MAX_CODE), blocks: [] };
+}
 function cleanProgram(p) {
   if (!p || typeof p !== 'object') return null;
   const lang = p.lang === 'blocks' ? 'blocks' : 'java';
+  if (lang === 'blocks' && Array.isArray(p.blocks)) return convertLegacy(p);
   return {
     id: pid++, name: cleanName(p.name), lang, mode: p.mode === 'auto' ? 'auto' : 'teleop', group: cleanGroup(p.group), desc: cleanDesc(p.desc),
     code: lang === 'java' && typeof p.code === 'string' ? p.code.slice(0, MAX_CODE) : '',
@@ -99,7 +109,7 @@ function padApi(src) {
 const KIND_OF = { DcMotor: 'motor', DcMotorEx: 'motor', DcMotorSimple: 'motor', Servo: 'servo', IMU: 'imu', DistanceSensor: 'distance', Rev2mDistanceSensor: 'distance' };
 const KIND_LABEL = { motor: 'motor', servo: 'servo', imu: 'IMU', distance: 'distance sensor' };
 function getDevice(cls, name) {
-  if (typeof name !== 'string') throw new Error('hardwareMap.get needs the device name in quotes, like hardwareMap.get(DcMotor.class, "frontLeft").');
+  if (typeof name !== 'string') throw new Error('hardwareMap.get needs the device name in quotes, like hardwareMap.get(DcMotor.class, "fl").');
   const d = world.device(name);
   if (!d) throw new Error('There is no device named "' + name + '" on your bot. It has: ' + BBZ.deviceList(state.robot).map((x) => x.name).join(', ') + '. Names must match the Build Bot tab exactly, capitals included.');
   if (cls) {
@@ -593,7 +603,7 @@ function pushProgram(p) {
 function addBlank(lang) {
   pushProgram(lang === 'java'
     ? { name: 'My OpMode', lang: 'java', mode: 'teleop', group: 'My Op Modes', desc: '', code: BLANK_JAVA, blocks: [] }
-    : { name: 'My Blocks', lang: 'blocks', mode: 'teleop', group: 'My Op Modes', desc: '', code: '', blocks: [] });
+    : { name: 'My Blocks', lang: 'blocks', mode: 'teleop', group: 'My Op Modes', desc: '', code: '', blocks: BBZ.Blocks.blank() });
 }
 function addExample(id) {
   const ex = BBZ.Samples.list(state.robot).find((e) => e.id === id);

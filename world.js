@@ -27,10 +27,10 @@ const FLOWER_TOP_IN = 21.5, FLOWER_CAP = 7;
 const TIP_WEIGHT = 8, NECTAR_WEIGHT = 5 / 3;         // 8 pollen, or 3 pollen + 3 nectar, tips a hive
 
 const ROLES = {
-  fl: { kind: 'motor', label: 'Front left wheel', def: 'frontLeft' },
-  fr: { kind: 'motor', label: 'Front right wheel', def: 'frontRight' },
-  bl: { kind: 'motor', label: 'Back left wheel', def: 'backLeft' },
-  br: { kind: 'motor', label: 'Back right wheel', def: 'backRight' },
+  fl: { kind: 'motor', label: 'Front left wheel', def: 'fl' },
+  fr: { kind: 'motor', label: 'Front right wheel', def: 'fr' },
+  bl: { kind: 'motor', label: 'Back left wheel', def: 'bl' },
+  br: { kind: 'motor', label: 'Back right wheel', def: 'br' },
   left: { kind: 'motor', label: 'Left wheels', def: 'leftDrive' },
   right: { kind: 'motor', label: 'Right wheels', def: 'rightDrive' },
   intake: { kind: 'motor', label: 'Intake roller', def: 'intake' },

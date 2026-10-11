@@ -496,6 +496,12 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .fb-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; text-align: center; }
 @media (max-width: 760px) { .fb { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
 
+/* Blockly workspace */
+.bly { width: 100%; height: 600px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+.blocklyToolboxDiv { font-family: var(--font-body); }
+.blocklyTreeLabel { font-family: var(--font-body); font-size: 14px; }
+@media (max-width: 620px) { .bly { height: 480px; } }
+
 /* tutorial */
 .tutnav { align-self: flex-start; flex-wrap: wrap; }
 .tutnav button { font-family: var(--font-bubble); font-size: 15px; }
@@ -779,7 +785,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
             <p class="hl-key" aria-label="What the code colours mean"><span class="hk">keywords</span><span class="ht">Types</span><span class="hf">methods()</span><span class="hs">"text"</span><span class="hn">numbers</span><span class="ha">@notes</span><span class="hc">// comments</span><span><span class="hb0">{</span><span class="hb1">(</span><span class="hb2">[</span><span class="hb3">{</span> brackets match by colour <span class="hb3">}</span><span class="hb2">]</span><span class="hb1">)</span><span class="hb0">}</span></span></p>
           </div>
           <div id="blocksPane" class="col" hidden>
-            <p class="hint">Pick a category on the left, then click a block to add it at the yellow marker. Click any thin gap between blocks to move the marker there.</p>
+            <p class="hint">Click a category on the left and drag blocks into the workspace. They snap together like the Blocks editor on a real Robot Controller. Only blocks inside <b>to runOpMode</b> run.</p>
             <div id="blocksRoot" class="col"></div>
             <div class="row">
               <button type="button" class="btn btn-small" id="btnViewJava" aria-expanded="false">Show the Java these blocks make</button>
@@ -999,41 +1005,48 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
     </div>
 
     <div id="tut-blocks" class="col" hidden>
-      <article class="lesson"><h3>Lesson 1: what a block is</h3>
-        <p>A block is one instruction for the robot. Blocks run from top to bottom, one after another. The colour tells you what kind of instruction it is.</p>
+      <article class="lesson"><h3>Lesson 1: the Blocks workspace</h3>
+        <p>The Blocks tab works like the Blocks editor on a real Robot Controller, because it is built on the same block library. Blocks snap together like puzzle pieces and run from top to bottom.</p>
+        <ul>
+          <li>The grey strip on the left is the <b>toolbox</b>. Click a category to see its blocks, then drag one into the workspace.</li>
+          <li>Drag a block onto the <b>bin</b> in the corner to delete it. Use <b>+</b> and <b>&minus;</b> to zoom.</li>
+          <li>Right-click a block to duplicate it or add a comment. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undoes your last change.</li>
+          <li>Blocks only run if they sit inside the purple <b>to runOpMode</b> block.</li>
+        </ul></article>
+      <article class="lesson"><h3>Lesson 2: what the categories hold</h3>
         <ul class="catkey">
-          <li><span class="tag cat-control">CONTROL</span> decides when and how often things happen: repeat, if / else, wait.</li>
-          <li><span class="tag cat-drive">DRIVE</span> moves the wheels: drive, strafe, turn, stop.</li>
-          <li><span class="tag cat-mech">TOOLS</span> works the intake, launcher, lift, and any single motor or servo.</li>
-          <li><span class="tag cat-output">TELEMETRY</span> shows a message on the Driver Station screen.</li>
+          <li><b>LinearOpMode</b>: <code>call waitForStart</code>, <code>call opModeIsActive</code>, <code>call sleep</code>, and note blocks.</li>
+          <li><b>Gamepad</b>: stick and trigger values (numbers) and buttons (true or false).</li>
+          <li><b>Actuators</b>: <b>DcMotor</b> blocks such as <code>set fl . Power to</code> and <code>set fl . Direction to</code>, and <b>Servo</b> blocks.</li>
+          <li><b>Sensors</b>: the IMU heading and the distance sensor.</li>
+          <li><b>Utilities</b>: <code>call Telemetry . addData</code> and <code>call Telemetry . update</code>.</li>
+          <li><b>Logic, Loops, Math, Text, Variables</b>: <code>if</code>, <code>repeat while</code>, numbers, sums and your own named values.</li>
         </ul></article>
-      <article class="lesson"><h3>Lesson 2: placing blocks</h3>
+      <article class="lesson"><h3>Lesson 3: the shape of every Blocks program</h3>
+        <p>Press <b>Create New Blocks Op Mode</b> and you get this skeleton. Every program you write fills in the three note blocks.</p>
+        <ul class="blocklist">
+          <li><b>to runOpMode</b>
+            <ul><li><i>Put initialization blocks here.</i> Set motor directions here.</li>
+            <li><b>call waitForStart</b></li>
+            <li><b>if</b> call opModeIsActive <b>do</b>
+              <ul><li><i>Put run blocks here.</i> Things to do once, right after START.</li>
+              <li><b>repeat while</b> call opModeIsActive <b>do</b>
+                <ul><li><i>Put loop blocks here.</i> Things to do again and again, such as reading the gamepad.</li>
+                <li><b>call Telemetry . update</b></li></ul></li></ul></li></ul></li>
+        </ul></article>
+      <article class="lesson"><h3>Lesson 4: drive with four motors</h3>
+        <p>A new bot has four drive motors named <code>fl</code>, <code>fr</code>, <code>bl</code> and <code>br</code> (front-left, front-right, back-left, back-right).</p>
         <ol>
-          <li>Press <b>Create New Blocks Op Mode</b>.</li>
-          <li>Click a category on the left (Control, Drive, Tools or Telemetry), then click a block. It lands at the yellow <b>next block goes here</b> marker.</li>
-          <li>Click any thin gap between blocks to move the marker there. Click a gap inside a <i>repeat</i> or <i>if</i> block to put blocks inside it.</li>
-          <li>Use <b>&uarr; &darr;</b> to reorder, <b>&#10697;</b> to copy and <b>&#10005;</b> to delete.</li>
-        </ol></article>
-      <article class="lesson"><h3>Lesson 3: drive a square</h3>
-        <p>Set <b>Runs in</b> to Autonomous, then build this:</p>
-        <ul class="blocklist">
-          <li><span class="tag cat-control">CONTROL</span> repeat <b>4</b> times
-            <ul><li><span class="tag cat-drive">DRIVE</span> drive forward <b>24</b> inches at power <b>0.6</b></li>
-            <li><span class="tag cat-drive">DRIVE</span> turn <b>left 90</b> degrees at power <b>0.5</b></li></ul></li>
-        </ul>
-        <p>Press Run. The robot should end up back where it started. If it does not, that is normal on a real robot too: change the numbers until it does.</p></article>
-      <article class="lesson"><h3>Lesson 4: make decisions</h3>
-        <p>TeleOp programs sit inside <b>repeat while the OpMode is running</b> and check the gamepad again and again.</p>
-        <ul class="blocklist">
-          <li><span class="tag cat-control">CONTROL</span> repeat while the OpMode is running
-            <ul><li><span class="tag cat-drive">DRIVE</span> drive with the gamepad sticks</li>
-            <li><span class="tag cat-control">CONTROL</span> if gamepad button pressed: <b>right bumper</b>
-              <ul><li><span class="tag cat-mech">TOOLS</span> intake <b>pull in</b></li></ul></li>
-            <li><b>else</b>
-              <ul><li><span class="tag cat-mech">TOOLS</span> intake <b>off</b></li></ul></li></ul></li>
-        </ul></article>
-      <article class="lesson"><h3>Lesson 5: from Blocks to Java</h3>
-        <p>Press <b>Show the Java these blocks make</b>. Every block becomes one or two lines of Java, with the same colours you will see in the Java editor. When you are ready, <b>Copy into a new Java program</b> and keep going by hand.</p></article>
+          <li>Under the first note, add <b>set fl . Direction to Direction . REVERSE</b> and the same for <b>bl</b>. The left motors are mounted the other way round, so without this the robot spins on the spot.</li>
+          <li>In the loop, make two variables: <b>set y to &minus; gamepad1 . RightStickY</b> and <b>set x to gamepad1 . RightStickX</b>. The minus is there because pushing a stick forward gives a negative number.</li>
+          <li>Add the four-motor <b>set Power</b> block from Actuators &rarr; DcMotor. Give <b>fl</b> and <b>bl</b> the value <b>y + x</b>, and <b>fr</b> and <b>br</b> the value <b>y &minus; x</b>.</li>
+          <li>Press Run and steer with the arrow keys.</li>
+        </ol>
+        <p>A <b>negative power</b> runs a motor backwards. Try <b>set fl . Power to &minus;0.5</b> on its own to see it.</p></article>
+      <article class="lesson"><h3>Lesson 5: an autonomous in blocks</h3>
+        <p>Autonomous code goes under <i>Put run blocks here</i> and needs no loop around it. The simplest one is three blocks: set all four powers to 0.4, <b>call sleep</b> 600 milliseconds, set all four powers to 0. Open the <b>Blocks Tip &amp; Park Auto</b> example to see how a <b>repeat while</b> loop watches an encoder or the IMU to drive a set distance and turn a set angle.</p></article>
+      <article class="lesson"><h3>Lesson 6: from Blocks to Java</h3>
+        <p>Press <b>Show the Java these blocks make</b>. Every block becomes one line of Java, coloured the same way as in the Java editor. When you are ready, <b>Copy into a new Java program</b> and keep going by hand.</p></article>
     </div>
 
     <div id="tut-java" class="col" hidden>
@@ -1042,12 +1055,12 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 <pre class="java">@TeleOp(name = "My First OpMode")
 public class MyFirstOpMode extends LinearOpMode {
 
-    private DcMotor frontLeft;
+    private DcMotor fl;
 
     @Override
     public void runOpMode() {
         // 1. Set up: connect to the hardware by name.
-        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        fl = hardwareMap.get(DcMotor.class, "fl");
 
         telemetry.addData("Status", "Ready");
         telemetry.update();
@@ -1057,8 +1070,8 @@ public class MyFirstOpMode extends LinearOpMode {
 
         // 3. Loop until STOP is pressed.
         while (opModeIsActive()) {
-            frontLeft.setPower(-gamepad1.left_stick_y);
-            telemetry.addData("Power", frontLeft.getPower());
+            fl.setPower(-gamepad1.left_stick_y);
+            telemetry.addData("Power", fl.getPower());
             telemetry.update();
         }
     }
@@ -1266,6 +1279,7 @@ launcher.setPower(gamepad1.right_trigger);</pre>
       <li>REV Robotics, Control Hub, HD Hex and Core Hex are trademarks of REV Robotics LLC. goBILDA and Yellow Jacket are trademarks of goBILDA. They are named only so you can pick parts that match your real robot.</li>
       <li>Java is a registered trademark of Oracle and/or its affiliates. Qualcomm is a trademark of Qualcomm Incorporated; it appears only inside the standard FTC package names in the example code. No part of the FTC software kit is included in this site.</li>
       <li>The match-start call is the traditional &ldquo;charge&rdquo; bugle tune, which is in the public domain. Every sound on this site is generated in your browser; no recordings are used.</li>
+      <li>The Blocks editor is built with Blockly, &copy; Google LLC, used under the Apache License 2.0. Its files are stored on this site and nothing is loaded from Google.</li>
       <li>All other product and company names belong to their owners.</li>
     </ul>
   </footer>
@@ -1276,7 +1290,11 @@ launcher.setPower(gamepad1.right_trigger);</pre>
 <script src="sound.js"></script>
 <script src="interp.js"></script>
 <script src="world.js"></script>
+<script src="blockly/blockly_compressed.js"></script>
+<script src="blockly/blocks_compressed.js"></script>
+<script src="blockly/en.js"></script>
 <script src="blocks.js"></script>
+<script src="ftcblocks.js"></script>
 <script src="app.js"></script>
 <script src="home.js"></script>
 <script src="extras.js"></script>

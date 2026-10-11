@@ -1,0 +1,7 @@
+Blockly 11.2.1
+Copyright Google LLC. Licensed under the Apache License, Version 2.0.
+https://github.com/google/blockly
+https://www.apache.org/licenses/LICENSE-2.0
+
+Files in this folder are unmodified copies from the official "blockly" npm package
+(blockly_compressed.js, blocks_compressed.js, msg/en.js saved as en.js, and media/).
