@@ -480,6 +480,22 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .foot-own { font-size: 13.5px; color: var(--ink); }
 .foot-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; max-width: 110ch; }
 
+/* beta label and feedback */
+.beta-pill { display: inline-block; font: 800 11px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; background: #ffc91f; color: #201800; border-radius: 10px; padding: 4px 9px; vertical-align: middle; text-shadow: none; }
+.beta-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: color-mix(in srgb, var(--honey) 16%, var(--surface)); border: 1px solid var(--honey); border-radius: 10px; padding: 9px 14px; }
+.beta-bar p { flex: 1 1 280px; min-width: 0; font-size: 14px; }
+.beta-actions { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.beta-actions a, .fb-actions a.btn { text-decoration: none; color: var(--ink); }
+.fb-actions a.btn-go { color: var(--on-honey); }
+.beta-close { border: 0; background: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; color: var(--muted); font-size: 14px; }
+.beta-close:hover { background: var(--sunk); color: var(--ink); }
+.fb { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); gap: 18px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 26px; }
+.fb-text { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fb-text p { font-size: 16px; max-width: 68ch; }
+.fb-text p.hint { font-size: 13px; }
+.fb-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; text-align: center; }
+@media (max-width: 760px) { .fb { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
+
 /* tutorial */
 .tutnav { align-self: flex-start; flex-wrap: wrap; }
 .tutnav button { font-family: var(--font-bubble); font-size: 15px; }
@@ -509,7 +525,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
   <header class="top">
     <div class="brand">
       <span class="brand-hex" aria-hidden="true"></span>
-      <h1 class="logo"><span class="w-y">Sim</span><span class="w-w">Your</span><span class="w-y">Code</span><small>Unofficial BIOBUZZ practice simulator for FIRST Tech Challenge teams</small></h1>
+      <h1 class="logo"><span class="w-y">Sim</span><span class="w-w">Your</span><span class="w-y">Code</span> <span class="beta-pill" title="This site is still being tested, so you may find bugs">Beta</span><small>Unofficial BIOBUZZ practice simulator for FIRST Tech Challenge teams</small></h1>
     </div>
     <nav class="tabs" aria-label="Sections">
       <button class="tab" type="button" data-view="home" aria-selected="true">Home</button>
@@ -523,6 +539,15 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
     <button type="button" class="lookbtn" id="btnLook" aria-expanded="false" aria-controls="lookPanel">Appearance</button>
   </header>
   <div class="stripe" aria-hidden="true"></div>
+  <div class="beta-bar" id="betaBar" role="note">
+    <span class="beta-pill">Beta</span>
+    <p><b>SimYourCode is still in beta, so you may run into bugs.</b> Found one, or just like the site? Tell us and it goes straight to the team.</p>
+    <span class="beta-actions">
+      <a class="btn btn-small" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage67/simyourcode/issues/new?labels=bug&amp;title=Bug%3A+&amp;body=What+happened%3F%0A%0A%0AWhat+did+you+expect+to+happen%3F%0A%0A%0AWhich+tab+were+you+on%3F%0A%0A%0AWhat+device+and+browser+are+you+using%3F%0A">Report a bug</a>
+      <a class="btn btn-small" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage67/simyourcode/issues/new?title=Feedback%3A+&amp;body=What+do+you+like%2C+or+what+would+you+add%3F%0A">Send a compliment or idea</a>
+      <button type="button" class="beta-close" id="betaClose" aria-label="Hide this beta notice">&#10005;</button>
+    </span>
+  </div>
   <div class="card look" id="lookPanel" hidden>
     <div class="card-head"><h3>Appearance</h3><span class="hint">Your choice is remembered on this device only.</span></div>
     <div class="row">
@@ -608,6 +633,19 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
       <p>This website is not like others, where the program is <b class="c-red">laggy</b> and the confusion sends you down a rabbit hole of knowledge. This one is <b class="c-honey">simple</b> and <b class="c-honey">organized</b>, and it is <b class="c-blue">convenient for new programmers</b>.</p>
       <p>Everything here is <b class="c-green">free</b>, with <b class="c-green">no ads</b> and <b class="c-green">no sketchy links</b>, so you never have to worry about picking up a virus.</p>
       <p>Here you can learn the <b class="c-blue">basics of programming</b> so your team is ready for this season's game, <b class="c-honey">BIOBUZZ</b>. <span class="why-fun">Have fun on this simulator!</span></p>
+    </div>
+
+    <div class="fb">
+      <div class="fb-text">
+        <h2 class="why-title">Help us <span>squash bugs</span></h2>
+        <p>SimYourCode is in <b>beta</b>. Things can break, numbers can be off and buttons can misbehave. If you spot a bug, or you just want to say the site helped your team, send a message. Every one is read by Team 18629 &ndash; Hydra.</p>
+        <p class="hint">Messages are sent through GitHub, so you need a free GitHub account, and what you write is public. Please do not include your name, school or other private details.</p>
+      </div>
+      <div class="fb-actions">
+        <a class="btn btn-go btn-big" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage67/simyourcode/issues/new?labels=bug&amp;title=Bug%3A+&amp;body=What+happened%3F%0A%0A%0AWhat+did+you+expect+to+happen%3F%0A%0A%0AWhich+tab+were+you+on%3F%0A%0A%0AWhat+device+and+browser+are+you+using%3F%0A">Report a bug</a>
+        <a class="btn btn-big" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage67/simyourcode/issues/new?title=Feedback%3A+&amp;body=What+do+you+like%2C+or+what+would+you+add%3F%0A">Send a compliment or idea</a>
+        <a class="hint" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage67/simyourcode/issues">See what others have reported</a>
+      </div>
     </div>
 
     <h3>Where do you want to go?</h3>
@@ -1165,6 +1203,7 @@ launcher.setPower(gamepad1.right_trigger);</pre>
         <li><b>Your work stays with you.</b> The programs you write and the robot you build are saved only inside your own browser, on your own device. The makers of this site cannot see them.</li>
         <li><b>Nothing from other websites.</b> The site loads no outside code, fonts or images. Links on the Game Manual tab open other websites, which have their own policies.</li>
         <li><b>Young users.</b> The site is safe for students of any age because it asks for no personal information. Please do not type real names, addresses or other private details into your code or program names.</li>
+        <li><b>Feedback.</b> The &ldquo;Report a bug&rdquo; and &ldquo;Send a compliment&rdquo; buttons open GitHub, a separate website. Anything you write there is public, is tied to your GitHub account, and is handled under GitHub's own privacy policy. This site itself never sees or stores it.</li>
         <li><b>The hosting service.</b> Like any web host, the service that delivers this page may keep basic technical records, such as the time of a visit. Team 18629 &ndash; Hydra does not receive or use those records.</li>
       </ul>
       <p>If this policy changes, the date at the top of this page changes with it.</p>
@@ -1176,7 +1215,7 @@ launcher.setPower(gamepad1.right_trigger);</pre>
       <ul>
         <li><b>What it is for.</b> The site is a free learning tool for practising robot code and driving. Use it for education, team practice and fun.</li>
         <li><b>Not official.</b> The site is made by Team 18629 &ndash; Hydra. It is not affiliated with, sponsored by or endorsed by <i>FIRST</i>. The official Competition Manual and Team Updates are the only source of rules.</li>
-        <li><b>No guarantees.</b> The site is provided as it is. The simulation is simplified, so scores, distances and robot behaviour here will differ from a real field. Always test on your real robot.</li>
+        <li><b>No guarantees.</b> The site is in beta and is provided as it is, so expect some bugs. The simulation is simplified, so scores, distances and robot behaviour here will differ from a real field. Always test on your real robot.</li>
         <li><b>Your code is yours.</b> You own whatever you write here. Keep your own copy of anything important, because browser storage can be cleared.</li>
         <li><b>Play fair.</b> Do not try to break, overload or misuse the site, and do not use it to harm others.</li>
         <li><b>Names and marks.</b> <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; belong to <i>FIRST</i>. The site's own design and code belong to its makers.</li>

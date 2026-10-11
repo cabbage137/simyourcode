@@ -14,6 +14,10 @@ document.querySelectorAll('[data-go]').forEach((el) => {
   });
 });
 
+/* the beta notice can be hidden for this visit */
+const betaBar = $('betaBar'), betaClose = $('betaClose');
+if (betaBar && betaClose) betaClose.addEventListener('click', () => { betaBar.hidden = true; });
+
 /* policy jump buttons */
 document.querySelectorAll('[data-jump]').forEach((el) => {
   el.addEventListener('click', () => {
