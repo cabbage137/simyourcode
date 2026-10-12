@@ -96,7 +96,7 @@ if (home && beeLayer) {
     el.className = 'bee'; el.innerHTML = BEE(i);
     beeLayer.append(el);
     const a = Math.random() * 6.283;
-    bees.push({ el, x: 0, y: 0, vx: Math.cos(a) * CRUISE, vy: Math.sin(a) * CRUISE, held: false, placed: false, turn: Math.random() * 6.283, face: 1, lx: 0, ly: 0, lt: 0, ox: 0, oy: 0 });
+    bees.push({ el, x: 0, y: 0, vx: Math.cos(a) * CRUISE, vy: Math.sin(a) * CRUISE, held: false, placed: false, turn: Math.random() * 6.283, face: 1, mood: 0, pace: CRUISE, push: 26, lx: 0, ly: 0, lt: 0, ox: 0, oy: 0 });
   }
   /* The bees stay in the part of the Home tab that is on screen, so they follow as the page scrolls. */
   const bounds = () => {
@@ -117,14 +117,25 @@ if (home && beeLayer) {
       if (b.held) { draw(b); return; }
       if (!still) {
         /* a gentle, wandering push, and a slow fade of any extra speed from being thrown */
-        b.turn += (Math.random() - 0.5) * 2.4 * dt;
-        b.vx += Math.cos(b.turn) * 26 * dt; b.vy += Math.sin(b.turn) * 26 * dt;
+        /* Every so often a bee changes its mind: a new heading and a new pace. Sometimes it hovers almost still,
+           sometimes it darts. Between those moments its heading jitters, so no two paths look alike. */
+        b.mood -= dt;
+        if (b.mood <= 0) {
+          const roll = Math.random();
+          b.mood = 0.5 + Math.random() * 2.2;
+          b.turn += (Math.random() - 0.5) * 4.4;
+          if (roll < 0.18) { b.pace = 6 + Math.random() * 8; b.push = 10; }
+          else if (roll > 0.82) { b.pace = 70 + Math.random() * 50; b.push = 150; b.mood = 0.35 + Math.random() * 0.5; }
+          else { b.pace = 22 + Math.random() * 34; b.push = 20 + Math.random() * 30; }
+        }
+        b.turn += (Math.random() - 0.5) * 9 * Math.sqrt(dt);
+        b.vx += Math.cos(b.turn) * b.push * dt; b.vy += Math.sin(b.turn) * b.push * dt;
         const sp = Math.hypot(b.vx, b.vy);
-        if (sp > CRUISE) { const k = Math.max(CRUISE / sp, Math.exp(-dt * 1.1)); b.vx *= k; b.vy *= k; }
+        if (sp > b.pace) { const k = Math.max(b.pace / sp, Math.exp(-dt * 1.6)); b.vx *= k; b.vy *= k; }
         b.x += b.vx * dt; b.y += b.vy * dt;
       }
-      if (b.x < bd.x0) { b.x = bd.x0; b.vx = Math.abs(b.vx); } else if (b.x > bd.x1) { b.x = bd.x1; b.vx = -Math.abs(b.vx); }
-      if (b.y < bd.y0) { b.y += Math.min(bd.y0 - b.y, 900 * dt); b.vy = Math.abs(b.vy); } else if (b.y > bd.y1) { b.y -= Math.min(b.y - bd.y1, 900 * dt); b.vy = -Math.abs(b.vy); }
+      if (b.x < bd.x0) { b.x = bd.x0; b.vx = Math.abs(b.vx); b.turn = Math.atan2(b.vy, b.vx); } else if (b.x > bd.x1) { b.x = bd.x1; b.vx = -Math.abs(b.vx); b.turn = Math.atan2(b.vy, b.vx); }
+      if (b.y < bd.y0) { b.y += Math.min(bd.y0 - b.y, 900 * dt); b.vy = Math.abs(b.vy); b.turn = Math.atan2(b.vy, b.vx); } else if (b.y > bd.y1) { b.y -= Math.min(b.y - bd.y1, 900 * dt); b.vy = -Math.abs(b.vy); b.turn = Math.atan2(b.vy, b.vx); }
       if (Math.abs(b.vx) > 4) b.face = b.vx < 0 ? -1 : 1;
     });
     /* bees bump off each other */
