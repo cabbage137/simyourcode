@@ -1068,6 +1068,8 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
         </table></div>
         <p>The <b>Appearance</b> button at the top right switches white and black mode, changes the font colour and turns sounds on or off. Tabs slide in when you switch, and everything you make is saved in this browser only.</p></article>
       <article class="lesson"><h3>Lesson 2: the Drive &amp; Code screen</h3>
+<figure class="fig"><canvas data-fig="screen" width="760" height="550" role="img" aria-label="A map of the Drive and Code screen with nine numbered areas"></canvas>
+          <figcaption>Where everything is on Drive &amp; Code: 1 the score bar, 2 the field, 3 the Driver Station, 4 the gamepad, 5 the console, 6 the editor, 7 the problems box, 8 telemetry and motors, 9 the score sheet and match log.</figcaption></figure>
         <figure class="fig"><canvas data-fig="field" width="760" height="760" role="img" aria-label="The field seen from above with numbered parts"></canvas>
           <figcaption>The field from above. The numbers match the list below.</figcaption></figure>
         <ol>
@@ -1080,6 +1082,8 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
         </ol>
         <p>Above the field are the <b>phase badge</b> (READY, PRACTICE, AUTO, PAUSE, TELEOP, ENDGAME, FINAL), the <b>clock</b>, your <b>score</b>, your <b>tips</b> and four dots showing what the robot is <b>carrying</b>.</p></article>
       <article class="lesson"><h3>Lesson 3: every button on the Driver Station</h3>
+<figure class="fig"><canvas data-fig="station" width="760" height="310" role="img" aria-label="A drawing of the Driver Station with its buttons numbered"></canvas>
+          <figcaption>The Driver Station: 1 alliance, 2 start spot, 3 speed, 4 run, 5 stop, 6 reset, 7 the two match programs, 8 play a full match.</figcaption></figure>
         <ul>
           <li><b>Red / Blue</b> picks your alliance. <b>Start spot</b> picks where the robot begins.</li>
           <li><b>&#9654; Run open program</b> starts the op mode showing in the editor. There is no clock, so practise as long as you like.</li>
@@ -1090,6 +1094,8 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
           <li><b>1&times; 2&times; 4&times;</b> speeds up time, which is handy for testing an autonomous quickly.</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 4: the Robot Controller Console</h3>
+<figure class="fig"><canvas data-fig="console" width="760" height="450" role="img" aria-label="A drawing of the Robot Controller Console with six numbered parts"></canvas>
+          <figcaption>The console: 1 Blocks or Java, 2 the buttons that make, copy and delete op modes, 3 a group, 4 the list (click a name to open it), 5 the editor, 6 the problems box.</figcaption></figure>
         <ul>
           <li><b>Blocks</b> and <b>OnBotJava</b> switch between your block programs and your Java programs.</li>
           <li><b>Create New &hellip; Op Mode</b> makes a blank program. <b>Examples</b> opens a list of ready-made ones; press <b>Add</b> to copy one in.</li>
@@ -1099,6 +1105,8 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
           <li>The box under the editor reports problems with a line number. A red bar marks the line.</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 5: the instruments</h3>
+<figure class="fig"><canvas data-fig="instruments" width="760" height="350" role="img" aria-label="Four instrument panels: telemetry, motors and servos, score sheet and match log"></canvas>
+          <figcaption>The four panels under the editor, with the kind of thing each one shows.</figcaption></figure>
         <ul>
           <li><b>Telemetry</b> shows messages from your code. Use it to check what the robot thinks is happening.</li>
           <li><b>Motors &amp; servos</b> shows the power on every motor, its encoder count, each servo position, the IMU heading, the distance reading and which AprilTags are in view.</li>
@@ -1126,6 +1134,8 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
           </tbody>
         </table></div></article>
       <article class="lesson"><h3>Lesson 2: your first drive</h3>
+<figure class="fig"><canvas data-fig="firstdrive" width="760" height="300" role="img" aria-label="Three pictures: launching at the HIVE, collecting at a FLOWER, and parking"></canvas>
+          <figcaption>Your first drive in three steps.</figcaption></figure>
         <ol>
           <li>Open <b>Drive &amp; Code</b>, pick the <b>OnBotJava</b> tab and click <b>Full TeleOp</b> in the op mode list.</li>
           <li>Press <b>&#9654; Run open program</b>. The badge changes to PRACTICE.</li>
@@ -1142,12 +1152,16 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
           <li><b>X-drive</b>: four omni wheels set at 45 degrees. About 40% faster and slides at full speed, but the same motor turns the wheel further per inch, so it is less exact.</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 4: why the left motors are reversed</h3>
+<figure class="fig"><canvas data-fig="reverse" width="760" height="320" role="img" aria-label="Two robots with wheel arrows: one spinning, one driving straight"></canvas>
+          <figcaption>Arrows show which way each wheel turns when every motor gets the same positive power.</figcaption></figure>
         <p>On a real robot the left motors are bolted on facing the other way. Give all four the same power and the robot spins on the spot. Every example fixes this once at the top with <code>setDirection(DcMotor.Direction.REVERSE)</code> on the left motors. You can switch this off with <b>Real-life motor mounting</b> on the Build Bot tab while you are learning.</p></article>
     </div>
 
     <!-- ---------- 3. the game ---------- -->
     <div id="tut-game" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the match in three parts</h3>
+<figure class="fig"><canvas data-fig="timeline" width="760" height="190" role="img" aria-label="A bar showing 30 seconds of AUTO, an 8 second pause, and 2 minutes of TELEOP with the last 60 seconds as the endgame"></canvas>
+          <figcaption>One match from left to right: 2 minutes 38 seconds in all.</figcaption></figure>
         <div class="tablewrap"><table>
           <thead><tr><th>Part</th><th>Length</th><th>Who is in control</th></tr></thead>
           <tbody>
@@ -1158,6 +1172,8 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
         </table></div>
         <p>The rest of this category covers each thing your robot can do for points. The <b>Game Manual</b> tab has the full list and the official wording always wins.</p></article>
       <article class="lesson"><h3>Lesson 2: LEAVE the wall (3 points, AUTO)</h3>
+<figure class="fig"><canvas data-fig="leave" width="760" height="300" role="img" aria-label="Before and after: a robot touching the wall, then clear of it"></canvas>
+          <figcaption>LEAVE only needs the robot to stop touching the wall.</figcaption></figure>
         <p>Your robot starts touching a wall. If it is no longer touching the wall when AUTO ends, you score 3 points. Driving forward for half a second is enough.</p>
 <pre class="java">setDrive(0.4, 0, 0);
 sleep(600);
@@ -1166,6 +1182,8 @@ setDrive(0, 0, 0);</pre>
       <article class="lesson"><h3>Lesson 3: tip your HIVE (20 points each time)</h3>
         <figure class="fig"><canvas data-fig="tip" width="760" height="520" role="img" aria-label="A robot launching POLLEN into the upward CELL of its HIVE"></canvas>
           <figcaption>Pieces must land in the CELL that faces up (the brighter box). The yellow bar fills as weight is added.</figcaption></figure>
+<figure class="fig"><canvas data-fig="tipsteps" width="760" height="300" role="img" aria-label="Three pictures of the HIVE: before, nearly full, and after it has tipped"></canvas>
+          <figcaption>A tip step by step. After it tips, the pieces spill out and the CELL on the other side faces up.</figcaption></figure>
         <ul>
           <li>Your upward CELL starts with 3 NECTAR in it. Add <b>3 POLLEN</b> and the HIVE tips.</li>
           <li>After a tip the other CELL faces up and is empty. It needs <b>8 POLLEN</b>, or 3 POLLEN and 3 NECTAR.</li>
@@ -1177,6 +1195,8 @@ setDrive(0, 0, 0);</pre>
       <article class="lesson"><h3>Lesson 4: fill the FLOWERS (2 points a piece)</h3>
         <figure class="fig"><canvas data-fig="flower" width="760" height="420" role="img" aria-label="A robot with its lift raised next to a FLOWER"></canvas>
           <figcaption>Collect from the bottom of a FLOWER with the intake. Add to the top with the lift raised to at least 21.5 inches.</figcaption></figure>
+<figure class="fig"><canvas data-fig="stack" width="760" height="350" role="img" aria-label="Three example FLOWER stacks with the points each one scores for red"></canvas>
+          <figcaption>Three FLOWERS and what red scores for each. Yellow is POLLEN, red and blue are NECTAR.</figcaption></figure>
         <ul>
           <li>A FLOWER holds up to 7 pieces. Each starts with 4 POLLEN.</li>
           <li>You <b>own</b> a FLOWER when the highest NECTAR in it is your colour. Every piece above the bottom one in a FLOWER you own is worth 2 points.</li>
@@ -1187,12 +1207,16 @@ setDrive(0, 0, 0);</pre>
       <article class="lesson"><h3>Lesson 5: the GARDEN and the LOADING ZONE</h3>
         <figure class="fig"><canvas data-fig="park" width="760" height="420" role="img" aria-label="A robot parked in its LOADING ZONE"></canvas>
           <figcaption>Parked in the LOADING ZONE. Any part of the robot over the tape counts.</figcaption></figure>
+<figure class="fig"><canvas data-fig="garden" width="760" height="300" role="img" aria-label="A robot pushing pieces into its GARDEN, and a robot parked on the LOADING ZONE tape"></canvas>
+          <figcaption>The two things any robot can do, even one with no tools.</figcaption></figure>
         <ul>
           <li><b>PARK</b> in your LOADING ZONE at the end of AUTO for 5 points, and again at the end of TELEOP for 5 more.</li>
           <li>Each piece resting in your <b>GARDEN</b> strip is worth 1 point. You can push pieces in with the robot, even with no tools.</li>
           <li>LEAVE and PARK points count toward SWARM (your alliance needs 16).</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 6: rules the simulator watches for you</h3>
+<figure class="fig"><canvas data-fig="halves" width="760" height="760" role="img" aria-label="The field with the red half marked as yours during AUTO and the blue half shaded"></canvas>
+          <figcaption>During AUTO a red robot should stay on the red half. For blue it is the other way round.</figcaption></figure>
         <ul>
           <li><b>G407</b>: carry at most 4 pieces. The intake simply stops taking more.</li>
           <li><b>G408</b>: do not pick up the other alliance's NECTAR.</li>
@@ -1207,6 +1231,9 @@ setDrive(0, 0, 0);</pre>
       <article class="lesson"><h3>Lesson 1: what is on the robot</h3>
         <figure class="fig"><canvas data-fig="robot" width="760" height="560" role="img" aria-label="A robot from above with each part numbered"></canvas>
           <figcaption>The starter bot with a webcam added. The numbers match the list below.</figcaption></figure>
+<figure class="fig"><canvas data-fig="robot3d" width="620" height="620" role="img" aria-label="The same robot as a 3D model"></canvas>
+          <figcaption>The same robot in 3D, as the Build Bot tab shows it. The clear box along the side holds the pieces it is carrying.</figcaption></figure>        <figure class="fig"><canvas data-fig="actuators" width="760" height="210" role="img" aria-label="A motor power bar from minus one to one, and a servo dial from zero to one"></canvas>
+          <figcaption>The two kinds of moving part your code controls.</figcaption></figure>
         <ol>
           <li><b>Intake</b> (green): pulls pieces in.</li>
           <li><b>Shooter</b> (orange): throws pieces.</li>
@@ -1238,6 +1265,8 @@ claw.setPosition(gamepad1.right_bumper ? 1.0 : 0.0);</pre>
       <article class="lesson"><h3>Lesson 3: the three shooters</h3>
         <figure class="fig"><canvas data-fig="shooters" width="760" height="300" role="img" aria-label="Single flywheel, dual flywheel and catapult"></canvas>
           <figcaption>Left to right: single flywheel, dual flywheel, catapult.</figcaption></figure>
+<figure class="fig"><canvas data-fig="range" width="760" height="300" role="img" aria-label="A bar chart of launch distance for powers from 0.1 to 1.0"></canvas>
+          <figcaption>The green bars are the powers that reach the HIVE from the start wall.</figcaption></figure>
         <div class="tablewrap"><table>
           <thead><tr><th>Type</th><th>Devices</th><th>How it behaves</th></tr></thead>
           <tbody>
@@ -1279,6 +1308,8 @@ gate.setPosition(1.0);
 sleep(350);
 gate.setPosition(0.0);</pre></article>
       <article class="lesson"><h3>Lesson 5: where a part sits matters</h3>
+<figure class="fig"><canvas data-fig="sides" width="760" height="300" role="img" aria-label="Two robots launching: one with the shooter on the front, one with it turned to the left side"></canvas>
+          <figcaption>The piece flies the way the shooter points, not the way the robot faces.</figcaption></figure>
         <p>In the Build Bot layout editor you can drag parts and turn them. The physics follows:</p>
         <ul>
           <li>The <b>intake</b> only collects on the side it is mounted on.</li>
@@ -1292,6 +1323,8 @@ gate.setPosition(0.0);</pre></article>
     <!-- ---------- 5. build bot ---------- -->
     <div id="tut-build" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the seven categories</h3>
+<figure class="fig"><canvas data-fig="build3d" width="760" height="400" role="img" aria-label="The same robot in the 3D view and in the top view"></canvas>
+          <figcaption>The two ways to look at your robot on the Build Bot tab.</figcaption></figure>
         <ol>
           <li><b>Identity</b>: the bot's name and frame colour.</li>
           <li><b>Drivetrain and wheels</b>: mecanum, tank or X-drive, the drive motor, the wheel size, and real-life motor mounting.</li>
@@ -1314,6 +1347,8 @@ gate.setPosition(0.0);</pre></article>
           <li><b>Reset layout</b> puts every part back.</li>
         </ol></article>
       <article class="lesson"><h3>Lesson 3: name your motors</h3>
+<figure class="fig"><canvas data-fig="names" width="760" height="320" role="img" aria-label="Robots from above with each drive motor labelled with its name"></canvas>
+          <figcaption>The names a new bot starts with, and which wheel each one is.</figcaption></figure>
         <p>The <b>Robot configuration</b> table works like <i>Configure Robot</i> on a real Driver Station: each device has a type, a port and a name. Your code must use the name exactly, capitals included.</p>
         <ul>
           <li>Type a new name and press <kbd>Enter</kbd>. Names start with a letter and use letters, numbers and <code>_</code>.</li>
@@ -1414,6 +1449,8 @@ public class MyFirstOpMode extends LinearOpMode {
         </table></div>
         <p>Watch out: <code>7 / 2</code> is <b>3</b> because both are whole numbers. Write <code>7 / 2.0</code> to get 3.5.</p></article>
       <article class="lesson"><h3>Lesson 4: drive code, the short way</h3>
+<figure class="fig"><canvas data-fig="mix" width="760" height="300" role="img" aria-label="Three robots with wheel arrows for driving forward, strafing right and turning right"></canvas>
+          <figcaption>What <code>setDrive</code> makes the wheels do for each of its three numbers.</figcaption></figure>
 <pre class="java">// Mixes forward, strafe and turn into the four wheel powers.
 void setDrive(double forward, double strafe, double turn) {
     fl.setPower(forward + strafe + turn);
@@ -1423,6 +1460,8 @@ void setDrive(double forward, double strafe, double turn) {
 }</pre>
         <p>Most examples use this helper. In TeleOp it is one line: <code>setDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);</code>. In autonomous, <code>setDrive(0.4, 0, 0)</code> drives forward and <code>setDrive(0, 0, 0)</code> stops.</p></article>
       <article class="lesson"><h3>Lesson 5: driving exact distances with encoders</h3>
+<figure class="fig"><canvas data-fig="encoder" width="760" height="230" role="img" aria-label="A wheel with encoder marks and the sum that turns 20 inches into encoder ticks"></canvas>
+          <figcaption>Inches become encoder ticks, and the motor runs until it has counted that many.</figcaption></figure>
         <p>Timed moves change when the battery sags. Encoders count wheel turns instead, so <code>driveInches(20, 0.6)</code> goes 20 inches every time. The examples that use it show the helper underneath: it sets a target with <code>setTargetPosition</code>, switches to <code>RUN_TO_POSITION</code>, waits while <code>isBusy()</code>, then stops. <code>turnLeft(90, 0.5)</code> uses the IMU the same way for turns.</p>
         <p>Examples to open: <b>Square Path Auto</b> and <b>Tip &amp; Park Auto</b>.</p></article>
       <article class="lesson"><h3>Lesson 6: fixing errors</h3>
@@ -1442,6 +1481,8 @@ void setDrive(double forward, double strafe, double turn) {
     <!-- ---------- 8. sensors and AprilTags ---------- -->
     <div id="tut-vision" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the IMU and the distance sensor</h3>
+<figure class="fig"><canvas data-fig="sensors" width="760" height="520" role="img" aria-label="A robot turned to the left with a dashed line from its distance sensor to the HIVE"></canvas>
+          <figcaption>The two sensors every starter bot has.</figcaption></figure>
 <pre class="java">// Which way is the robot facing? 0 at the start, turning left counts up.
 double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
 
@@ -1459,6 +1500,8 @@ double inches = distance.getDistance(DistanceUnit.INCH);</pre>
           <li><b>yaw</b>: how much the tag is turned away from facing the camera square-on.</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 3: the practice tags on this field</h3>
+<figure class="fig"><canvas data-fig="tagmap" width="760" height="760" role="img" aria-label="The whole field with each of the eight AprilTags numbered"></canvas>
+          <figcaption>Where the eight practice tags are. The yellow numbers are the tag IDs.</figcaption></figure>
         <div class="tablewrap"><table>
           <thead><tr><th>ID</th><th>Where it is</th></tr></thead>
           <tbody id="tagTable"></tbody>
@@ -1650,19 +1693,19 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261012d"></script>
-<script src="interp.js?v=20261012d"></script>
-<script src="world.js?v=20261012d"></script>
-<script src="bot3d.js?v=20261012d"></script>
-<script src="blockly/blockly_compressed.js?v=20261012d"></script>
-<script src="blockly/blocks_compressed.js?v=20261012d"></script>
-<script src="blockly/en.js?v=20261012d"></script>
-<script src="blocks.js?v=20261012d"></script>
-<script src="ftcblocks.js?v=20261012d"></script>
-<script src="app.js?v=20261012d"></script>
-<script src="home.js?v=20261012d"></script>
-<script src="extras.js?v=20261012d"></script>
-<script src="tutorial.js?v=20261012d"></script>
-<script src="bg.js?v=20261012d"></script>
+<script src="sound.js?v=20261012e"></script>
+<script src="interp.js?v=20261012e"></script>
+<script src="world.js?v=20261012e"></script>
+<script src="bot3d.js?v=20261012e"></script>
+<script src="blockly/blockly_compressed.js?v=20261012e"></script>
+<script src="blockly/blocks_compressed.js?v=20261012e"></script>
+<script src="blockly/en.js?v=20261012e"></script>
+<script src="blocks.js?v=20261012e"></script>
+<script src="ftcblocks.js?v=20261012e"></script>
+<script src="app.js?v=20261012e"></script>
+<script src="home.js?v=20261012e"></script>
+<script src="extras.js?v=20261012e"></script>
+<script src="tutorial.js?v=20261012e"></script>
+<script src="bg.js?v=20261012e"></script>
 </body>
 </html>
