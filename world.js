@@ -278,7 +278,9 @@ class Motor {
       if (this.mode === 'RUN_TO_POSITION') {
         const e = this.target - (this.raw - this.off) * this.dir;
         const lim = Math.abs(this.power);
-        cmd = this.dir * clamp(e * 1.5 / this.tpr, -lim, lim);
+        /* Like the position controller in a real hub: push toward the target, and ease off as the motor
+           speeds up, so it arrives without running past and creeping back. */
+        cmd = this.dir * clamp(e * 6 / this.tpr - 2.2 * this.u * this.dir, -lim, lim);
       } else if (this.mode !== 'STOP_AND_RESET_ENCODER') cmd = this.power * this.dir;
     }
     cmd *= this.gain;
@@ -377,6 +379,11 @@ class World {
   emit(kind, text) { this.events.push({ kind, text, t: this.time }); if (kind === 'foul') this.fouls++; }
   device(name) { return this.devices.get(name) || null; }
   newOpMode() { this.motorList.forEach((m) => m.resetSoft()); this.servoList.forEach((s) => s.resetSoft()); }
+  /* Ends a practice run. If it was an autonomous tested on its own, LEAVE and PARK are judged now. */
+  practiceDone() {
+    if (this.mode === 'autotest') { this.autoLeave = this.offWall(); this.autoPark = this.inLoadingZone(); this.autoDone = true; }
+    this.mode = 'idle';
+  }
   stopActuators() { this.motorList.forEach((m) => { m.power = 0; }); this.enabled = false; }
 
   yawDeg() { let d = (this.robot.th - this.robot.th0) * 180 / Math.PI; d = ((d + 180) % 360 + 360) % 360 - 180; return d; }
@@ -638,7 +645,7 @@ class World {
     this.flowers.forEach((f) => { if (Math.hypot(p.x - f.x, p.y - f.y) < 9) fl = f; });
     if (fl && h >= FLOWER_TOP_IN && fl.stack.length < FLOWER_CAP) {
       b.st = 'flower'; fl.stack.push(b);
-      if (b.type !== 'P' && (this.mode === 'auto' || this.mode === 'transition' || (this.mode === 'teleop' && this.clock > 60)))
+      if (b.type !== 'P' && (this.mode === 'auto' || this.mode === 'autotest' || this.mode === 'transition' || (this.mode === 'teleop' && this.clock > 60)))
         this.emit('foul', 'G410: NECTAR went into a FLOWER before the last 60 seconds. That is a MAJOR FOUL in a real match.');
       else this.emit('good', (b.type === 'P' ? 'POLLEN' : 'NECTAR') + ' placed in a FLOWER.');
       return;
@@ -661,7 +668,7 @@ class World {
       b.vx = rnd(-8, 8); b.vy = dirY * rnd(10, 26);
     });
     h.cells[side] = []; h.up = side === 'aud' ? 'rear' : 'aud'; h.flash = 1.2;
-    const auto = this.mode === 'auto' || this.mode === 'transition';
+    const auto = this.mode === 'auto' || this.mode === 'transition' || this.mode === 'autotest';
     if (auto) h.tipsAuto++; else h.tipsTele++;
     if (h.color === this.me) {
       this.emit('good', 'HIVE TIP! +20 points. The other CELL is now facing up.');
@@ -763,8 +770,8 @@ class World {
   }
   score() {
     const me = this.me, h = this.hives[me], g = ZONES[me].garden;
-    const timed = this.mode !== 'idle' && this.mode !== 'practice';
-    const live = this.mode === 'auto';
+    const timed = this.mode !== 'idle' && this.mode !== 'practice' && this.mode !== 'autotest';
+    const live = this.mode === 'auto' || this.mode === 'autotest';
     const leave = this.autoDone ? this.autoLeave : (live && this.offWall());
     const apark = this.autoDone ? this.autoPark : (live && this.inLoadingZone());
     let owned = 0, bonus = 0, garden = 0;

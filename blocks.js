@@ -154,10 +154,11 @@ function helperLines(name, cfg) {
         dm.map((m, i) => '    ' + m + '.setTargetPosition(' + params[i] + ');'),
         each((m) => '    ' + m + '.setMode(DcMotor.RunMode.RUN_TO_POSITION);'),
         each((m) => '    ' + m + '.setPower(power);'),
-        ['    while (opModeIsActive() && (' + dm.map((m) => m + '.isBusy()').join(' || ') + ')) {', '        idle();', '    }'],
+        ['    while (opModeIsActive() && (' + dm.map((m) => m + '.isBusy()').join(' || ') + ')) {', '        idle();', '    }',
+          '    sleep(250);       // let the motors settle exactly on their targets before letting go'],
         each((m) => '    ' + m + '.setPower(0);'),
         each((m) => '    ' + m + '.setMode(DcMotor.RunMode.RUN_USING_ENCODER);'),
-        ['    sleep(100);', '}']);
+        ['}']);
     }
     case 'driveInches': return [
       '// Drives straight using the wheel encoders. Negative inches goes backward.',
@@ -665,16 +666,49 @@ function botFacts(cfg) {
   const n = cfg.names, T = cfg.tools, kit = cfg.kit, hl = cfg.length / 2;
   const shooter = T.launcher ? kit.launcher : null, face = cfg.layout.launcher.face;
   const reach = shooter ? BBZ.shooterReach(cfg) : 0;
-  /* From the "facing your HIVE" start spot the middle of the upward CELL is 62.6 in from the wall. */
-  const hiveShot = 62.6 - (hl + 0.05) - reach;
   const wheels = shooter === 'dual' ? [n.launcher, n.launcher2] : shooter === 'flywheel' ? [n.launcher] : [];
+  /* Every autonomous first gets the robot to the same line in front of its HIVE, facing it. From the
+     "facing your HIVE" start spot it is already there, touching the wall; from the two alliance-wall
+     spots it drives over and stops 36 inches from the audience wall. The middle of the upward CELL is
+     62.6 inches from that wall. */
+  const startY = cfg.start === 'hive' ? hl + 0.05 : 36;
+  /* A catapult cannot change its range, so the robot itself moves until the CELL is exactly one throw away. */
+  let shift = 0;
+  if (shooter === 'catapult') {
+    shift = Math.round((Math.max(62.6 - BBZ.CATAPULT_RANGE - reach, hl + 0.05) - startY) * 2) / 2;
+    if (Math.abs(shift) < 1.5) shift = 0;
+  }
+  const shootY = startY + shift, hiveShot = 62.6 - shootY - reach;
+  const half = (v) => Math.round(v * 2) / 2;
+  /* The moves for "tip the HIVE, then park", as a list: ['D', inches forward], ['S', inches to the left],
+     ['T', degrees to the left] and ['SHOOT']. `slides` lets a mecanum or X-drive bot move sideways
+     instead of turning. */
+  const route = (slides) => {
+    const s = [], toHive = half(59.5 - hl - 0.05);
+    if (cfg.start === 'garden') s.push(['D', toHive], ['T', 90]);
+    else if (cfg.start === 'zone') {
+      /* a FLOWER stands on the wall between this spot and the HIVE line, so come off the wall first */
+      if (slides) s.push(['D', 9], ['S', -48], ['D', toHive - 9], ['T', 90]);
+      else s.push(['D', 9], ['T', -90], ['D', 48], ['T', 90], ['D', toHive - 9], ['T', 90]);
+    }
+    let y = startY;
+    if (shooter) { if (shift) { s.push(['D', shift]); y = shootY; } s.push(['SHOOT']); }
+    const last = half(13.5 - hl);                                  /* stops about 6 inches short of the wall, inside the LOADING ZONE */
+    if (slides) s.push(['S', 40], ['D', half(108.5 - y)], ['S', last]);
+    else {
+      const pre = Math.max(0, Math.round(hl + 8 - y));           /* get clear of the wall before turning */
+      if (pre) s.push(['D', pre]);
+      s.push(['T', 90], ['D', 40], ['T', -90], ['D', half(108.5 - y - pre)], ['T', 90], ['D', last]);
+    }
+    return s;
+  };
   return {
-    n, T, kit, shooter, face, reach, hiveShot, wheels,
+    n, T, kit, shooter, face, reach, hiveShot, wheels, route, start: cfg.start,
     four: BBZ.holo(cfg), claw: T.intake && kit.intake === 'claw', roller: T.intake && kit.intake !== 'claw',
     hivePower: +BBZ.shotPower(hiveShot).toFixed(2),
-    /* a catapult cannot change its range, so the robot itself has to move this far forward first */
-    cataShift: Math.round((hiveShot - BBZ.CATAPULT_RANGE) * 2) / 2,
     hiveTag: cfg.alliance === 'red' ? 1 : 4,
+    startName: BBZ.START_SPOTS[cfg.start].label,
+    atHive: cfg.start === 'hive',
     spin: (p) => wheels.map((w) => w + '.setPower(' + p + ');')
   };
 }
@@ -721,17 +755,23 @@ function javaSample(mode, cfg) {
     return scaffold({ cfg, mode, title: 'Full TeleOp', cls: 'FullTeleOp', body, use, constLines,
       intro: ['Full TeleOp: drive with the gamepad and work every tool on your bot.'] });
   }
-  let step = 1;
   /* Quarter turns that point the shooter's side at the HIVE (dir 1) and back again (dir -1). */
   const aim = (dir) => (f.face === 2 ? [90, 90] : [f.face === 1 ? -90 : 90]).map((d) => 'turnLeft(' + d * dir + ', 0.4);');
+  const steps = f.route(false), shootAt = steps.findIndex((s) => s[0] === 'SHOOT');
+  const move = (s) => s[0] === 'D' ? 'driveInches(' + s[1] + ', ' + (Math.abs(s[1]) >= 30 ? '0.7' : '0.5') + ');' : 'turnLeft(' + s[1] + ', 0.5);';
+  use.push('driveInches', 'turnLeft');
+  let step = 1;
+  if (shootAt > 0) {
+    body.push('// ' + (step++) + '. Drive to the line in front of your HIVE and face it.');
+    steps.slice(0, shootAt).forEach((s) => body.push(move(s)));
+    body.push('');
+  }
   if (f.shooter) {
     use.push('launchOne');
-    if (f.face) { use.push('turnLeft'); body.push('// Your shooter points out of the ' + BBZ.FACE_NAME[f.face] + ', so turn that side toward the HIVE first.'); aim(1).forEach((s) => body.push(s)); body.push(''); }
-    if (f.shooter === 'catapult') {
-      body.push('// ' + (step++) + '. A catapult always throws the same distance, so line up first, then fire 3 POLLEN.');
-      if (!f.face && Math.abs(f.cataShift) >= 1.5) { use.push('driveInches'); body.push('driveInches(' + f.cataShift + ', 0.4);'); }
-    } else {
-      constLines.push('static final double LAUNCH_POWER = ' + f.hivePower.toFixed(2) + ';       // tuned for the start spot facing the HIVE');
+    if (f.face) { body.push('// Your shooter points out of the ' + BBZ.FACE_NAME[f.face] + ', so turn that side toward the HIVE.'); aim(1).forEach((s) => body.push(s)); }
+    if (f.shooter === 'catapult') body.push('// ' + (step++) + '. A catapult always throws the same distance. From here that lands in the upward CELL.');
+    else {
+      constLines.push('static final double LAUNCH_POWER = ' + f.hivePower.toFixed(2) + ';       // tuned for the distance to the HIVE from here');
       body.push('// ' + (step++) + '. Spin up the launcher and shoot 3 POLLEN into the upward CELL.');
       f.spin('LAUNCH_POWER').forEach((s) => body.push(s));
       body.push('sleep(1500);');
@@ -742,14 +782,10 @@ function javaSample(mode, cfg) {
     if (f.face) aim(-1).forEach((s) => body.push(s));
     body.push('');
   }
-  use.push('driveInches', 'turnLeft');
-  const back = (f.shooter === 'catapult' && !f.face && Math.abs(f.cataShift) >= 1.5) ? f.cataShift : 0;
-  body.push(
-    '// ' + step + '. LEAVE the wall (3 points), then drive to the LOADING ZONE and PARK (5 points).',
-    'driveInches(' + (8 - back) + ', 0.6);', 'turnLeft(90, 0.5);', 'driveInches(40, 0.7);', 'turnLeft(-90, 0.5);',
-    'driveInches(92, 0.8);', 'turnLeft(90, 0.5);', 'driveInches(6, 0.5);');
+  body.push('// ' + step + '. LEAVE the wall (3 points), then drive to the LOADING ZONE and PARK (5 points).');
+  steps.slice(shootAt + 1).forEach((s) => body.push(move(s)));
   return scaffold({ cfg, mode, title: 'Tip & Park Auto', cls: 'TipAndParkAuto', body, use, constLines,
-    intro: ['Tip & Park Auto. It is written for the start spot "Audience wall, facing your HIVE".'] });
+    intro: ['Tip & Park Auto. It is written for the start spot "' + f.startName + '".'] });
 }
 
 BBZ.Blocks = { SPEC, render, generate, sanitize, makeBlock, countBlocks, className, resetCursor: () => { cursor = null; } };
@@ -867,7 +903,7 @@ function exampleList(cfg) {
         'sleep(600);',
         'setDrive(0, 0, 0);'] }) },
     { id: 'java-tip', name: 'Tip & Park Auto', lang: 'java', mode: 'auto', why: null,
-      desc: (f.shooter ? 'Shoots 3 POLLEN to tip the HIVE, leaves the wall, then parks.' : 'Leaves the wall and parks in the LOADING ZONE.') + ' Start facing your HIVE.',
+      desc: (f.shooter ? 'Shoots 3 POLLEN to tip the HIVE, leaves the wall, then parks.' : 'Leaves the wall and parks in the LOADING ZONE.') + ' Written for the start spot "' + f.startName + '".',
       make: () => javaSample('auto', cfg) },
     { id: 'java-square', name: 'Square Path Auto', lang: 'java', mode: 'auto', why: null,
       desc: 'Drives a 20 inch square and returns to the start. Great for tuning distances and turns.',
@@ -894,7 +930,7 @@ function exampleList(cfg) {
         'liftTo(22, true);',
         'dropOne();',
         'liftTo(0, true);'] }) },
-    { id: 'java-tagaim', name: 'AprilTag Aim Auto', lang: 'java', mode: 'auto', why: need(cfg, ['camera'], [frontOnly('camera', 'webcam')]),
+    { id: 'java-tagaim', name: 'AprilTag Aim Auto', lang: 'java', mode: 'auto', why: need(cfg, ['camera'], [frontOnly('camera', 'webcam'), f.atHive ? null : 'the start spot that faces your HIVE']),
       desc: 'Uses the webcam to turn until your HIVE tag is dead ahead and ' + (f.shooter && !f.face ? 'drive to shooting distance, then fires.' : 'drive to a set distance from it.'),
       make: J({ mode: 'auto', title: 'AprilTag Aim Auto', cls: 'AprilTagAimAuto', about: 'lines the robot up on an AprilTag using the webcam.', use: ['setDrive', 'findTag'].concat(f.shooter ? ['launchOne'] : []),
         constLines: ['static final int HIVE_TAG = ' + f.hiveTag + ';            // the tag on your side of your HIVE',

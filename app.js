@@ -63,7 +63,25 @@ function load() {
     state.speed = raw.speed === 2 || raw.speed === 4 ? raw.speed : 1;
   }
   if (!state.programs.length) seed();
+  else renewOldExamples();
   fixMatchPicks();
+}
+/* Example op modes saved by an earlier version of the site cannot keep themselves up to date. Each one is
+   swapped for the current example of the same name; the old copy is kept, renamed, in its own group, so
+   nothing anyone wrote is lost. */
+function renewOldExamples() {
+  let list = null;
+  const fresh = [];
+  state.programs.forEach((p) => {
+    if (p.ex || p.group !== 'Examples') return;
+    list = list || BBZ.Samples.list(state.robot);
+    const ex = list.find((e) => e.name === p.name && e.lang === p.lang);
+    if (!ex || ex.why || state.programs.length + fresh.length >= MAX_PROGRAMS) return;
+    try { fresh.push({ at: p, prog: fromExample(ex) }); } catch (e) { return; }
+    p.name = cleanName(p.name.slice(0, 34) + ' (old)'); p.group = 'Older versions';
+  });
+  fresh.forEach((f) => { state.programs.splice(state.programs.indexOf(f.at), 0, f.prog); });
+  if (fresh.length) normalise();
 }
 function fixMatchPicks() {
   const ok = (i, mode) => i >= 0 && state.programs[i] && state.programs[i].mode === mode;
@@ -241,13 +259,21 @@ function endOpMode() {
   runner = null; runProg = null; started = false;
   if (world) world.stopActuators();
 }
+/* Ends a practice run. A lone autonomous run has its LEAVE and PARK checked here, as the end of AUTO would. */
+function endPractice() {
+  if (world.mode !== 'practice' && world.mode !== 'autotest') return false;
+  world.practiceDone();
+  return true;
+}
 function runOpen() {
   const p = openProg();
   if (!p) return;
-  if (matchOn || world.mode === 'over') { world.reset(); clearLog(); rebuildHw(); }
+  /* An autonomous is written for the start spot, so it always begins from a fresh field, like a real match. */
+  const fresh = p.mode === 'auto';
+  if (matchOn || world.mode === 'over' || fresh) { endOpMode(); world.reset(); clearLog(); rebuildHw(); }
   matchOn = false;
-  world.mode = 'practice';
-  if (startOpMode(p)) { setStatus('Running "' + p.name + '". Press Stop when you are done.'); addLog('info', 'Started ' + p.name + ' (practice, no clock).'); }
+  world.mode = fresh ? 'autotest' : 'practice';            /* an autonomous run on its own is scored as AUTO */
+  if (startOpMode(p)) { setStatus('Running "' + p.name + '"' + (fresh ? ' from the start spot' : '') + '. Press Stop when you are done.'); addLog('info', 'Started ' + p.name + (fresh ? ' on a fresh field (practice, no clock).' : ' (practice, no clock).')); }
   else { world.mode = 'idle'; setStatus('That program has a problem. Check the box under the editor.'); }
 }
 const sfx = (name) => { try { if (BBZ.Sound) BBZ.Sound.play(name); } catch (e) { /* sound is optional */ } };
@@ -321,6 +347,7 @@ function stopAll() {
   const was = runner || matchOn || countTimer;
   endOpMode();
   if (matchOn) { matchOn = false; addLog('info', 'Match stopped early.'); }
+  endPractice();
   if (world.mode !== 'over') world.mode = 'idle';
   if (was) setStatus('Stopped. The field stays as it is; press Reset field to start fresh.');
 }
@@ -338,13 +365,13 @@ function simStep() {
       if (runner.step(world.time)) {
         const name = runProg ? runProg.name : 'Program';
         endOpMode();
-        if (world.mode === 'practice') { world.mode = 'idle'; setStatus('"' + name + '" finished.'); }
+        if (endPractice()) setStatus('"' + name + '" finished.' + (world.autoDone ? ' The Score sheet shows what it earned.' : ''));
         addLog('info', name + ' reached the end of its code.');
-      } else if (stopReq) { endOpMode(); if (world.mode === 'practice') world.mode = 'idle'; setStatus('The program asked to stop.'); }
+      } else if (stopReq) { endOpMode(); endPractice(); setStatus('The program asked to stop.'); }
     } catch (e) {
       const prog = runProg;
       endOpMode();
-      if (world.mode === 'practice') world.mode = 'idle';
+      endPractice();
       showError(e, prog);
       setStatus('The program stopped with an error.');
     }
@@ -392,7 +419,7 @@ function updateHw() {
     else if (r.d.kind === 'camera') { const seen = world.tagDetections(); r.val.textContent = seen.length ? 'ID ' + seen.map((t) => t.id).join(', ') : 'none'; }
   });
 }
-const PHASE = { idle: 'READY', practice: 'PRACTICE', auto: 'AUTO', transition: 'PAUSE', teleop: 'TELEOP', over: 'FINAL' };
+const PHASE = { idle: 'READY', practice: 'PRACTICE', autotest: 'AUTO TEST', auto: 'AUTO', transition: 'PAUSE', teleop: 'TELEOP', over: 'FINAL' };
 let lastHeld = '';
 const heard = { endgame: false, beep: 0 };
 function updateHud() {
@@ -457,7 +484,7 @@ function pollPad() {
       break;
     }
   } catch (e) { /* the Gamepad API can be blocked; keyboard and on-screen controls still work */ }
-  const live = !(world.mode === 'auto' || world.mode === 'transition');
+  const live = !(world.mode === 'auto' || world.mode === 'transition' || world.mode === 'autotest');
   const c1 = (v) => BBZ.clamp(v, -1, 1);
   pad.left_stick_x = live ? c1(lx) : 0; pad.left_stick_y = live ? c1(ly) : 0;
   pad.right_stick_x = live ? c1(rx) : 0; pad.right_stick_y = live ? c1(ry) : 0;
@@ -1116,7 +1143,7 @@ function frame(ts) {
 
 /* Runs a program on a private copy of the field with nobody at the controls and reports what happened.
    Nothing on screen changes. It exists so every example can be checked against every kind of bot. */
-BBZ.dryRun = (src, cfg, mode, seconds) => {
+BBZ.dryRun = (src, cfg, mode, seconds, pads) => {
   const keep = { world, started, startAt, stopReq, robot: state.robot, pending: tele.pending, shown: tele.shown };
   const out = { error: null, finished: false };
   try {
@@ -1126,6 +1153,7 @@ BBZ.dryRun = (src, cfg, mode, seconds) => {
     let r = J.start(src, makeHost());
     while (world.time < seconds) {
       if (!started && world.time >= startAt) started = true;
+      if (pads) { const want = pads(world.time, world) || {}; PAD_KEYS.forEach((k) => { pad[k] = want[k] !== undefined ? want[k] : (ANALOG[k] ? 0 : false); }); }
       if (r && (r.step(world.time) || stopReq)) { r = null; out.finished = true; world.stopActuators(); }
       world.step(STEP);
       if (world.phaseChanged) { world.phaseChanged = false; r = null; world.stopActuators(); }
@@ -1133,7 +1161,8 @@ BBZ.dryRun = (src, cfg, mode, seconds) => {
     const s = world.score();
     out.score = s.total; out.tips = s.tips; out.items = s.items.filter((i) => i.n).map((i) => i.label + ' x' + i.n);
     out.x = +world.robot.x.toFixed(1); out.y = +world.robot.y.toFixed(1); out.deg = +(world.robot.th * 180 / Math.PI).toFixed(0);
-    out.fouls = world.fouls; out.held = world.robot.held.length; out.tele = (tele.shown || []).slice(0, 6);
+    out.fouls = world.fouls; out.held = world.robot.held.length; out.world = world;
+    if (pads) PAD_KEYS.forEach((k) => { pad[k] = ANALOG[k] ? 0 : false; }); out.tele = (tele.shown || []).slice(0, 6);
   } catch (e) { out.error = (e && e.line ? 'line ' + e.line + ': ' : '') + (e && e.message ? e.message : String(e)); }
   world = keep.world; started = keep.started; startAt = keep.startAt; stopReq = keep.stopReq; state.robot = keep.robot;
   tele.pending = keep.pending; tele.shown = keep.shown; tele.dirty = true;

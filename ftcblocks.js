@@ -573,23 +573,23 @@ function examples(c) {
   list.push({ id: 'blocks-leave', name: 'Blocks Leave Only', lang: 'blocks', mode: 'auto', why: null,
     desc: 'Three blocks: drive forward, wait, stop. That is enough for the 3 LEAVE points.',
     make: () => { const b = builder(); return auto(b, [fwd(b, 0.4), b.sleep(600), fwd(b, 0)]); } });
+  /* Turns a list of moves into timed blocks: set the powers, wait, stop, pause. */
+  const timed = (b, s) => {
+    const p = s[0] === 'T' ? 0.4 : (Math.abs(s[1]) >= 30 ? 0.9 : 0.5), dir = s[1] < 0 ? -1 : 1;
+    if (s[0] === 'D') return [fwd(b, dir * p), b.sleep(time.drive(c, s[1], p)), fwd(b, 0), b.sleep(150)];
+    if (s[0] === 'S') return [slide(b, dir * p), b.sleep(time.strafe(c, s[1], p)), fwd(b, 0), b.sleep(150)];
+    return [spin(b, dir * p), b.sleep(time.turn(c, s[1], p)), fwd(b, 0), b.sleep(150)];
+  };
   list.push({ id: 'blocks-tip', name: 'Blocks Tip & Park Auto', lang: 'blocks', mode: 'auto', why: f.face ? 'Needs the shooter pointing out of the front' : null,
-    desc: (f.shooter ? 'Shoots 3 POLLEN to tip the HIVE, then ' : 'Leaves the wall and ') + 'drives to the LOADING ZONE by time. Start facing your HIVE.',
+    desc: (f.shooter ? 'Shoots 3 POLLEN to tip the HIVE, then ' : 'Leaves the wall and ') + 'drives to the LOADING ZONE and parks, all by time. Written for the start spot "' + f.startName + '".',
     make: () => {
       const b = builder(), steps = [];
-      let gone = 0;                                     // inches already driven forward before the path starts
-      if (f.shooter === 'catapult' && f.cataShift >= 1.5) { steps.push(fwd(b, 0.3), b.sleep(time.drive(c, f.cataShift, 0.3)), fwd(b, 0), b.sleep(300)); gone = f.cataShift; }
-      if (f.wheels.length) wheels(b, f.hivePower).forEach((s) => steps.push(s)), steps.push(b.sleep(1500));
-      if (f.shooter) steps.push(b.repeat(3, fire(b)));
-      if (f.wheels.length) wheels(b, 0).forEach((s) => steps.push(s));
-      if (four) steps.push(slide(b, 0.5), b.sleep(time.strafe(c, 40, 0.5, true)), fwd(b, 0.6), b.sleep(time.drive(c, 100 - gone, 0.6, true)), slide(b, 0.4), b.sleep(time.strafe(c, 9, 0.4)), fwd(b, 0));
-      else steps.push(fwd(b, 0.5), b.sleep(time.drive(c, 8 - Math.min(gone, 6), 0.5)), fwd(b, 0), b.sleep(250),
-        spin(b, 0.3), b.sleep(time.turn(c, 90, 0.3)), fwd(b, 0), b.sleep(250),
-        fwd(b, 0.6), b.sleep(time.drive(c, 40, 0.6)), fwd(b, 0), b.sleep(250),
-        spin(b, -0.3), b.sleep(time.turn(c, 90, 0.3)), fwd(b, 0), b.sleep(250),
-        fwd(b, 0.7), b.sleep(time.drive(c, 92, 0.7)), fwd(b, 0), b.sleep(250),
-        spin(b, 0.3), b.sleep(time.turn(c, 90, 0.3)), fwd(b, 0), b.sleep(250),
-        fwd(b, 0.4), b.sleep(time.drive(c, 6, 0.4)), fwd(b, 0));
+      f.route(four).forEach((s) => {
+        if (s[0] !== 'SHOOT') { timed(b, s).forEach((x) => steps.push(x)); return; }
+        if (f.wheels.length) { wheels(b, f.hivePower).forEach((x) => steps.push(x)); steps.push(b.sleep(1500)); }
+        steps.push(b.repeat(3, fire(b)));
+        if (f.wheels.length) wheels(b, 0).forEach((x) => steps.push(x));
+      });
       return auto(b, steps);
     } });
   list.push({ id: 'blocks-square', name: 'Blocks Square Path', lang: 'blocks', mode: 'auto', why: null,
@@ -612,7 +612,7 @@ function examples(c) {
       const prop = (p) => b.blk('aprilTag_getProperty', { PROP: p }, { ID: near() });
       return teleop(b, stickMix(b).concat([b.numData('Nearest tag', near()), b.numData('Range', prop('Range')), b.numData('Bearing', prop('Bearing'))]));
     } });
-  list.push({ id: 'blocks-tagstop', name: 'Blocks AprilTag Stop', lang: 'blocks', mode: 'auto', why: S.need(c, ['camera'], [T.camera && c.layout.camera.face ? 'the webcam pointing out of the front' : null]),
+  list.push({ id: 'blocks-tagstop', name: 'Blocks AprilTag Stop', lang: 'blocks', mode: 'auto', why: S.need(c, ['camera'], [T.camera && c.layout.camera.face ? 'the webcam pointing out of the front' : null, f.atHive ? null : 'the start spot that faces your HIVE']),
     desc: 'Drives toward your HIVE and stops when its AprilTag is 30 inches away. Start facing your HIVE.',
     make: () => {
       const b = builder(), id = f.hiveTag;
