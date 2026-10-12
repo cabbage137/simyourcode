@@ -771,7 +771,16 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
         </div>
 
         <div class="card">
-          <div class="card-head"><h3>Gamepad 1</h3><span class="hint">Drag the sticks, click the buttons, use the keyboard, or plug in a real controller.</span></div>
+          <div class="card-head"><h3>Gamepads</h3><span class="hint">Use up to two real controllers, or the keyboard and the on-screen pad.</span></div>
+          <p class="hint" id="padStatus" role="status">No controller found yet. Plug one in or pair it, then press any button on it. The first one becomes gamepad1 and the second gamepad2.</p>
+          <div class="row">
+            <span class="hint">Keyboard and on-screen pad drive:</span>
+            <div class="seg" role="group" aria-label="Which gamepad the keyboard and on-screen pad control">
+              <button type="button" data-pt="0" aria-pressed="true">Gamepad 1</button>
+              <button type="button" data-pt="1" aria-pressed="false">Gamepad 2</button>
+            </div>
+            <button type="button" class="btn btn-small" id="btnSwapPads" disabled>Swap controllers</button>
+          </div>
           <div class="padgrid">
             <div class="padcol">
               <div class="row"><button type="button" class="pb pb-wide" data-pad="left_trigger">LT<small>Z</small></button><button type="button" class="pb pb-wide" data-pad="left_bumper">LB<small>Q</small></button></div>
@@ -1117,6 +1126,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
     <!-- ---------- 2. driving ---------- -->
     <div id="tut-drive" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the controls</h3>
+        <p><b>Two controllers:</b> plug in or pair up to two controllers (PS5, PS4, Xbox and most others work) and press a button on each. The first is <code>gamepad1</code> and the second is <code>gamepad2</code>, and the Gamepads card names them. On a PlayStation controller Cross is <code>a</code>, Circle is <code>b</code>, Square is <code>x</code> and Triangle is <code>y</code>; you can also write <code>gamepad2.cross</code>. <b>Swap controllers</b> switches which one is gamepad1. With no second controller, switch the keyboard and on-screen pad to <b>Gamepad 2</b> to test that code.</p>
         <figure class="fig"><canvas data-fig="pad" width="760" height="420" role="img" aria-label="A gamepad with the keyboard key for each control"></canvas>
           <figcaption>Each control with its keyboard key. A real controller plugged into your computer works too.</figcaption></figure>
         <p>The <b>Full TeleOp</b> example uses these. Click outside the code box first so your keys go to the robot.</p>
@@ -1693,19 +1703,19 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261012h"></script>
-<script src="interp.js?v=20261012h"></script>
-<script src="world.js?v=20261012h"></script>
-<script src="bot3d.js?v=20261012h"></script>
-<script src="blockly/blockly_compressed.js?v=20261012h"></script>
-<script src="blockly/blocks_compressed.js?v=20261012h"></script>
-<script src="blockly/en.js?v=20261012h"></script>
-<script src="blocks.js?v=20261012h"></script>
-<script src="ftcblocks.js?v=20261012h"></script>
-<script src="app.js?v=20261012h"></script>
-<script src="home.js?v=20261012h"></script>
-<script src="extras.js?v=20261012h"></script>
-<script src="tutorial.js?v=20261012h"></script>
-<script src="bg.js?v=20261012h"></script>
+<script src="sound.js?v=20261012i"></script>
+<script src="interp.js?v=20261012i"></script>
+<script src="world.js?v=20261012i"></script>
+<script src="bot3d.js?v=20261012i"></script>
+<script src="blockly/blockly_compressed.js?v=20261012i"></script>
+<script src="blockly/blocks_compressed.js?v=20261012i"></script>
+<script src="blockly/en.js?v=20261012i"></script>
+<script src="blocks.js?v=20261012i"></script>
+<script src="ftcblocks.js?v=20261012i"></script>
+<script src="app.js?v=20261012i"></script>
+<script src="home.js?v=20261012i"></script>
+<script src="extras.js?v=20261012i"></script>
+<script src="tutorial.js?v=20261012i"></script>
+<script src="bg.js?v=20261012i"></script>
 </body>
 </html>

@@ -816,6 +816,12 @@ function exampleList(cfg) {
     { id: 'java-full', name: 'Full TeleOp', lang: 'java', mode: 'teleop', why: null,
       desc: 'Drives and works every tool on your bot. It changes to match the parts you picked in Build Bot.',
       make: () => javaSample('teleop', cfg) },
+    { id: 'java-two', name: 'Two Driver TeleOp', lang: 'java', mode: 'teleop', why: (f.T.intake || f.T.launcher || f.T.lift) ? null : 'Needs at least one scoring tool',
+      desc: 'For two controllers: gamepad1 drives, gamepad2 works the tools. No second controller? Switch the on-screen pad to Gamepad 2.',
+      make: () => javaSample('teleop', cfg).split('\n').map((line) => line.indexOf('setDrive(') >= 0 ? line : line.replace(/gamepad1\./g, 'gamepad2.')).join('\n')
+        .replace('Full TeleOp: drive with the gamepad and work every tool on your bot.', 'Two Driver TeleOp: the driver on gamepad1 steers, the operator on gamepad2 works every tool.')
+        .replace('"Full TeleOp"', '"Two Driver TeleOp"').replace('class FullTeleOp', 'class TwoDriverTeleOp')
+        .replace('// Left stick drives', '// Driver (gamepad1): left stick drives') },
     { id: 'java-slow', name: 'Slow Mode TeleOp', lang: 'java', mode: 'teleop', why: null,
       desc: 'Hold the left trigger to drive at one-third speed for careful lining up.',
       make: J({ mode: 'teleop', title: 'Slow Mode TeleOp', cls: 'SlowModeTeleOp', about: 'hold the left trigger for slow, careful driving.', use: ['setDrive'], body: loop([

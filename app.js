@@ -123,7 +123,7 @@ function readColors() {
 /* ---------- telemetry, gamepads and hardware map handed to student code ---------- */
 const tele = { pending: [], shown: null, dirty: true, update() { this.shown = this.pending.slice(0, 30); this.pending = []; this.dirty = true; } };
 const PAD_KEYS = ['left_stick_x', 'left_stick_y', 'right_stick_x', 'right_stick_y', 'left_trigger', 'right_trigger', 'a', 'b', 'x', 'y',
-  'left_bumper', 'right_bumper', 'dpad_up', 'dpad_down', 'dpad_left', 'dpad_right', 'start', 'back'];
+  'left_bumper', 'right_bumper', 'dpad_up', 'dpad_down', 'dpad_left', 'dpad_right', 'start', 'back', 'left_stick_button', 'right_stick_button', 'guide', 'touchpad'];
 const ANALOG = { left_stick_x: 1, left_stick_y: 1, right_stick_x: 1, right_stick_y: 1, left_trigger: 1, right_trigger: 1 };
 const blankPad = () => { const p = {}; PAD_KEYS.forEach((k) => { p[k] = ANALOG[k] ? 0 : false; }); return p; };
 const pad = blankPad(), pad2 = blankPad();
@@ -131,7 +131,7 @@ function padApi(src) {
   const F = Object.create(null);
   PAD_KEYS.forEach((k) => { F[k] = () => src[k]; });
   F.cross = F.a; F.circle = F.b; F.square = F.x; F.triangle = F.y;
-  F.left_stick_button = () => false; F.right_stick_button = () => false;
+  F.options = F.start; F.share = F.back; F.ps = F.guide;                  /* the PlayStation names for the same buttons */
   return { __t: 'Gamepad', __f: F, __m: Object.create(null) };
 }
 const KIND_OF = { DcMotor: 'motor', DcMotorEx: 'motor', DcMotorSimple: 'motor', Servo: 'servo', IMU: 'imu', DistanceSensor: 'distance', Rev2mDistanceSensor: 'distance', WebcamName: 'camera', CameraName: 'camera' };
@@ -462,37 +462,68 @@ const KEYMAP = { KeyQ: 'left_bumper', KeyE: 'right_bumper', KeyZ: 'left_trigger'
   KeyT: 'dpad_up', KeyG: 'dpad_down', KeyF: 'dpad_left', KeyH: 'dpad_right' };
 const DRIVE_KEYS = { KeyW: 1, KeyA: 1, KeyS: 1, KeyD: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1 };
 const typing = (t) => t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
-function pollPad() {
-  const k = (c) => keys[c] ? 1 : 0;
-  let lx = k('KeyD') - k('KeyA') + vstick.lx, ly = k('KeyS') - k('KeyW') + vstick.ly;
-  let rx = k('ArrowRight') - k('ArrowLeft') + vstick.rx, ry = k('ArrowDown') - k('ArrowUp') + vstick.ry;
-  const b = {};
-  Object.keys(KEYMAP).forEach((c) => { if (keys[c]) b[KEYMAP[c]] = true; });
-  Object.keys(vbtn).forEach((n) => { if (vbtn[n]) b[n] = true; });
-  let lt = b.left_trigger ? 1 : 0, rt = b.right_trigger ? 1 : 0;
+/* Up to two real controllers, in the order the browser lists them: the first drives gamepad1 and the
+   second drives gamepad2 (Swap turns that round). PlayStation, Xbox and most other controllers report
+   the same "standard" button layout, so a PS5 controller's Cross is A, Circle is B, Square is X and
+   Triangle is Y. The keyboard and the on-screen pad feed whichever gamepad is picked under the sticks. */
+const padPair = [pad, pad2];
+let screenTo = 0, swapPads = false, padSeen = '';
+const HW_BUTTONS = ['a', 'b', 'x', 'y', 'left_bumper', 'right_bumper', null, null, 'back', 'start', 'left_stick_button', 'right_stick_button', 'dpad_up', 'dpad_down', 'dpad_left', 'dpad_right', 'guide', 'touchpad'];
+function readControllers() {
+  const found = [];
   try {
     const gps = navigator.getGamepads ? navigator.getGamepads() : [];
-    for (let i = 0; i < gps.length; i++) {
+    for (let i = 0; i < gps.length && found.length < 2; i++) {
       const g = gps[i];
-      if (!g || !g.connected || g.mapping !== 'standard') continue;
-      const dz = (v) => Math.abs(v) < 0.08 ? 0 : v, B = (n) => !!(g.buttons[n] && g.buttons[n].pressed);
-      lx += dz(g.axes[0] || 0); ly += dz(g.axes[1] || 0); rx += dz(g.axes[2] || 0); ry += dz(g.axes[3] || 0);
-      ['a', 'b', 'x', 'y', 'left_bumper', 'right_bumper'].forEach((n, j) => { if (B(j)) b[n] = true; });
-      lt = Math.max(lt, g.buttons[6] ? g.buttons[6].value : 0); rt = Math.max(rt, g.buttons[7] ? g.buttons[7].value : 0);
-      if (B(8)) b.back = true; if (B(9)) b.start = true;
-      if (B(12)) b.dpad_up = true; if (B(13)) b.dpad_down = true; if (B(14)) b.dpad_left = true; if (B(15)) b.dpad_right = true;
-      break;
+      if (!g || !g.connected || !g.buttons || g.buttons.length < 10 || !g.axes || g.axes.length < 4) continue;
+      const dz = (v) => Math.abs(v) < 0.08 ? 0 : v, s = { name: String(g.id || 'Controller').replace(/\s*\(.*$/, '').slice(0, 36) || 'Controller', b: {} };
+      s.lx = dz(g.axes[0] || 0); s.ly = dz(g.axes[1] || 0); s.rx = dz(g.axes[2] || 0); s.ry = dz(g.axes[3] || 0);
+      s.lt = g.buttons[6] ? g.buttons[6].value || 0 : 0; s.rt = g.buttons[7] ? g.buttons[7].value || 0 : 0;
+      HW_BUTTONS.forEach((n, j) => { if (n && g.buttons[j] && g.buttons[j].pressed) s.b[n] = true; });
+      found.push(s);
     }
   } catch (e) { /* the Gamepad API can be blocked; keyboard and on-screen controls still work */ }
+  if (swapPads && found.length === 2) found.reverse();
+  return found;
+}
+function showControllers(found) {
+  const key = found.map((f) => f.name).join('|') + '/' + screenTo + '/' + swapPads;
+  if (key === padSeen) return;
+  padSeen = key;
+  const el = $('padStatus');
+  if (el) el.textContent = found.length
+    ? found.map((f, i) => 'Controller ' + (i + 1) + ' (' + f.name + ') is gamepad' + (i + 1)).join('. ') + '.' + (found.length < 2 ? ' Connect a second one and press a button on it for gamepad2.' : '')
+    : 'No controller found yet. Plug one in or pair it, then press any button on it. The first one becomes gamepad1 and the second gamepad2.';
+  document.querySelectorAll('[data-pt]').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.pt === screenTo)));
+  const sw = $('btnSwapPads'); if (sw) sw.disabled = found.length < 2;
+}
+function pollPad() {
+  const k = (c) => keys[c] ? 1 : 0;
+  const scr = { lx: k('KeyD') - k('KeyA') + vstick.lx, ly: k('KeyS') - k('KeyW') + vstick.ly, rx: k('ArrowRight') - k('ArrowLeft') + vstick.rx, ry: k('ArrowDown') - k('ArrowUp') + vstick.ry, b: {} };
+  Object.keys(KEYMAP).forEach((c) => { if (keys[c]) scr.b[KEYMAP[c]] = true; });
+  Object.keys(vbtn).forEach((n) => { if (vbtn[n]) scr.b[n] = true; });
+  scr.lt = scr.b.left_trigger ? 1 : 0; scr.rt = scr.b.right_trigger ? 1 : 0;
+  const found = readControllers();
   const live = !(world.mode === 'auto' || world.mode === 'transition' || world.mode === 'autotest');
   const c1 = (v) => BBZ.clamp(v, -1, 1);
-  pad.left_stick_x = live ? c1(lx) : 0; pad.left_stick_y = live ? c1(ly) : 0;
-  pad.right_stick_x = live ? c1(rx) : 0; pad.right_stick_y = live ? c1(ry) : 0;
-  pad.left_trigger = live ? lt : 0; pad.right_trigger = live ? rt : 0;
-  PAD_KEYS.forEach((n) => { if (!ANALOG[n]) pad[n] = live && b[n] === true; });
-  document.querySelectorAll('.pb').forEach((el) => { el.classList.toggle('is-down', b[el.dataset.pad] === true); });
+  let lit = scr.b;
+  for (let i = 0; i < 2; i++) {
+    const a = i === screenTo ? scr : null, h = found[i] || null, p = padPair[i];
+    const sum = (key) => (a ? a[key] : 0) + (h ? h[key] : 0), b = Object.assign({}, a ? a.b : null, h ? h.b : null);
+    p.left_stick_x = live ? c1(sum('lx')) : 0; p.left_stick_y = live ? c1(sum('ly')) : 0;
+    p.right_stick_x = live ? c1(sum('rx')) : 0; p.right_stick_y = live ? c1(sum('ry')) : 0;
+    p.left_trigger = live ? Math.max(a ? a.lt : 0, h ? h.lt : 0) : 0; p.right_trigger = live ? Math.max(a ? a.rt : 0, h ? h.rt : 0) : 0;
+    PAD_KEYS.forEach((n) => { if (!ANALOG[n]) p[n] = live && b[n] === true; });
+    if (i === screenTo) { lit = b; if (h) { if (h.lt > 0.5) lit.left_trigger = true; if (h.rt > 0.5) lit.right_trigger = true; } }
+  }
+  document.querySelectorAll('.pb').forEach((el) => { el.classList.toggle('is-down', lit[el.dataset.pad] === true); });
+  showControllers(found);
 }
 function wireInput() {
+  document.querySelectorAll('[data-pt]').forEach((b) => b.addEventListener('click', () => { screenTo = +b.dataset.pt === 1 ? 1 : 0; padSeen = ''; }));
+  if ($('btnSwapPads')) $('btnSwapPads').addEventListener('click', () => { swapPads = !swapPads; padSeen = ''; notify(swapPads ? 'Swapped: the second controller is now gamepad1.' : 'Back to normal: the first controller is gamepad1.'); });
+  window.addEventListener('gamepadconnected', () => { padSeen = ''; });
+  window.addEventListener('gamepaddisconnected', () => { padSeen = ''; });
   window.addEventListener('keydown', (e) => {
     if (typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
     if (KEYMAP[e.code] || DRIVE_KEYS[e.code]) { keys[e.code] = true; if (!$('view-drive').hidden) e.preventDefault(); }
@@ -1153,7 +1184,7 @@ BBZ.dryRun = (src, cfg, mode, seconds, pads) => {
     let r = J.start(src, makeHost());
     while (world.time < seconds) {
       if (!started && world.time >= startAt) started = true;
-      if (pads) { const want = pads(world.time, world) || {}; PAD_KEYS.forEach((k) => { pad[k] = want[k] !== undefined ? want[k] : (ANALOG[k] ? 0 : false); }); }
+      if (pads) { const want = pads(world.time, world) || {}, two = want.two || {}; PAD_KEYS.forEach((k) => { pad[k] = want[k] !== undefined ? want[k] : (ANALOG[k] ? 0 : false); pad2[k] = two[k] !== undefined ? two[k] : (ANALOG[k] ? 0 : false); }); }
       if (r && (r.step(world.time) || stopReq)) { r = null; out.finished = true; world.stopActuators(); }
       world.step(STEP);
       if (world.phaseChanged) { world.phaseChanged = false; r = null; world.stopActuators(); }
@@ -1162,7 +1193,7 @@ BBZ.dryRun = (src, cfg, mode, seconds, pads) => {
     out.score = s.total; out.tips = s.tips; out.items = s.items.filter((i) => i.n).map((i) => i.label + ' x' + i.n);
     out.x = +world.robot.x.toFixed(1); out.y = +world.robot.y.toFixed(1); out.deg = +(world.robot.th * 180 / Math.PI).toFixed(0);
     out.fouls = world.fouls; out.held = world.robot.held.length; out.world = world;
-    if (pads) PAD_KEYS.forEach((k) => { pad[k] = ANALOG[k] ? 0 : false; }); out.tele = (tele.shown || []).slice(0, 6);
+    if (pads) PAD_KEYS.forEach((k) => { pad[k] = ANALOG[k] ? 0 : false; pad2[k] = ANALOG[k] ? 0 : false; }); out.tele = (tele.shown || []).slice(0, 6);
   } catch (e) { out.error = (e && e.line ? 'line ' + e.line + ': ' : '') + (e && e.message ? e.message : String(e)); }
   world = keep.world; started = keep.started; startAt = keep.startAt; stopReq = keep.stopReq; state.robot = keep.robot;
   tele.pending = keep.pending; tele.shown = keep.shown; tele.dirty = true;

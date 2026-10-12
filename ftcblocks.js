@@ -203,8 +203,9 @@ function builder() {
   const get = (name) => blk('variables_get', { VAR: V(name) });
   const set = (name, v) => blk('variables_set', { VAR: V(name) }, { VALUE: v });
   const active = () => blk('linearOpMode_opModeIsActive');
-  const padN = (p) => blk('gamepad_getProperty_Number', { GAMEPAD: 'gamepad1', PROP: p });
-  const padB = (p) => blk('gamepad_getProperty_Boolean', { GAMEPAD: 'gamepad1', PROP: p });
+  const who = { pad: 'gamepad1' };                 /* which gamepad the next gamepad blocks read */
+  const padN = (p) => blk('gamepad_getProperty_Number', { GAMEPAD: who.pad, PROP: p });
+  const padB = (p) => blk('gamepad_getProperty_Boolean', { GAMEPAD: who.pad, PROP: p });
   const power = (m, v) => blk('dcMotor_setProperty_Number', { DEVICE: m, PROP: 'Power' }, { VALUE: v });
   const powers = (ms, vs) => {
     const f = { PROP: 'Power' }, inp = {};
@@ -232,7 +233,7 @@ function builder() {
     blocks: { languageVersion: 0, blocks: [{ type: 'ftc_runOpMode', x: 20, y: 20, inputs: { DO: { block: chain(body) } } }] },
     variables: vars.map((name) => ({ name, id: 'var_' + name }))
   });
-  return { blk, chain, num, txt, note, op, cmp, and, neg, get, set, active, padN, padB, power, powers, servo, reverse, pos, sleep, loopWhile, repeat, iff, numData, update, program };
+  return { who, blk, chain, num, txt, note, op, cmp, and, neg, get, set, active, padN, padB, power, powers, servo, reverse, pos, sleep, loopWhile, repeat, iff, numData, update, program };
 }
 /* The starting point for a new op mode: the same skeleton FTC Blocks gives you. */
 function blank() {
@@ -552,10 +553,10 @@ function examples(c) {
   list.push({ id: 'blocks-drive', name: 'Blocks Drive Only', lang: 'blocks', mode: 'teleop', why: null,
     desc: 'The classic first program: the left stick drives' + (four ? ' and slides' : '') + ', the right stick turns.',
     make: () => { const b = builder(); return teleop(b, stickMix(b)); } });
-  list.push({ id: 'blocks-full', name: 'Blocks Full TeleOp', lang: 'blocks', mode: 'teleop', why: null,
-    desc: 'Drives and works every tool on your bot, with one if / else block per button.',
-    make: () => {
+  /* The whole TeleOp. With `second`, the sticks stay on gamepad1 and every tool moves to gamepad2. */
+  const fullBlocks = (second) => {
       const b = builder(), loop = stickMix(b);
+      if (second) b.who.pad = 'gamepad2';
       if (f.roller) loop.push(b.iff([[b.padB('RightBumper'), [b.power(n.intake, b.num(1))]], [b.padB('LeftBumper'), [b.power(n.intake, b.num(-1))]]], [b.power(n.intake, b.num(0))]));
       if (f.claw) loop.push(b.iff([[b.padB('RightBumper'), [b.servo(n.claw, b.num(1))]]], [b.servo(n.claw, b.num(0))]));
       if (f.wheels.length) {
@@ -569,7 +570,13 @@ function examples(c) {
         loop.push(b.iff([[b.padB('X'), [b.servo(n.gate, b.num(1))]]], [b.servo(n.gate, b.num(0))]));
       }
       return teleop(b, loop);
-    } });
+  };
+  list.push({ id: 'blocks-full', name: 'Blocks Full TeleOp', lang: 'blocks', mode: 'teleop', why: null,
+    desc: 'Drives and works every tool on your bot, with one if / else block per button.',
+    make: () => fullBlocks(false) });
+  list.push({ id: 'blocks-two', name: 'Blocks Two Driver TeleOp', lang: 'blocks', mode: 'teleop', why: (T.intake || T.launcher || T.lift) ? null : 'Needs at least one scoring tool',
+    desc: 'For two controllers: gamepad1 drives, gamepad2 works the tools. No second controller? Switch the on-screen pad to Gamepad 2.',
+    make: () => fullBlocks(true) });
   list.push({ id: 'blocks-leave', name: 'Blocks Leave Only', lang: 'blocks', mode: 'auto', why: null,
     desc: 'Three blocks: drive forward, wait, stop. That is enough for the 3 LEAVE points.',
     make: () => { const b = builder(); return auto(b, [fwd(b, 0.4), b.sleep(600), fwd(b, 0)]); } });
