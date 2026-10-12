@@ -69,26 +69,31 @@ if (home && tool) {
   }
 }
 
-/* Three bees drift around the Home tab as if there were no gravity. Grab one and drag it, or throw it:
+/* Four bees drift around the Home tab as if there were no gravity. Grab one and drag it, or throw it:
    it glides off, bounces from the edges and the other bees, then settles back to a slow wander. */
 const beeLayer = $('bees');
 if (home && beeLayer) {
-  const BEE = '<svg viewBox="0 0 56 48" focusable="false">' +
-    '<ellipse class="wing" cx="23" cy="12" rx="9" ry="11" fill="#e3f4ff" fill-opacity="0.88" stroke="#7fb2d6" stroke-width="1"/>' +
-    '<ellipse class="wing" cx="34" cy="11" rx="8" ry="10" fill="#e3f4ff" fill-opacity="0.88" stroke="#7fb2d6" stroke-width="1"/>' +
-    '<path d="M10 30l-7-2 7-2z" fill="#3a2a08"/>' +
-    '<ellipse cx="28" cy="30" rx="19" ry="13" fill="#f6c21c" stroke="#3a2a08" stroke-width="2"/>' +
-    '<path d="M19 19.5v21M27 17.5v25M35 19v22" stroke="#3a2a08" stroke-width="4.4" stroke-linecap="round"/>' +
-    '<path d="M41 19q1-8 7-8M45 21q4-6 8-4" fill="none" stroke="#3a2a08" stroke-width="1.6" stroke-linecap="round"/>' +
-    '<circle cx="43.5" cy="27" r="2.7" fill="#1d1503"/><circle cx="44.4" cy="26" r="0.9" fill="#fff"/>' +
-    '<path d="M42 33q2.4 2.2 5 0" fill="none" stroke="#3a2a08" stroke-width="1.5" stroke-linecap="round"/></svg>';
-  const SIZE = 56, R = 25, CRUISE = 34;
+  /* A round cartoon bee: fat yellow body with a thick outline, three brown stripes at the back, a little
+     stinger, two small wings on top, one curly antenna and a tiny calm face. Each one needs its own clip id. */
+  const BEE = (i) => '<svg viewBox="0 0 122 104" focusable="false">' +
+    '<defs><clipPath id="beeBody' + i + '"><ellipse cx="68" cy="62" rx="50" ry="38"/></clipPath></defs>' +
+    '<ellipse class="wing" cx="52" cy="20" rx="16" ry="11" fill="#ffffff" stroke="#111111" stroke-width="4"/>' +
+    '<ellipse class="wing" cx="72" cy="19" rx="13" ry="10" fill="#ffffff" stroke="#111111" stroke-width="4"/>' +
+    '<path d="M21 54L3 62l18 8z" fill="#111111"/>' +
+    '<ellipse cx="68" cy="62" rx="50" ry="38" fill="#ffd400"/>' +
+    '<g clip-path="url(#beeBody' + i + ')" fill="#8a4b08" stroke="#111111" stroke-width="2.5">' +
+    '<rect x="30" y="14" width="8" height="96"/><rect x="44" y="14" width="8" height="96"/><rect x="58" y="14" width="8" height="96"/></g>' +
+    '<ellipse cx="68" cy="62" rx="50" ry="38" fill="none" stroke="#111111" stroke-width="4.5"/>' +
+    '<path d="M92 27q6-9 15-3" fill="none" stroke="#111111" stroke-width="4" stroke-linecap="round"/>' +
+    '<circle cx="95" cy="58" r="2.8" fill="#111111"/><circle cx="108" cy="58" r="2.8" fill="#111111"/>' +
+    '<path d="M98 65h7" stroke="#111111" stroke-width="2.6" stroke-linecap="round"/></svg>';
+  const COUNT = 4, SIZE = 92, R = 38, CRUISE = 34;
   let still = false;
   try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { still = false; }
   const bees = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < COUNT; i++) {
     const el = document.createElement('div');
-    el.className = 'bee'; el.innerHTML = BEE;
+    el.className = 'bee'; el.innerHTML = BEE(i);
     beeLayer.append(el);
     const a = Math.random() * 6.283;
     bees.push({ el, x: 0, y: 0, vx: Math.cos(a) * CRUISE, vy: Math.sin(a) * CRUISE, held: false, placed: false, turn: Math.random() * 6.283, face: 1, lx: 0, ly: 0, lt: 0, ox: 0, oy: 0 });
@@ -108,7 +113,7 @@ if (home && beeLayer) {
     const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000)); last = now;
     const bd = bounds();
     bees.forEach((b, i) => {
-      if (!b.placed) { b.placed = true; b.x = bd.x0 + (bd.x1 - bd.x0) * (0.2 + 0.3 * i); b.y = bd.y0 + (bd.y1 - bd.y0) * (0.25 + 0.2 * ((i * 2) % 3)); }
+      if (!b.placed) { b.placed = true; b.x = bd.x0 + (bd.x1 - bd.x0) * (0.12 + 0.25 * i); b.y = bd.y0 + (bd.y1 - bd.y0) * (0.2 + 0.25 * ((i * 2) % 3)); }
       if (b.held) { draw(b); return; }
       if (!still) {
         /* a gentle, wandering push, and a slow fade of any extra speed from being thrown */
@@ -123,7 +128,7 @@ if (home && beeLayer) {
       if (Math.abs(b.vx) > 4) b.face = b.vx < 0 ? -1 : 1;
     });
     /* bees bump off each other */
-    for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) {
+    for (let i = 0; i < COUNT; i++) for (let j = i + 1; j < COUNT; j++) {
       const a = bees[i], c = bees[j], dx = c.x - a.x, dy = c.y - a.y, d = Math.hypot(dx, dy);
       if (d >= R * 2 || d < 0.01) continue;
       const nx = dx / d, ny = dy / d, push = (R * 2 - d) / 2;

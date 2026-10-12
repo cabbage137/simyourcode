@@ -565,13 +565,13 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .blkfig { width: 100%; height: 290px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; pointer-events: none; }
 .blkfig.tall { height: 430px; }
 
-/* ---------- the three bees on the Home tab ---------- */
+/* ---------- the four bees on the Home tab ---------- */
 #view-home { position: relative; }
 .bees { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
-.bee { position: absolute; left: 0; top: 0; width: 56px; height: 48px; pointer-events: auto; cursor: grab; touch-action: none; will-change: transform; -webkit-user-select: none; user-select: none; }
+.bee { position: absolute; left: 0; top: 0; width: 92px; height: 78px; pointer-events: auto; cursor: grab; touch-action: none; will-change: transform; -webkit-user-select: none; user-select: none; }
 .bee.is-held { cursor: grabbing; }
 .bee svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.28)); }
-.bee .wing { transform-origin: 28px 17px; animation: flap 0.09s linear infinite alternate; }
+.bee .wing { transform-origin: 62px 30px; animation: flap 0.09s linear infinite alternate; }
 @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(0.4); } }
 @media (prefers-reduced-motion: reduce) { .bee .wing { animation: none; } }
 @media (max-width: 760px) { .choice.three { grid-template-columns: minmax(0, 1fr); } }
@@ -1057,7 +1057,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
         <div class="tablewrap"><table>
           <thead><tr><th>Tab</th><th>What you do there</th></tr></thead>
           <tbody>
-            <tr><td><b>Home</b></td><td>The front page. The cards jump to the other tabs, and the three bees can be dragged and thrown around for fun.</td></tr>
+            <tr><td><b>Home</b></td><td>The front page. The cards jump to the other tabs, and the four bees can be dragged and thrown around for fun.</td></tr>
             <tr><td><b>Drive &amp; Code</b></td><td>The field, the Driver Station, the gamepad and the code editor. This is where you run programs.</td></tr>
             <tr><td><b>Build Bot</b></td><td>Choose the drivetrain, tools and sensors, look at your robot in 3D, drag parts around, name your motors, or load a ready-made robot.</td></tr>
             <tr><td><b>Step by Step</b></td><td>A ten-step path from your first look at the field to a full match.</td></tr>
@@ -1693,19 +1693,19 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261012e"></script>
-<script src="interp.js?v=20261012e"></script>
-<script src="world.js?v=20261012e"></script>
-<script src="bot3d.js?v=20261012e"></script>
-<script src="blockly/blockly_compressed.js?v=20261012e"></script>
-<script src="blockly/blocks_compressed.js?v=20261012e"></script>
-<script src="blockly/en.js?v=20261012e"></script>
-<script src="blocks.js?v=20261012e"></script>
-<script src="ftcblocks.js?v=20261012e"></script>
-<script src="app.js?v=20261012e"></script>
-<script src="home.js?v=20261012e"></script>
-<script src="extras.js?v=20261012e"></script>
-<script src="tutorial.js?v=20261012e"></script>
-<script src="bg.js?v=20261012e"></script>
+<script src="sound.js?v=20261012f"></script>
+<script src="interp.js?v=20261012f"></script>
+<script src="world.js?v=20261012f"></script>
+<script src="bot3d.js?v=20261012f"></script>
+<script src="blockly/blockly_compressed.js?v=20261012f"></script>
+<script src="blockly/blocks_compressed.js?v=20261012f"></script>
+<script src="blockly/en.js?v=20261012f"></script>
+<script src="blocks.js?v=20261012f"></script>
+<script src="ftcblocks.js?v=20261012f"></script>
+<script src="app.js?v=20261012f"></script>
+<script src="home.js?v=20261012f"></script>
+<script src="extras.js?v=20261012f"></script>
+<script src="tutorial.js?v=20261012f"></script>
+<script src="bg.js?v=20261012f"></script>
 </body>
 </html>
