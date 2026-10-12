@@ -31,9 +31,18 @@ function cleanProgram(p) {
   return {
     id: pid++, name: cleanName(p.name), lang, mode: p.mode === 'auto' ? 'auto' : 'teleop', group: cleanGroup(p.group), desc: cleanDesc(p.desc),
     code: lang === 'java' && typeof p.code === 'string' ? p.code.slice(0, MAX_CODE) : '',
-    blocks: lang === 'blocks' ? BBZ.Blocks.sanitize(p.blocks) : []
+    blocks: lang === 'blocks' ? BBZ.Blocks.sanitize(p.blocks) : [],
+    ex: (typeof p.ex === 'string' && /^[a-z-]{1,30}$/.test(p.ex)) ? p.ex : '', sig: (typeof p.sig === 'string' && /^[0-9a-z]{1,16}$/.test(p.sig)) ? p.sig : ''
   };
 }
+/* A short fingerprint of a program's contents. An example whose fingerprint still matches has not been edited. */
+function sigOf(p) {
+  const s = p.lang === 'java' ? p.code : JSON.stringify(p.blocks);
+  let a = 2166136261;
+  for (let i = 0; i < s.length; i++) { a ^= s.charCodeAt(i); a = Math.imul(a, 16777619); }
+  return (a >>> 0).toString(36) + s.length.toString(36);
+}
+const isPure = (p) => !!(p.ex && p.sig && sigOf(p) === p.sig);
 function seed() {
   const list = BBZ.Samples.list(state.robot);
   state.programs = ['java-full', 'java-tip', 'blocks-full', 'blocks-tip'].map((id) => fromExample(list.find((e) => e.id === id)));
@@ -47,6 +56,7 @@ function load() {
   try { raw = JSON.parse(window.localStorage.getItem(KEY) || 'null'); } catch (e) { raw = null; }
   if (raw && typeof raw === 'object') {
     state.robot = BBZ.sanitizeRobot(raw.robot);
+    BBZ.Blocks.useRobot(state.robot);            /* block dropdowns must know this bot's device names before programs are read */
     if (Array.isArray(raw.programs)) state.programs = raw.programs.slice(0, MAX_PROGRAMS).map(cleanProgram).filter(Boolean); normalise();
     const idx = (v) => (typeof v === 'number' && Number.isInteger(v) && v >= -1 && v < state.programs.length) ? v : -1;
     state.open = Math.max(0, idx(raw.open)); state.auto = idx(raw.auto); state.tele = idx(raw.tele);
@@ -68,7 +78,7 @@ function save() {
     try {
       window.localStorage.setItem(KEY, JSON.stringify({
         robot: state.robot, open: state.open, auto: state.auto, tele: state.tele, speed: state.speed,
-        programs: state.programs.map((p) => ({ name: p.name, lang: p.lang, mode: p.mode, group: p.group, desc: p.desc, code: p.code, blocks: p.blocks }))
+        programs: state.programs.map((p) => ({ name: p.name, lang: p.lang, mode: p.mode, group: p.group, desc: p.desc, code: p.code, blocks: p.blocks, ex: p.ex || '', sig: p.sig || '' }))
       }));
     } catch (e) { /* storage can be unavailable; the page still works */ }
   }, 350);
@@ -106,15 +116,49 @@ function padApi(src) {
   F.left_stick_button = () => false; F.right_stick_button = () => false;
   return { __t: 'Gamepad', __f: F, __m: Object.create(null) };
 }
-const KIND_OF = { DcMotor: 'motor', DcMotorEx: 'motor', DcMotorSimple: 'motor', Servo: 'servo', IMU: 'imu', DistanceSensor: 'distance', Rev2mDistanceSensor: 'distance' };
-const KIND_LABEL = { motor: 'motor', servo: 'servo', imu: 'IMU', distance: 'distance sensor' };
+const KIND_OF = { DcMotor: 'motor', DcMotorEx: 'motor', DcMotorSimple: 'motor', Servo: 'servo', IMU: 'imu', DistanceSensor: 'distance', Rev2mDistanceSensor: 'distance', WebcamName: 'camera', CameraName: 'camera' };
+const KIND_LABEL = { motor: 'motor', servo: 'servo', imu: 'IMU', distance: 'distance sensor', camera: 'webcam' };
+/* The vision objects student code gets from AprilTagProcessor and VisionPortal, shaped like the FTC SDK ones. */
+function tagObject(d) {
+  const P = Object.create(null), F = Object.create(null), MD = Object.create(null);
+  P.range = () => d.range; P.bearing = () => d.bearing; P.yaw = () => d.yaw; P.x = () => d.x; P.y = () => d.y; P.z = () => 0;
+  P.elevation = () => 0; P.pitch = () => 0; P.roll = () => 0;
+  MD.id = () => d.id; MD.name = () => d.name; MD.tagsize = () => 4;
+  const pose = { __t: 'AprilTagPoseFtc', __f: P, __m: Object.create(null) }, meta = { __t: 'AprilTagMetadata', __f: MD, __m: Object.create(null) };
+  F.id = () => d.id; F.ftcPose = () => pose; F.metadata = () => meta; F.decisionMargin = () => 80;
+  return { __t: 'AprilTagDetection', __f: F, __m: Object.create(null), __s: () => 'AprilTag ' + d.id };
+}
+function visionStatics(cls, name, a) {
+  if (cls === 'AprilTagProcessor' && name === 'easyCreateWithDefaults') {
+    const M = Object.create(null);
+    const list = () => {
+      const items = world.tagDetections().map(tagObject), L = Object.create(null);
+      L.size = () => items.length; L.isEmpty = () => items.length === 0;
+      L.get = (x) => { const i = x[0]; if (typeof i !== 'number' || i < 0 || i >= items.length) throw new Error('The list has ' + items.length + ' detection(s), so get(' + i + ') is outside it. Check size() first.'); return items[i]; };
+      return { arr: items, __t: 'List', __m: L, __s: () => items.length + ' AprilTag detection(s)' };
+    };
+    M.getDetections = list; M.getFreshDetections = list; M.setDecimation = () => undefined;
+    return { __t: 'AprilTagProcessor', __m: M };
+  }
+  if (cls === 'VisionPortal' && name === 'easyCreateWithDefaults') {
+    if (!a[0] || a[0].__t !== 'WebcamName') throw new Error('VisionPortal.easyCreateWithDefaults needs your webcam first, like hardwareMap.get(WebcamName.class, "' + state.robot.names.camera + '").');
+    if (!a[1] || a[1].__t !== 'AprilTagProcessor') throw new Error('VisionPortal.easyCreateWithDefaults needs an AprilTagProcessor as its second value.');
+    const M = Object.create(null);
+    M.close = () => undefined; M.stopStreaming = () => undefined; M.resumeStreaming = () => undefined; M.setProcessorEnabled = () => undefined;
+    M.getCameraState = () => 'STREAMING';
+    return { __t: 'VisionPortal', __m: M };
+  }
+  return undefined;
+}
 function getDevice(cls, name) {
   if (typeof name !== 'string') throw new Error('hardwareMap.get needs the device name in quotes, like hardwareMap.get(DcMotor.class, "fl").');
-  const d = world.device(name);
+  let d = world.device(name);
+  if (!d && name === 'Webcam 1') d = world.device(state.robot.names.camera);          // the usual name on a real robot
+  if (!d && KIND_OF[cls] === 'camera' && !state.robot.tools.camera) throw new Error('Your bot has no webcam. Tick "Webcam (AprilTags)" under Sensors on the Build Bot tab, then run again.');
   if (!d) throw new Error('There is no device named "' + name + '" on your bot. It has: ' + BBZ.deviceList(state.robot).map((x) => x.name).join(', ') + '. Names must match the Build Bot tab exactly, capitals included.');
   if (cls) {
     const want = KIND_OF[cls];
-    if (!want) throw new Error('This simulator has no device type called ' + cls + '. Use DcMotor, Servo, IMU or DistanceSensor.');
+    if (!want) throw new Error('This simulator has no device type called ' + cls + '. Use DcMotor, Servo, IMU, DistanceSensor or WebcamName.');
     if (want !== d.kind) throw new Error('"' + name + '" is a ' + KIND_LABEL[d.kind] + ', but your code asks for a ' + cls + '.');
   }
   return d.api;
@@ -140,6 +184,7 @@ function makeHost() {
     now: () => world.time - t0,
     isStarted: () => started,
     isStopRequested: () => stopReq,
+    statics: visionStatics,
     requestStop: () => { stopReq = true; },
     log: (s) => addLog('info', 'Printed: ' + String(s).slice(0, 200)),
     flushTelemetry: () => { if (tele.pending.length) tele.update(); },
@@ -328,7 +373,7 @@ function rebuildHw() {
   const tb = $('hwBody'); tb.textContent = ''; hwRows = [];
   BBZ.deviceList(state.robot).forEach((d) => {
     const fill = h('i'), bar = h('div', { class: 'bar' + (d.kind === 'motor' ? ' mid' : '') }, fill), val = h('td', { class: 'num mono' });
-    const out = d.kind === 'motor' || d.kind === 'servo' ? bar : h('span', { class: 'hint', text: d.kind === 'imu' ? 'heading' : 'ahead' });
+    const out = d.kind === 'motor' || d.kind === 'servo' ? bar : h('span', { class: 'hint', text: d.kind === 'imu' ? 'heading' : d.kind === 'camera' ? 'tags in view' : 'distance' });
     tb.append(h('tr', null, h('td', { class: 'mono', text: d.name }), h('td', null, out), val));
     hwRows.push({ d, fill, val, dev: (world.device(d.name) || {}).dev });
   });
@@ -344,6 +389,7 @@ function updateHw() {
       r.val.textContent = r.dev.actual.toFixed(2);
     } else if (r.d.kind === 'imu') r.val.textContent = world.yawDeg().toFixed(1) + '°';
     else if (r.d.kind === 'distance') r.val.textContent = world.distanceIn().toFixed(1) + ' in';
+    else if (r.d.kind === 'camera') { const seen = world.tagDetections(); r.val.textContent = seen.length ? 'ID ' + seen.map((t) => t.id).join(', ') : 'none'; }
   });
 }
 const PHASE = { idle: 'READY', practice: 'PRACTICE', auto: 'AUTO', transition: 'PAUSE', teleop: 'TELEOP', over: 'FINAL' };
@@ -474,8 +520,10 @@ function withPrograms(fn) {
   fixMatchPicks(); renderProgramLists(); save();
 }
 function fromExample(ex) {
-  return { id: pid++, name: ex.name, lang: ex.lang, mode: ex.mode, group: 'Examples', desc: ex.desc,
-    code: ex.lang === 'java' ? ex.make() : '', blocks: ex.lang === 'blocks' ? BBZ.Blocks.sanitize(ex.make()) : [] };
+  const p = { id: pid++, name: ex.name, lang: ex.lang, mode: ex.mode, group: 'Examples', desc: ex.desc,
+    code: ex.lang === 'java' ? ex.make() : '', blocks: ex.lang === 'blocks' ? BBZ.Blocks.sanitize(ex.make()) : [], ex: ex.id, sig: '' };
+  p.sig = sigOf(p);
+  return p;
 }
 function matchList(sel, mode, value) {
   sel.textContent = '';
@@ -702,66 +750,186 @@ function wireStation() {
 }
 
 /* ---------- build bot ---------- */
+/* Example op modes nobody has edited are rewritten whenever the bot changes, so they always fit its parts and names. */
+function refreshExamples() {
+  let list = null, n = 0;
+  state.programs.forEach((p) => {
+    if (!isPure(p)) return;
+    list = list || BBZ.Samples.list(state.robot);
+    const ex = list.find((e) => e.id === p.ex);
+    if (!ex || ex.why) return;
+    try {
+      if (ex.lang === 'java') p.code = ex.make(); else p.blocks = BBZ.Blocks.sanitize(ex.make());
+      p.desc = ex.desc; p.sig = sigOf(p); n++;
+    } catch (e) { /* keep the old copy if the example cannot be rebuilt */ }
+  });
+  return n;
+}
 function applyRobot(rerenderBuild) {
   state.robot = BBZ.sanitizeRobot(state.robot);
+  BBZ.Blocks.useRobot(state.robot);
   endOpMode(); matchOn = false;
   world = new BBZ.World(state.robot);
+  refreshExamples();
   clearLog(); rebuildHw(); renderStation(); renderExamples();
   tele.pending = []; tele.shown = null; tele.dirty = true;
   setStatus('Field reset for your bot. Pick a program and press Run.');
   if (rerenderBuild !== false) renderBuild();
   else { drawPreview(); renderChecks(); }
+  renderProgramLists();
   const p = openProg();
   if (p && p.lang === 'blocks') { BBZ.Blocks.render($('blocksRoot'), p, state.robot, blocksApi); refreshGenJava(); }
+  else if (p && $('code').value !== p.code) { $('code').value = p.code; updateGutter(); try { window.dispatchEvent(new Event('bbz-editor')); } catch (e) { /* ignore */ } }
   save();
+}
+/* Where each device would plug in on a real Control Hub, to make the table read like the Configure Robot screen. */
+function portOf(d, i, kindIndex) {
+  if (d.kind === 'motor') return kindIndex < 4 ? 'Control Hub motor ' + kindIndex : 'Expansion Hub motor ' + (kindIndex - 4);
+  if (d.kind === 'servo') return 'Control Hub servo ' + kindIndex;
+  if (d.kind === 'imu') return 'I2C bus 0 (built in)';
+  if (d.kind === 'distance') return 'I2C bus 1';
+  return 'USB';
+}
+const TYPE_LABEL = { motor: 'DcMotor', servo: 'Servo', imu: 'IMU', distance: 'DistanceSensor', camera: 'Webcam' };
+/* Changes a device name everywhere it is used: Java text and the dropdowns inside saved Blocks programs. */
+function renameEverywhere(from, to) {
+  const re = new RegExp('(^|[^A-Za-z0-9_])' + from + '(?![A-Za-z0-9_])', 'g');
+  let n = 0;
+  const walk = (o) => {
+    if (!o || typeof o !== 'object') return;
+    if (Array.isArray(o)) { o.forEach(walk); return; }
+    if (o.fields && typeof o.fields === 'object') Object.keys(o.fields).forEach((k) => { if (k.indexOf('DEVICE') === 0 && o.fields[k] === from) { o.fields[k] = to; n++; } });
+    Object.keys(o).forEach((k) => { if (k !== 'fields') walk(o[k]); });
+  };
+  state.programs.forEach((p) => {
+    if (isPure(p)) return;                                   // untouched examples are rebuilt from scratch instead
+    if (p.lang === 'java') { const next = p.code.replace(re, (m, a) => { n++; return a + to; }); p.code = next.slice(0, MAX_CODE); }
+    else walk(p.blocks);
+  });
+  return n;
 }
 function renderChecks() {
   const c = state.robot, devs = BBZ.deviceList(c), motors = devs.filter((d) => d.kind === 'motor').length, servos = devs.filter((d) => d.kind === 'servo').length;
-  const spec = BBZ.MOTORS[c.motor], speed = spec.rpm / 60 * Math.PI * BBZ.WHEELS[c.wheel].d * 0.85;
+  const speed = BBZ.topSpeed(c);
   const ul = $('checks'); ul.textContent = '';
   const li = (pill, cls, text) => ul.append(h('li', null, h('span', { class: 'pill' + (cls ? ' ' + cls : ''), text: pill }), h('span', { text })));
   li('OK', '', motors + ' of 8 motors used (rule R503).');
   li('OK', '', servos + ' of 8 servos used (rule R503).');
   li('OK', '', 'Starting size ' + c.width + ' × ' + c.length + ' in fits the 18 in cube (rule R102).');
-  li('INFO', 'info', 'Top speed about ' + speed.toFixed(0) + ' in/s (' + (speed / 12).toFixed(1) + ' ft/s). ' + BBZ.ticksPerInch(c).toFixed(1) + ' encoder ticks per inch.');
-  li('INFO', 'info', 'Carries up to 4 pieces at a time (rule G407).' + (c.tools.intake ? '' : ' With no intake it can only use its 4 pre-loaded POLLEN.'));
-  if (!c.tools.launcher && !c.tools.lift) li('INFO', 'info', 'With no launcher and no lift, this bot can only push pieces and park.');
+  li('INFO', 'info', BBZ.DRIVES[c.drive].label + ' drive: top speed about ' + speed.toFixed(0) + ' in/s (' + (speed / 12).toFixed(1) + ' ft/s). ' + BBZ.ticksPerInch(c).toFixed(1) + ' encoder ticks per inch.');
+  const claw = c.tools.intake && c.kit.intake === 'claw';
+  li('INFO', 'info', 'Carries up to 4 pieces at a time (rule G407).' + (c.tools.intake ? (claw ? ' A claw bot starts with 3 so the claw has room for one more.' : '') : ' With no intake it can only use its 4 pre-loaded POLLEN.'));
+  if (c.tools.intake) li('INFO', 'info', BBZ.KITS.intake[c.kit.intake].label + ' on the ' + BBZ.FACE_NAME[c.layout.intake.face] + '.');
+  if (c.tools.launcher) li('INFO', 'info', BBZ.KITS.launcher[c.kit.launcher].label + ' shooting out of the ' + BBZ.FACE_NAME[c.layout.launcher.face] + '.' + (c.layout.launcher.face ? ' Your code must turn that side toward the target.' : ''));
+  if (c.tools.lift) li('INFO', 'info', BBZ.KITS.lift[c.kit.lift].label + ': reaches ' + BBZ.liftMax(c) + ' in, ' + BBZ.liftTicksPerInch(c).toFixed(1) + ' ticks per inch. Pieces drop off the ' + BBZ.FACE_NAME[c.layout.lift.face] + '.');
+  if (!c.tools.launcher && !c.tools.lift) li('INFO', 'info', 'With no shooter and no lift, this bot can only push or carry pieces and park.');
 }
-function drawPreview() {
+
+/* The preview doubles as the layout editor: click a part to pick it, drag it to move it. */
+let pickKey = '', dragKey = '';
+const PREVIEW_SPAN = 26;                                    // inches shown across the preview
+function drawBot(cv, cfg, pick, label) {
   if (!col) readColors();
-  const cv = $('preview'), ctx = cv.getContext('2d'), px = cv.width, k = px / 26;
+  const ctx = cv.getContext('2d'), px = cv.width, k = px / PREVIEW_SPAN;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = col.tile; ctx.fillRect(0, 0, px, px);
   ctx.setTransform(k, 0, 0, -k, px / 2, px / 2);
   ctx.strokeStyle = col.tileLine; ctx.lineWidth = 0.15; ctx.setLineDash([0.6, 0.6]); ctx.strokeRect(-9, -9, 18, 18); ctx.setLineDash([]);
   ctx.rotate(Math.PI / 2);
-  BBZ.drawRobot(ctx, state.robot, { held: ['P', 'P', 'P', 'P'], lift: 8, spin: 0.6, roll: 0 }, col);
+  BBZ.drawRobot(ctx, cfg, { held: ['P', 'P', 'P'], lift: 8, spin: 0.6, roll: 0, claw: 0.2, cata: 0 }, col, pick);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = col.tileText; ctx.font = '600 13px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('FRONT', px / 2, 16);
+  if (label) { ctx.fillStyle = col.tileText; ctx.font = '600 ' + Math.round(px / 30) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('FRONT', px / 2, px / 24); }
+}
+function drawPreview() { drawBot($('preview'), state.robot, pickKey, true); }
+/* Turns a pointer position on the preview into robot inches (+x front, +y left). */
+function previewPoint(e) {
+  const cv = $('preview'), r = cv.getBoundingClientRect(), k = r.width / PREVIEW_SPAN;
+  const X = (e.clientX - r.left - r.width / 2) / k, Y = -(e.clientY - r.top - r.height / 2) / k;
+  return { x: Y, y: -X };
+}
+function partAt(pt) {
+  const c = state.robot;
+  let best = '', bd = 1e9;
+  BBZ.partList(c).forEach((p) => {
+    let d;
+    if (p.edge) {
+      const a = p.face * Math.PI / 2, along = -(pt.x - p.x) * Math.sin(a) + (pt.y - p.y) * Math.cos(a), out = (pt.x - p.x) * Math.cos(a) + (pt.y - p.y) * Math.sin(a);
+      const span = (p.face % 2 === 0 ? c.width : c.length) / 2;
+      d = (Math.abs(along) < span && out > -2 && out < 3.4) ? Math.abs(out) : 1e9;
+    } else { d = Math.hypot(pt.x - p.x, pt.y - p.y); if (d > p.r + 1.2) d = 1e9; }
+    if (d < bd) { bd = d; best = p.key; }
+  });
+  return best;
+}
+function movePart(key, pt) {
+  const c = state.robot, L = c.layout[key], hl = c.length / 2, hw = c.width / 2;
+  if (BBZ.PARTS[key].edge) L.face = Math.abs(pt.x) / hl >= Math.abs(pt.y) / hw ? (pt.x >= 0 ? 0 : 2) : (pt.y >= 0 ? 1 : 3);
+  else { L.u = BBZ.clamp(pt.x / Math.max(1, hl - 2.6), -1, 1); L.v = BBZ.clamp(pt.y / Math.max(1, hw - 3.4), -1, 1); }
+}
+function describePick() {
+  const c = state.robot, msg = $('layoutMsg'), P = BBZ.PARTS[pickKey];
+  $('btnTurnPart').disabled = !(P && P.turns);
+  if (!P) { msg.textContent = 'Click a part in the picture, or pick one from the list, then drag it where you want it.'; return; }
+  const L = c.layout[pickKey];
+  msg.textContent = P.label + ' selected' + (P.turns ? ', pointing out of the ' + BBZ.FACE_NAME[L.face] + '.' : '.') +
+    (P.edge ? ' Drag it to another side of the robot.' : ' Drag it, or use the arrow keys.') + (P.turns ? ' Turn changes the way it points.' : '');
+}
+function renderPartButtons() {
+  const box = $('partList'); box.textContent = '';
+  BBZ.partList(state.robot).forEach((p) => box.append(h('button', { type: 'button', 'aria-pressed': String(p.key === pickKey), onclick: () => { pickKey = p.key; renderPartButtons(); describePick(); drawPreview(); } }, p.label)));
+}
+function renderPresets() {
+  const box = $('presetList'); box.textContent = '';
+  BBZ.PRESETS.forEach((p) => {
+    const cv = h('canvas', { width: 220, height: 220, role: 'img', 'aria-label': 'Top view of ' + p.name });
+    box.append(h('div', { class: 'preset' }, cv,
+      h('b', { text: p.name }), h('span', { class: 'cat-chip', text: p.style }), h('span', { class: 'hint', text: p.blurb }),
+      h('button', { type: 'button', class: 'btn btn-small', 'aria-label': 'Use ' + p.name, onclick: () => {
+        state.robot = BBZ.presetRobot(p.id, state.robot.alliance); pickKey = '';
+        applyRobot(); notify('Loaded "' + p.name + '". Change anything you like, it is your bot now.');
+        try { $('view-build').scrollIntoView({ block: 'start' }); } catch (e) { /* ignore */ }
+      } }, 'Use this bot')));
+    drawBot(cv, BBZ.presetRobot(p.id, state.robot.alliance), '', false);
+  });
 }
 function renderBuild() {
   const c = state.robot;
   $('botName').value = c.name;
-  $('driveMecanum').setAttribute('aria-pressed', String(c.drive === 'mecanum'));
-  $('driveTank').setAttribute('aria-pressed', String(c.drive === 'tank'));
+  const dl = $('driveList'); dl.textContent = '';
+  Object.keys(BBZ.DRIVES).forEach((k) => {
+    const d = BBZ.DRIVES[k];
+    dl.append(h('button', { type: 'button', 'aria-pressed': String(c.drive === k), onclick: () => { c.drive = k; applyRobot(); } }, h('b', { text: d.label }), h('span', { class: 'hint', text: d.blurb })));
+  });
+  const pl = $('paintList'); pl.textContent = '';
+  Object.keys(BBZ.PAINTS).forEach((k) => pl.append(h('button', { type: 'button', class: 'swatch', style: 'background:' + BBZ.PAINTS[k], title: k, 'aria-label': 'Frame colour ' + k, 'aria-pressed': String(c.paint === k), onclick: () => { c.paint = k; applyRobot(); } })));
   fillSelect($('motorSel'), Object.keys(BBZ.MOTORS).map((k) => [k, BBZ.MOTORS[k].label]), c.motor);
   fillSelect($('wheelSel'), Object.keys(BBZ.WHEELS).map((k) => [k, BBZ.WHEELS[k].label]), c.wheel);
   $('widthRange').value = c.width; $('lengthRange').value = c.length;
   $('widthOut').textContent = c.width + ' in'; $('lengthOut').textContent = c.length + ' in';
   $('realistic').checked = c.realistic;
   $('realisticBox').classList.toggle('is-on', c.realistic);
-  const tl = $('toolList'), sl = $('sensorList'); tl.textContent = ''; if (sl) sl.textContent = '';
+  const tl = $('toolList'), sl = $('sensorList'); tl.textContent = ''; sl.textContent = '';
   Object.keys(BBZ.TOOLS).forEach((t) => {
-    const tool = BBZ.TOOLS[t], id = 'tool-' + t;
+    const tool = BBZ.TOOLS[t], id = 'tool-' + t, kits = BBZ.KITS[t];
     const cb = h('input', { type: 'checkbox', id, checked: c.tools[t], onchange: (e) => { c.tools[t] = e.target.checked; applyRobot(); } });
-    const uses = tool.roles.map((r) => BBZ.ROLES[r].kind === 'motor' ? '1 motor' : BBZ.ROLES[r].kind === 'servo' ? '1 servo' : '1 sensor').join(' + ');
-    ((sl && (t === 'imu' || t === 'distance')) ? sl : tl).append(h('div', { class: 'tool' + (c.tools[t] ? ' is-on' : '') }, cb, h('label', { for: id }, h('b', { text: tool.label }), h('span', { class: 'hint', text: tool.blurb }), h('span', { class: 'uses', text: 'Uses ' + uses }))));
+    const uses = BBZ.toolRoles(c, t).map((r) => BBZ.ROLES[r].kind === 'motor' ? '1 motor' : BBZ.ROLES[r].kind === 'servo' ? '1 servo' : '1 sensor').join(' + ');
+    const label = h('label', { for: id }, h('b', { text: tool.label }), h('span', { class: 'hint', text: tool.blurb }), h('span', { class: 'uses', text: 'Uses ' + uses }));
+    const card = h('div', { class: 'tool' + (c.tools[t] ? ' is-on' : '') }, cb, label);
+    if (kits) {
+      const sel = h('select', { id: 'kit-' + t, 'aria-label': 'Type of ' + tool.label, disabled: !c.tools[t], onchange: (e) => { c.kit[t] = e.target.value; applyRobot(); } });
+      Object.keys(kits).forEach((k) => sel.append(h('option', { value: k }, kits[k].label)));
+      sel.value = c.kit[t];
+      card.append(h('div', { class: 'kit' }, h('span', { class: 'field-label', text: 'Type' }), sel, h('span', { class: 'hint', text: kits[c.kit[t]].blurb })));
+    }
+    ((t === 'imu' || t === 'distance' || t === 'camera') ? sl : tl).append(card);
   });
   const tb = $('hwNames'); tb.textContent = '';
-  BBZ.deviceList(c).forEach((d) => {
+  const count = {};
+  BBZ.deviceList(c).forEach((d, i) => {
+    const ki = count[d.kind] = (count[d.kind] === undefined ? 0 : count[d.kind] + 1);
     const inp = h('input', { type: 'text', class: 'name-in', id: 'name-' + d.role, value: d.name, maxlength: 24, autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Name for ' + d.label });
     inp.addEventListener('change', () => {
       const v = inp.value.trim(), msg = $('nameMsg');
+      if (v === c.names[d.role]) return;
       const clash = BBZ.deviceList(c).some((x) => x.role !== d.role && x.name === v);
       if (!BBZ.validName(v) || clash) {
         inp.value = c.names[d.role]; inp.classList.add('is-bad');
@@ -769,19 +937,24 @@ function renderBuild() {
         setTimeout(() => inp.classList.remove('is-bad'), 1500);
         return;
       }
-      msg.textContent = 'Renamed to "' + v + '". Update your code to use the new name.';
+      const n = renameEverywhere(c.names[d.role], v);
+      msg.textContent = 'Renamed to "' + v + '".' + (n ? ' Your op modes were updated in ' + n + ' place' + (n === 1 ? '' : 's') + ' to match.' : ' Blocks and examples now use the new name.');
       c.names[d.role] = v; applyRobot();
+      const again = $('name-' + d.role); if (again) { try { again.focus(); } catch (e) { /* ignore */ } }
     });
-    const ty = d.kind === 'motor' ? 'DcMotor' : d.kind === 'servo' ? 'Servo' : d.kind === 'imu' ? 'IMU' : 'DistanceSensor';
-    tb.append(h('tr', null, h('td', { text: d.label }), h('td', { class: 'mono', text: ty }), h('td', null, inp)));
+    tb.append(h('tr', null, h('td', { text: d.label }), h('td', { class: 'mono', text: TYPE_LABEL[d.kind] }), h('td', { class: 'hint', text: portOf(d, i, ki) }), h('td', null, inp)));
   });
-  renderChecks(); drawPreview();
+  renderPartButtons(); describePick(); renderChecks(); drawPreview(); renderPresets();
 }
+/* Ready-made naming styles teams commonly use for the drive motors. */
+const NAME_SETS = {
+  short: { fl: 'fl', fr: 'fr', bl: 'bl', br: 'br', left: 'leftDrive', right: 'rightDrive' },
+  long: { fl: 'frontLeft', fr: 'frontRight', bl: 'backLeft', br: 'backRight', left: 'leftDrive', right: 'rightDrive' },
+  sdk: { fl: 'leftFront', fr: 'rightFront', bl: 'leftBack', br: 'rightBack', left: 'left_drive', right: 'right_drive' }
+};
 function wireBuild() {
   const c = () => state.robot;
   $('botName').addEventListener('change', (e) => { c().name = e.target.value; applyRobot(); });
-  $('driveMecanum').addEventListener('click', () => { c().drive = 'mecanum'; applyRobot(); });
-  $('driveTank').addEventListener('click', () => { c().drive = 'tank'; applyRobot(); });
   $('motorSel').addEventListener('change', (e) => { c().motor = e.target.value; applyRobot(); });
   $('wheelSel').addEventListener('change', (e) => { c().wheel = e.target.value; applyRobot(); });
   const size = (key, out) => (e) => { c()[key] = parseFloat(e.target.value); $(out).textContent = c()[key] + ' in'; drawPreview(); };
@@ -790,14 +963,69 @@ function wireBuild() {
   $('widthRange').addEventListener('change', () => applyRobot());
   $('lengthRange').addEventListener('change', () => applyRobot());
   $('realistic').addEventListener('change', (e) => { c().realistic = e.target.checked; applyRobot(); });
-  $('btnResetBot').addEventListener('click', () => { const a = c().alliance; state.robot = BBZ.defaultRobot(); state.robot.alliance = a; applyRobot(); notify('Back to the starter bot.'); });
+  $('btnResetBot').addEventListener('click', () => { state.robot = BBZ.presetRobot('bee', c().alliance); pickKey = ''; applyRobot(); notify('Back to the starter bot.'); });
+  document.querySelectorAll('[data-names]').forEach((b) => b.addEventListener('click', () => {
+    const set = NAME_SETS[b.dataset.names], roles = BBZ.driveRoles(c());
+    if (!set) return;
+    const taken = BBZ.deviceList(c()).filter((d) => roles.indexOf(d.role) < 0).map((d) => d.name);
+    if (roles.some((r) => taken.indexOf(set[r]) >= 0)) { $('nameMsg').textContent = 'One of those names is already used by another part, so nothing was changed.'; return; }
+    /* go through temporary names first so swapping two names cannot collide */
+    let n = 0;
+    roles.forEach((r, i) => { n += renameEverywhere(c().names[r], 'zzTmpName' + i); });
+    roles.forEach((r, i) => { renameEverywhere('zzTmpName' + i, set[r]); c().names[r] = set[r]; });
+    $('nameMsg').textContent = 'Drive motors renamed to ' + roles.map((r) => set[r]).join(', ') + '.' + (n ? ' Your op modes were updated to match.' : '');
+    applyRobot();
+  }));
+
+  /* layout editor */
+  const cv = $('preview');
+  cv.addEventListener('pointerdown', (e) => {
+    const key = partAt(previewPoint(e));
+    pickKey = key; dragKey = key;
+    if (key) { try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } sfx('lift'); }
+    renderPartButtons(); describePick(); drawPreview();
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (!dragKey) { cv.style.cursor = partAt(previewPoint(e)) ? 'grab' : 'default'; return; }
+    cv.style.cursor = 'grabbing';
+    movePart(dragKey, previewPoint(e)); drawPreview();
+  });
+  const drop = () => { if (!dragKey) return; dragKey = ''; sfx('snap'); applyRobot(); };
+  cv.addEventListener('pointerup', drop); cv.addEventListener('pointercancel', drop);
+  cv.addEventListener('dblclick', () => { if (pickKey) $('btnTurnPart').click(); });
+  cv.addEventListener('keydown', (e) => {
+    const P = BBZ.PARTS[pickKey], L = P && c().layout[pickKey];
+    if (!P) return;
+    const step = { ArrowUp: [0.1, 0], ArrowDown: [-0.1, 0], ArrowLeft: [0, 0.1], ArrowRight: [0, -0.1] }[e.key];
+    if (step) {
+      if (P.edge) L.face = { ArrowUp: 0, ArrowLeft: 1, ArrowDown: 2, ArrowRight: 3 }[e.key];
+      else { L.u = BBZ.clamp(L.u + step[0], -1, 1); L.v = BBZ.clamp(L.v + step[1], -1, 1); }
+      e.preventDefault(); applyRobot();
+    } else if (e.key === 'r' || e.key === 'R') { $('btnTurnPart').click(); e.preventDefault(); }
+  });
+  $('btnTurnPart').addEventListener('click', () => {
+    const P = BBZ.PARTS[pickKey];
+    if (!P || !P.turns) return;
+    c().layout[pickKey].face = (c().layout[pickKey].face + 1) % 4; sfx('snap'); applyRobot();
+  });
+  $('btnResetLayout').addEventListener('click', () => { c().layout = BBZ.defaultLayout(); applyRobot(); notify('Every part is back in its usual place.'); });
 }
 
 /* ---------- navigation and the frame loop ---------- */
 const VIEWS = ['home', 'drive', 'build', 'learn', 'tutorial', 'manual', 'legal'];
 function showView(name, fromHash) {
   if (VIEWS.indexOf(name) < 0) name = 'home';
+  const was = VIEWS.find((v) => !$('view-' + v).hidden);
   VIEWS.forEach((v) => { $('view-' + v).hidden = v !== name; });
+  if (was !== name) {
+    /* the new tab glides in from the side it sits on in the tab bar, instead of just appearing */
+    const el = $('view-' + name);
+    el.classList.remove('view-in', 'from-left');
+    void el.offsetWidth;
+    if (was && VIEWS.indexOf(name) < VIEWS.indexOf(was)) el.classList.add('from-left');
+    el.classList.add('view-in');
+  }
   document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === name)));
   if (name === 'build') { renderBuild(); }
   if (name === 'drive') { resizeField(); updateGutter(); }
@@ -825,6 +1053,33 @@ function frame(ts) {
   }
 }
 
+/* Runs a program on a private copy of the field with nobody at the controls and reports what happened.
+   Nothing on screen changes. It exists so every example can be checked against every kind of bot. */
+BBZ.dryRun = (src, cfg, mode, seconds) => {
+  const keep = { world, started, startAt, stopReq, robot: state.robot, pending: tele.pending, shown: tele.shown };
+  const out = { error: null, finished: false };
+  try {
+    state.robot = cfg; world = new BBZ.World(cfg);
+    world.mode = mode === 'auto' ? 'auto' : 'practice'; world.clock = 30; world.enabled = true;
+    started = false; stopReq = false; startAt = 0.35;
+    let r = J.start(src, makeHost());
+    while (world.time < seconds) {
+      if (!started && world.time >= startAt) started = true;
+      if (r && (r.step(world.time) || stopReq)) { r = null; out.finished = true; world.stopActuators(); }
+      world.step(STEP);
+      if (world.phaseChanged) { world.phaseChanged = false; r = null; world.stopActuators(); }
+    }
+    const s = world.score();
+    out.score = s.total; out.tips = s.tips; out.items = s.items.filter((i) => i.n).map((i) => i.label + ' x' + i.n);
+    out.x = +world.robot.x.toFixed(1); out.y = +world.robot.y.toFixed(1); out.deg = +(world.robot.th * 180 / Math.PI).toFixed(0);
+    out.fouls = world.fouls; out.held = world.robot.held.length; out.tele = (tele.shown || []).slice(0, 6);
+  } catch (e) { out.error = (e && e.line ? 'line ' + e.line + ': ' : '') + (e && e.message ? e.message : String(e)); }
+  world = keep.world; started = keep.started; startAt = keep.startAt; stopReq = keep.stopReq; state.robot = keep.robot;
+  tele.pending = keep.pending; tele.shown = keep.shown; tele.dirty = true;
+  return out;
+};
+BBZ.colors = () => { readColors(); return col; };
+BBZ.currentRobot = () => state.robot;
 function init() {
   load();
   readColors();

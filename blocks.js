@@ -125,44 +125,35 @@ function className(name) {
 }
 
 function helperLines(name, cfg) {
-  const n = cfg.names, mec = cfg.drive === 'mecanum', T = cfg.tools;
+  const n = cfg.names, four = BBZ.holo(cfg), T = cfg.tools;
   const dm = BBZ.driveRoles(cfg).map((r) => n[r]);
   const each = (fn) => dm.map(fn);
   switch (name) {
     case 'setDrive':
-      if (mec) return [
+      if (four) return [
         '// Mixes forward, strafe (right is +) and turn (right is +) into the four wheel powers.',
         'void setDrive(double forward, double strafe, double turn) {',
-        '    double pFL = forward + strafe + turn;',
-        '    double pFR = forward - strafe - turn;',
-        '    double pBL = forward - strafe + turn;',
-        '    double pBR = forward + strafe - turn;',
-        '    // If any wheel would go past full power, shrink them all by the same amount.',
-        '    double biggest = Math.max(1.0, Math.max(Math.max(Math.abs(pFL), Math.abs(pFR)), Math.max(Math.abs(pBL), Math.abs(pBR))));',
-        '    ' + n.fl + '.setPower(pFL / biggest);',
-        '    ' + n.fr + '.setPower(pFR / biggest);',
-        '    ' + n.bl + '.setPower(pBL / biggest);',
-        '    ' + n.br + '.setPower(pBR / biggest);',
+        '    ' + n.fl + '.setPower(forward + strafe + turn);',
+        '    ' + n.fr + '.setPower(forward - strafe - turn);',
+        '    ' + n.bl + '.setPower(forward - strafe + turn);',
+        '    ' + n.br + '.setPower(forward + strafe - turn);',
         '}'];
       return [
-        '// Mixes forward and turn (right is +) into left and right wheel powers.',
-        '// A tank drive cannot strafe, so that value is ignored.',
+        '// Mixes forward and turn (right is +) into the left and right wheel powers.',
+        '// A tank drive cannot slide sideways, so strafe is ignored.',
         'void setDrive(double forward, double strafe, double turn) {',
-        '    double pLeft = forward + turn;',
-        '    double pRight = forward - turn;',
-        '    double biggest = Math.max(1.0, Math.max(Math.abs(pLeft), Math.abs(pRight)));',
-        '    ' + n.left + '.setPower(pLeft / biggest);',
-        '    ' + n.right + '.setPower(pRight / biggest);',
+        '    ' + n.left + '.setPower(forward + turn);',
+        '    ' + n.right + '.setPower(forward - turn);',
         '}'];
     case 'moveTicks': {
-      const params = mec ? ['tFL', 'tFR', 'tBL', 'tBR'] : ['tLeft', 'tRight'];
+      const params = four ? ['tFL', 'tFR', 'tBL', 'tBR'] : ['tLeft', 'tRight'];
       return [].concat(
         ['// Runs every drive motor to its own encoder target, then stops.',
           'void moveTicks(' + params.map((p) => 'int ' + p).join(', ') + ', double power) {'],
         each((m) => '    ' + m + '.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);'),
         dm.map((m, i) => '    ' + m + '.setTargetPosition(' + params[i] + ');'),
         each((m) => '    ' + m + '.setMode(DcMotor.RunMode.RUN_TO_POSITION);'),
-        each((m) => '    ' + m + '.setPower(Math.abs(power));'),
+        each((m) => '    ' + m + '.setPower(power);'),
         ['    while (opModeIsActive() && (' + dm.map((m) => m + '.isBusy()').join(' || ') + ')) {', '        idle();', '    }'],
         each((m) => '    ' + m + '.setPower(0);'),
         each((m) => '    ' + m + '.setMode(DcMotor.RunMode.RUN_USING_ENCODER);'),
@@ -172,11 +163,11 @@ function helperLines(name, cfg) {
       '// Drives straight using the wheel encoders. Negative inches goes backward.',
       'void driveInches(double inches, double power) {',
       '    int count = (int) Math.round(inches * TICKS_PER_INCH);',
-      '    moveTicks(' + (mec ? 'count, count, count, count' : 'count, count') + ', power);',
+      '    moveTicks(' + (four ? 'count, count, count, count' : 'count, count') + ', power);',
       '}'];
     case 'strafeInches': return [
-      '// Slides sideways to the right (negative = left). Mecanum wheels slip a little when',
-      '// strafing, so the robot travels a bit less than asked. Tune the number on your real robot.',
+      '// Slides sideways to the right (negative = left). Wheels slip a little when strafing,',
+      '// so the robot travels a bit less than asked. Tune the number on your real robot.',
       'void strafeInches(double inches, double power) {',
       '    int count = (int) Math.round(inches * TICKS_PER_INCH);',
       '    moveTicks(count, -count, -count, count, power);',
@@ -184,36 +175,44 @@ function helperLines(name, cfg) {
     case 'turnLeft':
       if (T.imu) return [
         '// Turns on the spot using the IMU. Positive degrees turns left, negative turns right.',
+        '// For a half turn, call it twice with 90.',
         'void turnLeft(double degrees, double power) {',
         '    ' + n.imu + '.resetYaw();',
-        '    while (opModeIsActive()) {',
+        '    ElapsedTime onTarget = new ElapsedTime();',
+        '    // Keep correcting until the robot has stayed within 1 degree for a quarter of a second.',
+        '    while (opModeIsActive() && onTarget.seconds() < 0.25) {',
         '        double error = degrees - ' + n.imu + '.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);',
-        '        if (Math.abs(error) < 1.5) {',
-        '            break;',
+        '        if (Math.abs(error) > 1.0) {',
+        '            onTarget.reset();',
         '        }',
-        '        double correction = Range.clip(error * 0.03, -power, power);',
-        '        if (Math.abs(correction) < 0.08) {',
-        '            correction = 0.08 * Math.signum(error);   // keep enough power to finish the turn',
-        '        }',
-        '        setDrive(0, 0, -correction);',
+        '        // The further off it is, the harder it turns, so it slows down as it arrives.',
+        '        setDrive(0, 0, -Range.clip(error * 0.02, -power, power));',
         '    }',
         '    setDrive(0, 0, 0);',
-        '    sleep(150);',
         '}'];
       return [
         '// Turns on the spot by counting encoder ticks (add an IMU for more accurate turns).',
         'void turnLeft(double degrees, double power) {',
         '    int count = (int) Math.round(degrees * TICKS_PER_DEGREE);',
-        '    moveTicks(' + (mec ? '-count, count, -count, count' : '-count, count') + ', power);',
+        '    moveTicks(' + (four ? '-count, count, -count, count' : '-count, count') + ', power);',
         '}'];
-    case 'launchOne': return [
-      '// Pushes one piece into the spinning launcher wheel, then pulls the feeder back.',
-      'void launchOne() {',
-      '    ' + n.feeder + '.setPosition(1.0);',
-      '    sleep(300);',
-      '    ' + n.feeder + '.setPosition(0.0);',
-      '    sleep(300);',
-      '}'];
+    case 'launchOne':
+      if (T.launcher && cfg.kit.launcher === 'catapult') return [
+        '// Lets the catapult arm go, then pulls it back down ready for the next piece.',
+        'void launchOne() {',
+        '    ' + n.catapult + '.setPosition(1.0);',
+        '    sleep(300);',
+        '    ' + n.catapult + '.setPosition(0.0);',
+        '    sleep(700);',
+        '}'];
+      return [
+        '// Pushes one piece into the spinning launcher wheel, then pulls the feeder back.',
+        'void launchOne() {',
+        '    ' + n.feeder + '.setPosition(1.0);',
+        '    sleep(300);',
+        '    ' + n.feeder + '.setPosition(0.0);',
+        '    sleep(700);       // let the wheel get back up to speed',
+        '}'];
     case 'dropOne': return [
       '// Opens the gate long enough for one piece to fall out, then closes it.',
       'void dropOne() {',
@@ -232,19 +231,39 @@ function helperLines(name, cfg) {
       '        idle();',
       '    }',
       '}'];
+    case 'findTag': return [
+      '// Looks through everything the webcam can see for one tag ID. Gives back null if it is not in view.',
+      'AprilTagDetection findTag(int id) {',
+      '    for (AprilTagDetection detection : aprilTag.getDetections()) {',
+      '        if (detection.id == id) {',
+      '            return detection;',
+      '        }',
+      '    }',
+      '    return null;',
+      '}'];
   }
   return [];
 }
 
-/* Builds a full OpMode class around `body` (lines relative to the inside of runOpMode). */
+const TYPE_OF = { motor: 'DcMotor', servo: 'Servo', imu: 'IMU', distance: 'DistanceSensor' };
+/* Builds a full OpMode class around `body` (lines relative to the inside of runOpMode), laid out the way
+   the OnBot Java templates are. Only the devices, imports and set-up lines the program really uses are written. */
 function scaffold(o) {
-  const cfg = o.cfg, n = cfg.names, T = cfg.tools, devs = BBZ.deviceList(cfg);
-  const dm = BBZ.driveRoles(cfg).map((r) => n[r]);
+  const cfg = o.cfg, n = cfg.names, all = BBZ.deviceList(cfg);
   const use = new Set(o.use || []), consts = new Set(o.consts || []);
   if (use.has('driveInches') || use.has('strafeInches')) { use.add('moveTicks'); consts.add('TPI'); }
-  if (use.has('turnLeft')) { if (T.imu) use.add('setDrive'); else { use.add('moveTicks'); consts.add('TPD'); } }
+  if (use.has('turnLeft')) { if (cfg.tools.imu) use.add('setDrive'); else { use.add('moveTicks'); consts.add('TPD'); } }
   if (use.has('liftTo')) consts.add('LIFT');
+  const helpers = [];
+  ['setDrive', 'moveTicks', 'driveInches', 'strafeInches', 'turnLeft', 'launchOne', 'dropOne', 'liftTo', 'findTag'].forEach((hn) => {
+    if (use.has(hn)) helpers.push(helperLines(hn, cfg));
+  });
+  const text = o.body.concat(o.extra || [], o.constLines || [], [].concat.apply([], helpers)).join('\n');
+  const mentions = (word) => new RegExp('(^|[^A-Za-z0-9_])' + word + '([^A-Za-z0-9_]|$)').test(text);
+  const drive = new Set(BBZ.driveRoles(cfg));
+  const devs = all.filter((d) => d.kind !== 'camera' && (drive.has(d.role) || mentions(d.name)));
   const has = (kind) => devs.some((d) => d.kind === kind);
+  const vision = mentions('aprilTag'), timer = mentions('runtime'), cam = all.find((d) => d.kind === 'camera');
   const L = [];
   (o.intro || []).forEach((s) => L.push('// ' + s));
   L.push('package org.firstinspires.ftc.teamcode;', '');
@@ -254,56 +273,53 @@ function scaffold(o) {
   if (has('servo')) L.push('import com.qualcomm.robotcore.hardware.Servo;');
   if (has('imu')) L.push('import com.qualcomm.robotcore.hardware.IMU;', 'import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;', 'import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;');
   if (has('distance')) L.push('import com.qualcomm.robotcore.hardware.DistanceSensor;', 'import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;');
-  L.push('import com.qualcomm.robotcore.util.ElapsedTime;', 'import com.qualcomm.robotcore.util.Range;', '');
-  L.push((o.mode === 'auto' ? '@Autonomous' : '@TeleOp') + '(name = ' + str(o.title) + (o.group ? ', group = ' + str(o.group) : '') + ')');
+  if (vision) L.push('import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;', 'import org.firstinspires.ftc.vision.VisionPortal;',
+    'import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;', 'import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;');
+  if (timer || mentions('ElapsedTime')) L.push('import com.qualcomm.robotcore.util.ElapsedTime;');
+  if (mentions('Range')) L.push('import com.qualcomm.robotcore.util.Range;');
+  L.push('', (o.mode === 'auto' ? '@Autonomous' : '@TeleOp') + '(name = ' + str(o.title) + (o.group ? ', group = ' + str(o.group) : '') + ')');
   L.push('public class ' + o.cls + ' extends LinearOpMode {');
   if (consts.has('TPI')) L.push('    static final double TICKS_PER_INCH = ' + BBZ.ticksPerInch(cfg).toFixed(2) + ';      // wheel encoder ticks for one inch');
   if (consts.has('TPD')) L.push('    static final double TICKS_PER_DEGREE = ' + (BBZ.ticksPerInch(cfg) * BBZ.turnK(cfg) * Math.PI / 180).toFixed(3) + ';   // wheel ticks to turn one degree');
-  if (consts.has('LIFT')) L.push('    static final double LIFT_TICKS_PER_INCH = ' + BBZ.liftTicksPerInch().toFixed(2) + ';');
+  if (consts.has('LIFT')) L.push('    static final double LIFT_TICKS_PER_INCH = ' + BBZ.liftTicksPerInch(cfg).toFixed(2) + ';');
   (o.constLines || []).forEach((s) => L.push('    ' + s));
   if (consts.size || (o.constLines || []).length) L.push('');
-  devs.forEach((d) => {
-    const ty = d.kind === 'motor' ? 'DcMotor' : d.kind === 'servo' ? 'Servo' : d.kind === 'imu' ? 'IMU' : 'DistanceSensor';
-    L.push('    private ' + ty + ' ' + d.name + ';');
-  });
-  L.push('    private ElapsedTime runtime = new ElapsedTime();', '', '    @Override', '    public void runOpMode() {');
+  devs.forEach((d) => L.push('    private ' + TYPE_OF[d.kind] + ' ' + d.name + ';'));
+  if (vision) L.push('    private AprilTagProcessor aprilTag;', '    private VisionPortal visionPortal;');
+  if (timer) L.push('    private ElapsedTime runtime = new ElapsedTime();');
+  L.push('', '    @Override', '    public void runOpMode() {');
   const B = (s) => L.push(s === '' ? '' : '        ' + s);
-  B('// Connect each variable to the device with the same name in the robot configuration.');
-  devs.forEach((d) => {
-    const ty = d.kind === 'motor' ? 'DcMotor' : d.kind === 'servo' ? 'Servo' : d.kind === 'imu' ? 'IMU' : 'DistanceSensor';
-    B(d.name + ' = hardwareMap.get(' + ty + '.class, ' + str(d.name) + ');');
-  });
-  B('');
+  devs.forEach((d) => B(d.name + ' = hardwareMap.get(' + TYPE_OF[d.kind] + '.class, ' + str(d.name) + ');'));
   if (cfg.realistic) {
-    B('// The left motors are mounted facing the other way, so they are reversed here.');
-    B('// Without this the robot spins instead of driving straight.');
-    (cfg.drive === 'mecanum' ? [n.fl, n.bl] : [n.left]).forEach((m) => B(m + '.setDirection(DcMotor.Direction.REVERSE);'));
+    B('');
+    B('// The left motors are mounted the other way round, so they are reversed.');
+    (BBZ.holo(cfg) ? [n.fl, n.bl] : [n.left]).forEach((m) => B(m + '.setDirection(DcMotor.Direction.REVERSE);'));
   }
-  dm.forEach((m) => B(m + '.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);'));
-  dm.forEach((m) => B(m + '.setMode(DcMotor.RunMode.RUN_USING_ENCODER);'));
-  dm.forEach((m) => B(m + '.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);'));
-  if (T.lift) { B(n.lift + '.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);'); B(n.lift + '.setMode(DcMotor.RunMode.RUN_USING_ENCODER);'); B(n.gate + '.setPosition(0.0);'); }
-  if (T.launcher) B(n.feeder + '.setPosition(0.0);');
-  if (T.imu) {
+  const lift = devs.find((d) => d.role === 'lift');
+  if (lift) { B(lift.name + '.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);'); B(lift.name + '.setMode(DcMotor.RunMode.RUN_USING_ENCODER);'); }
+  if (has('imu')) {
     B(n.imu + '.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(');
     B('        RevHubOrientationOnRobot.LogoFacingDirection.UP,');
     B('        RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));');
     B(n.imu + '.resetYaw();');
   }
+  devs.filter((d) => d.kind === 'servo').forEach((d) => B(d.name + '.setPosition(0.0);'));
+  if (vision) {
+    B('');
+    B('// The AprilTag processor finds tags in the picture; the VisionPortal connects it to the webcam.');
+    B('aprilTag = AprilTagProcessor.easyCreateWithDefaults();');
+    B('visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, ' + str(cam ? cam.name : n.camera) + '), aprilTag);');
+  }
   B('');
-  B('telemetry.addData("Status", "Ready. Press START.");');
+  B('telemetry.addData("Status", "Initialized");');
   B('telemetry.update();');
-  B('');
+  B('// Wait for the game to start (driver presses START)');
   B('waitForStart();');
-  B('runtime.reset();');
+  if (timer) B('runtime.reset();');
   B('');
   o.body.forEach(B);
   L.push('    }');
-  ['setDrive', 'moveTicks', 'driveInches', 'strafeInches', 'turnLeft', 'launchOne', 'dropOne', 'liftTo'].forEach((hn) => {
-    if (!use.has(hn)) return;
-    L.push('');
-    helperLines(hn, cfg).forEach((s) => L.push('    ' + s));
-  });
+  helpers.forEach((lines) => { L.push(''); lines.forEach((s) => L.push('    ' + s)); });
   if (o.extra && o.extra.length) { L.push(''); o.extra.forEach((s) => L.push(s === '' ? '' : '    ' + s)); }
   L.push('}', '');
   return L.join('\n');
@@ -339,7 +355,7 @@ function generate(prog, cfg) {
     blocks.forEach((b) => {
       const sp = SPEC[b.type], f = b.f;
       if (sp.tool && !needTool(sp.tool, 'The block "' + sp.title + '"')) return;
-      if (sp.mecanum && cfg.drive !== 'mecanum') { fail('The block "' + sp.title + '" only works with a mecanum drivetrain. A tank drive cannot slide sideways.'); return; }
+      if (sp.mecanum && !BBZ.holo(cfg)) { fail('The block "' + sp.title + '" only works with a mecanum drivetrain. A tank drive cannot slide sideways.'); return; }
       const loopBody = (open) => {
         P(open); ctx.depth++;
         list(b.body, ind + 1).forEach((s) => out.push(s));
@@ -530,7 +546,7 @@ function render(root, prog, cfg, api) {
   if (openCat) {
     Object.keys(SPEC).forEach((t) => {
       if (SPEC[t].cat !== openCat) return;
-      const sp = SPEC[t], off = (sp.tool && !cfg.tools[sp.tool]) || (sp.mecanum && cfg.drive !== 'mecanum');
+      const sp = SPEC[t], off = (sp.tool && !cfg.tools[sp.tool]) || (sp.mecanum && !BBZ.holo(cfg));
       fly.append(h('button', { type: 'button', class: 'pal-btn cat-' + openCat + (off ? ' is-off' : ''), title: off ? 'Your bot does not have the part this block needs' : 'Click to add, or drag into your program',
         onclick: () => add(t), onpointerdown: (e) => beginDrag(e, { type: t }, sp.title, openCat, null) }, sp.title));
     });
@@ -625,189 +641,245 @@ function render(root, prog, cfg, api) {
 }
 
 /* ---------- example programs ---------- */
-function launchPower(cfg) { return Math.sqrt((62.6 - (cfg.length / 2 + 0.05) - 12) / 78); }
+/* How long to hold a power to cover a distance or an angle. Motors take a moment to speed up, and they
+   coast a little after the power is cut, so the sums below follow the same motor model the field uses. */
+const timing = (function () {
+  const TAU = 0.1, BRAKE = 0.06;
+  const solve = (amount, rate, chained) => {
+    if (chained) return amount / rate;
+    const travelled = (t) => { const k = 1 - Math.exp(-t / TAU); return rate * (t - TAU * k) + rate * k * BRAKE; };
+    let lo = 0, hi = 30;
+    for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (travelled(mid) < amount) lo = mid; else hi = mid; }
+    return hi;
+  };
+  const ms = (s) => Math.max(20, Math.round(s * 100) * 10);
+  return {
+    drive: (cfg, inches, p, chained) => ms(solve(Math.abs(inches), BBZ.topSpeed(cfg) * p, chained)),
+    strafe: (cfg, inches, p, chained) => ms(solve(Math.abs(inches), BBZ.topSpeed(cfg) * p * BBZ.DRIVES[cfg.drive].ks / BBZ.DRIVES[cfg.drive].kf, chained)),
+    turn: (cfg, deg, p, chained) => ms(solve(Math.abs(deg) * Math.PI / 180, BBZ.topSpeed(cfg) * p / BBZ.turnK(cfg), chained))
+  };
+})();
+
+/* Facts about the current bot that every example needs: which mechanisms it has and the numbers that fit it. */
+function botFacts(cfg) {
+  const n = cfg.names, T = cfg.tools, kit = cfg.kit, hl = cfg.length / 2;
+  const shooter = T.launcher ? kit.launcher : null, face = cfg.layout.launcher.face;
+  const reach = shooter ? BBZ.shooterReach(cfg) : 0;
+  /* From the "facing your HIVE" start spot the middle of the upward CELL is 62.6 in from the wall. */
+  const hiveShot = 62.6 - (hl + 0.05) - reach;
+  const wheels = shooter === 'dual' ? [n.launcher, n.launcher2] : shooter === 'flywheel' ? [n.launcher] : [];
+  return {
+    n, T, kit, shooter, face, reach, hiveShot, wheels,
+    four: BBZ.holo(cfg), claw: T.intake && kit.intake === 'claw', roller: T.intake && kit.intake !== 'claw',
+    hivePower: +BBZ.shotPower(hiveShot).toFixed(2),
+    /* a catapult cannot change its range, so the robot itself has to move this far forward first */
+    cataShift: Math.round((hiveShot - BBZ.CATAPULT_RANGE) * 2) / 2,
+    hiveTag: cfg.alliance === 'red' ? 1 : 4,
+    spin: (p) => wheels.map((w) => w + '.setPower(' + p + ');')
+  };
+}
+function need(cfg, tools, extra) {
+  const miss = tools.filter((t) => !cfg.tools[t]).map((t) => BBZ.TOOLS[t].label);
+  (extra || []).forEach((x) => { if (x) miss.push(x); });
+  return miss.length ? 'Needs ' + miss.join(' and ') : null;
+}
 
 function javaSample(mode, cfg) {
-  const n = cfg.names, T = cfg.tools, body = [], use = [], constLines = [];
+  const f = botFacts(cfg), n = f.n, T = f.T, body = [], use = [], constLines = [];
   if (mode === 'teleop') {
     use.push('setDrive');
-    if (T.launcher) constLines.push('static final double LAUNCH_POWER = 0.75;       // try other values: faster wheel = longer shot');
-    body.push('while (opModeIsActive()) {');
-    body.push('    // Left stick drives' + (cfg.drive === 'mecanum' ? ' and strafes' : '') + ', right stick turns.');
+    body.push('// run until the end of the match (driver presses STOP)', 'while (opModeIsActive()) {');
+    body.push('    // Left stick drives' + (f.four ? ' and slides sideways' : '') + ', right stick turns.');
     body.push('    // Pushing a stick forward gives a NEGATIVE y value, so it is flipped here.');
-    body.push('    double forward = -gamepad1.left_stick_y;');
-    body.push('    double strafe = gamepad1.left_stick_x;');
-    body.push('    double turn = gamepad1.right_stick_x;');
-    body.push('    setDrive(forward, strafe, turn);', '');
-    if (T.intake) body.push(
+    body.push('    setDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);', '');
+    if (f.roller) body.push(
       '    // Intake: right bumper pulls pieces in, left bumper pushes them out.',
       '    if (gamepad1.right_bumper) {', '        ' + n.intake + '.setPower(1.0);',
       '    } else if (gamepad1.left_bumper) {', '        ' + n.intake + '.setPower(-1.0);',
       '    } else {', '        ' + n.intake + '.setPower(0);', '    }', '');
-    if (T.launcher) body.push(
-      '    // Launcher: hold the right trigger to spin the wheel, press A to feed one piece.',
-      '    ' + n.launcher + '.setPower(gamepad1.right_trigger * LAUNCH_POWER);',
-      '    ' + n.feeder + '.setPosition(gamepad1.a ? 1.0 : 0.0);', '');
+    if (f.claw) body.push(
+      '    // Claw: hold the right bumper to close it on a piece, let go to open it again.',
+      '    ' + n.claw + '.setPosition(gamepad1.right_bumper ? 1.0 : 0.0);', '');
+    if (f.wheels.length) {
+      constLines.push('static final double LAUNCH_POWER = 0.75;       // try other values: faster wheel = longer shot');
+      body.push('    // Launcher: hold the right trigger to spin the wheel' + (f.wheels.length > 1 ? 's' : '') + ', press A to feed one piece.');
+      f.wheels.forEach((w) => body.push('    ' + w + '.setPower(gamepad1.right_trigger * LAUNCH_POWER);'));
+      body.push('    ' + n.feeder + '.setPosition(gamepad1.a ? 1.0 : 0.0);', '');
+    }
+    if (f.shooter === 'catapult') body.push(
+      '    // Catapult: press A to fire. Let go and the arm pulls back down for the next piece.',
+      '    ' + n.catapult + '.setPosition(gamepad1.a ? 1.0 : 0.0);', '');
     if (T.lift) body.push(
       '    // Lift: D-pad up and down. X opens the gate to drop one piece.',
       '    if (gamepad1.dpad_up) {', '        ' + n.lift + '.setPower(0.9);',
       '    } else if (gamepad1.dpad_down) {', '        ' + n.lift + '.setPower(-0.9);',
       '    } else {', '        ' + n.lift + '.setPower(0);', '    }',
       '    ' + n.gate + '.setPosition(gamepad1.x ? 1.0 : 0.0);', '');
-    body.push('    // Telemetry shows up on the Driver Station screen.');
     if (T.imu) body.push('    telemetry.addData("Heading", "%.1f deg", ' + n.imu + '.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));');
-    if (T.distance) body.push('    telemetry.addData("Distance ahead", "%.1f in", ' + n.distance + '.getDistance(DistanceUnit.INCH));');
-    if (T.lift) body.push('    telemetry.addData("Lift ticks", ' + n.lift + '.getCurrentPosition());');
-    body.push('    telemetry.addData("Run time", "%.1f s", runtime.seconds());', '    telemetry.update();', '}');
-    return scaffold({ cfg, mode, title: 'Example TeleOp', cls: 'ExampleTeleOp', body, use, constLines,
-      intro: ['Example TeleOp: drive with the gamepad and work every tool on your bot.', 'The package, import and @ lines are what a real robot needs; the simulator skips them.'] });
+    if (T.distance) body.push('    telemetry.addData("Distance", "%.1f in", ' + n.distance + '.getDistance(DistanceUnit.INCH));');
+    body.push('    telemetry.addData("Status", "Running");', '    telemetry.update();', '}');
+    return scaffold({ cfg, mode, title: 'Full TeleOp', cls: 'FullTeleOp', body, use, constLines,
+      intro: ['Full TeleOp: drive with the gamepad and work every tool on your bot.'] });
   }
-  if (T.launcher) {
-    constLines.push('static final double LAUNCH_POWER = ' + launchPower(cfg).toFixed(2) + ';       // tuned for the start spot facing the HIVE');
+  let step = 1;
+  /* Quarter turns that point the shooter's side at the HIVE (dir 1) and back again (dir -1). */
+  const aim = (dir) => (f.face === 2 ? [90, 90] : [f.face === 1 ? -90 : 90]).map((d) => 'turnLeft(' + d * dir + ', 0.4);');
+  if (f.shooter) {
     use.push('launchOne');
-    body.push(
-      '// 1. Spin up the launcher and shoot 3 POLLEN into the upward CELL.',
-      '//    That CELL starts with 3 NECTAR, so 3 more POLLEN tips the HIVE (20 points).',
-      n.launcher + '.setPower(LAUNCH_POWER);', 'sleep(1500);',
-      'for (int i = 0; i < 3 && opModeIsActive(); i++) {', '    launchOne();', '    sleep(400);       // let the wheel get back up to speed', '}',
-      n.launcher + '.setPower(0);', '');
+    if (f.face) { use.push('turnLeft'); body.push('// Your shooter points out of the ' + BBZ.FACE_NAME[f.face] + ', so turn that side toward the HIVE first.'); aim(1).forEach((s) => body.push(s)); body.push(''); }
+    if (f.shooter === 'catapult') {
+      body.push('// ' + (step++) + '. A catapult always throws the same distance, so line up first, then fire 3 POLLEN.');
+      if (!f.face && Math.abs(f.cataShift) >= 1.5) { use.push('driveInches'); body.push('driveInches(' + f.cataShift + ', 0.4);'); }
+    } else {
+      constLines.push('static final double LAUNCH_POWER = ' + f.hivePower.toFixed(2) + ';       // tuned for the start spot facing the HIVE');
+      body.push('// ' + (step++) + '. Spin up the launcher and shoot 3 POLLEN into the upward CELL.');
+      f.spin('LAUNCH_POWER').forEach((s) => body.push(s));
+      body.push('sleep(1500);');
+    }
+    body.push('//    That CELL starts with 3 NECTAR, so 3 more POLLEN tips the HIVE (20 points).',
+      'for (int i = 0; i < 3 && opModeIsActive(); i++) {', '    launchOne();', '}');
+    f.spin('0').forEach((s) => body.push(s));
+    if (f.face) aim(-1).forEach((s) => body.push(s));
+    body.push('');
   }
   use.push('driveInches', 'turnLeft');
+  const back = (f.shooter === 'catapult' && !f.face && Math.abs(f.cataShift) >= 1.5) ? f.cataShift : 0;
   body.push(
-    '// ' + (T.launcher ? '2' : '1') + '. LEAVE the wall (3 points), then drive to the LOADING ZONE and PARK (5 points).',
-    'driveInches(8, 0.6);', 'turnLeft(90, 0.5);', 'driveInches(40, 0.7);', 'turnLeft(-90, 0.5);',
-    'driveInches(92, 0.8);', 'turnLeft(90, 0.5);', 'driveInches(6, 0.5);', '',
-    'telemetry.addData("Auto", "Finished in %.1f s", runtime.seconds());', 'telemetry.update();');
-  return scaffold({ cfg, mode, title: 'Example Auto', cls: 'ExampleAuto', body, use, constLines,
-    intro: ['Example Autonomous. It is written for the start spot "Audience wall, facing your HIVE".', 'The package, import and @ lines are what a real robot needs; the simulator skips them.'] });
-}
-
-function blocksSample(mode, cfg) {
-  const T = cfg.tools, mb = (t, f) => makeBlock(t, cfg, f);
-  const btn = (b) => ({ kind: 'btn', btn: b, n: 5, not: false });
-  const iff = (b, yes, no) => { const x = mb('if', { c: btn(b) }); x.body = yes; x.els = no || []; return x; };
-  if (mode === 'teleop') {
-    const loop = mb('forever');
-    loop.body.push(mb('drive_pad'));
-    if (T.intake) loop.body.push(iff('right_bumper', [mb('intake', { m: 'in' })], [iff('left_bumper', [mb('intake', { m: 'out' })], [mb('intake', { m: 'off' })])]));
-    if (T.launcher) {
-      loop.body.push(iff('right_trigger', [mb('launcher', { p: 0.75 })], [mb('launcher', { p: 0 })]));
-      loop.body.push(iff('a', [mb('servo', { r: 'feeder', p: 1 })], [mb('servo', { r: 'feeder', p: 0 })]));
-    }
-    if (T.lift) {
-      loop.body.push(iff('dpad_up', [mb('lift_to', { h: 22, w: 'go' })]));
-      loop.body.push(iff('dpad_down', [mb('lift_to', { h: 0, w: 'go' })]));
-      loop.body.push(iff('x', [mb('servo', { r: 'gate', p: 1 })], [mb('servo', { r: 'gate', p: 0 })]));
-    }
-    loop.body.push(mb('show', { t: 'Run time', v: 'timer' }));
-    return [loop];
-  }
-  const out = [];
-  if (T.launcher) {
-    const rep = mb('repeat', { n: 3 });
-    rep.body = [mb('launch_one'), mb('wait', { s: 0.4 })];
-    out.push(mb('launcher', { p: +launchPower(cfg).toFixed(2) }), mb('wait', { s: 1.5 }), rep, mb('launcher', { p: 0 }));
-  }
-  out.push(mb('drive_in', { d: 8 }), mb('turn', { dir: 'left', a: 90 }), mb('drive_in', { d: 40, p: 0.7 }), mb('turn', { dir: 'right', a: 90 }),
-    mb('drive_in', { d: 92, p: 0.8 }), mb('turn', { dir: 'left', a: 90 }), mb('drive_in', { d: 6, p: 0.5 }));
-  return out;
+    '// ' + step + '. LEAVE the wall (3 points), then drive to the LOADING ZONE and PARK (5 points).',
+    'driveInches(' + (8 - back) + ', 0.6);', 'turnLeft(90, 0.5);', 'driveInches(40, 0.7);', 'turnLeft(-90, 0.5);',
+    'driveInches(92, 0.8);', 'turnLeft(90, 0.5);', 'driveInches(6, 0.5);');
+  return scaffold({ cfg, mode, title: 'Tip & Park Auto', cls: 'TipAndParkAuto', body, use, constLines,
+    intro: ['Tip & Park Auto. It is written for the start spot "Audience wall, facing your HIVE".'] });
 }
 
 BBZ.Blocks = { SPEC, render, generate, sanitize, makeBlock, countBlocks, className, resetCursor: () => { cursor = null; } };
 /* The example library: every entry has a name, a one-line description and a maker for the current bot.
    `why` is set when the bot is missing a part the example needs. */
 function exampleList(cfg) {
-  const n = cfg.names, T = cfg.tools, mec = cfg.drive === 'mecanum';
-  const real = 'The package, import and @ lines are what a real robot needs; the simulator skips them.';
-  const J = (o) => () => scaffold(Object.assign({ cfg, intro: [o.title + '. ' + o.about, real] }, o));
-  const mb = (t, f) => makeBlock(t, cfg, f);
-  const need = (tools, mecanum) => {
-    const miss = tools.filter((t) => !T[t]).map((t) => BBZ.TOOLS[t].label);
-    if (mecanum && !mec) miss.push('a mecanum drivetrain');
-    return miss.length ? 'Needs ' + miss.join(' and ') : null;
-  };
+  const f = botFacts(cfg), n = f.n;
+  const J = (o) => () => scaffold(Object.assign({ cfg, intro: [o.title + ': ' + o.about] }, o));
   const dm = BBZ.driveRoles(cfg).map((r) => n[r]);
+  const loop = (lines) => ['// run until the end of the match (driver presses STOP)', 'while (opModeIsActive()) {'].concat(lines.map((s) => s === '' ? '' : '    ' + s), ['}']);
+  const mix = f.four
+    ? [n.fl + '.setPower(y + x + turn);', n.fr + '.setPower(y - x - turn);', n.bl + '.setPower(y - x + turn);', n.br + '.setPower(y + x - turn);']
+    : [n.left + '.setPower(y + turn);', n.right + '.setPower(y - turn);'];
+  /* Some examples drive forward toward what a sensor sees, so they only make sense when it looks out of the front. */
+  const frontOnly = (part, label) => (cfg.tools[part] && cfg.layout[part].face) ? 'the ' + label + ' pointing out of the front' : null;
+  const tagRange = 34, camReach = cfg.tools.camera ? BBZ.partPos(cfg, 'camera').x : 0;
+  const tagShot = tagRange + 10.1 + camReach - f.reach;                      // from the shooter to the middle of the CELL
+  const cataRange = Math.round(BBZ.CATAPULT_RANGE - 10.1 - camReach + f.reach) - 4;      // a little close, so the wall behind is never in the way
   return [
     { id: 'java-drive', name: 'Drive Only TeleOp', lang: 'java', mode: 'teleop', why: null,
       desc: 'The simplest TeleOp: the sticks drive the robot and nothing else. Start here.',
-      make: J({ mode: 'teleop', title: 'Drive Only TeleOp', cls: 'DriveOnlyTeleOp', about: 'The sticks drive the robot and nothing else.', use: ['setDrive'], body: [
-        'while (opModeIsActive()) {',
-        '    // Pushing a stick forward gives a NEGATIVE y value, so it is flipped here.',
-        '    setDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);',
-        '    telemetry.addData("Run time", "%.1f s", runtime.seconds());',
-        '    telemetry.update();',
-        '}'] }) },
+      make: J({ mode: 'teleop', title: 'Drive Only TeleOp', cls: 'DriveOnlyTeleOp', about: 'the sticks drive the robot and nothing else.', body: loop([
+        '// Pushing a stick forward gives a NEGATIVE y value, so it is flipped here.',
+        'double y = -gamepad1.left_stick_y;'].concat(f.four ? ['double x = gamepad1.left_stick_x;'] : [], [
+        'double turn = gamepad1.right_stick_x;', ''], mix, ['',
+        'telemetry.addData("Status", "Running");',
+        'telemetry.update();'])) }) },
     { id: 'java-full', name: 'Full TeleOp', lang: 'java', mode: 'teleop', why: null,
-      desc: 'Drives and works every tool on your bot: intake, launcher, lift and gate.',
+      desc: 'Drives and works every tool on your bot. It changes to match the parts you picked in Build Bot.',
       make: () => javaSample('teleop', cfg) },
     { id: 'java-slow', name: 'Slow Mode TeleOp', lang: 'java', mode: 'teleop', why: null,
       desc: 'Hold the left trigger to drive at one-third speed for careful lining up.',
-      make: J({ mode: 'teleop', title: 'Slow Mode TeleOp', cls: 'SlowModeTeleOp', about: 'Hold the left trigger for slow, careful driving.', use: ['setDrive'], body: [
-        'while (opModeIsActive()) {',
-        '    // The ? : picks one of two values: slow while the trigger is held, full speed otherwise.',
-        '    double speed = gamepad1.left_trigger > 0.5 ? 0.35 : 1.0;',
-        '    setDrive(-gamepad1.left_stick_y * speed, gamepad1.left_stick_x * speed, gamepad1.right_stick_x * speed);',
-        '    telemetry.addData("Speed", speed == 1.0 ? "FULL" : "SLOW");',
-        '    telemetry.update();',
-        '}'] }) },
-    { id: 'java-field', name: 'Field-Centric TeleOp', lang: 'java', mode: 'teleop', why: need(['imu'], true),
+      make: J({ mode: 'teleop', title: 'Slow Mode TeleOp', cls: 'SlowModeTeleOp', about: 'hold the left trigger for slow, careful driving.', use: ['setDrive'], body: loop([
+        '// The ? : picks one of two values: slow while the trigger is held, full speed otherwise.',
+        'double speed = gamepad1.left_trigger > 0.5 ? 0.35 : 1.0;',
+        'setDrive(-gamepad1.left_stick_y * speed, gamepad1.left_stick_x * speed, gamepad1.right_stick_x * speed);',
+        'telemetry.addData("Speed", speed == 1.0 ? "FULL" : "SLOW");',
+        'telemetry.update();']) }) },
+    { id: 'java-field', name: 'Field-Centric TeleOp', lang: 'java', mode: 'teleop', why: need(cfg, ['imu'], [f.four ? null : 'a drivetrain that can slide sideways']),
       desc: 'Stick up always drives away from you, whichever way the robot faces. Press Y to reset.',
-      make: J({ mode: 'teleop', title: 'Field-Centric TeleOp', cls: 'FieldCentricTeleOp', about: 'Stick directions follow the field, not the robot.', use: ['setDrive'], body: [
-        'while (opModeIsActive()) {',
-        '    double stickForward = -gamepad1.left_stick_y;',
-        '    double stickRight = gamepad1.left_stick_x;',
+      make: J({ mode: 'teleop', title: 'Field-Centric TeleOp', cls: 'FieldCentricTeleOp', about: 'stick directions follow the field, not the robot.', use: ['setDrive'], body: loop([
+        'double stickForward = -gamepad1.left_stick_y;',
+        'double stickRight = gamepad1.left_stick_x;',
+        '// How far has the robot turned since it started?',
+        'double heading = ' + n.imu + '.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);',
         '',
-        '    // How far has the robot turned since it started?',
-        '    double heading = ' + n.imu + '.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);',
+        '// Rotate the stick by that angle so "up" always means the same direction on the field.',
+        'double forward = stickForward * Math.cos(heading) - stickRight * Math.sin(heading);',
+        'double strafe = stickRight * Math.cos(heading) + stickForward * Math.sin(heading);',
+        'setDrive(forward, strafe, gamepad1.right_stick_x);',
         '',
-        '    // Rotate the stick by that angle so "up" always means the same direction on the field.',
-        '    double forward = stickForward * Math.cos(heading) - stickRight * Math.sin(heading);',
-        '    double strafe = stickRight * Math.cos(heading) + stickForward * Math.sin(heading);',
-        '    setDrive(forward, strafe, gamepad1.right_stick_x);',
-        '',
-        '    // Y makes the way the robot faces right now the new "forward".',
-        '    if (gamepad1.y) {',
-        '        ' + n.imu + '.resetYaw();',
-        '    }',
-        '    telemetry.addData("Heading", "%.0f deg", Math.toDegrees(heading));',
-        '    telemetry.update();',
-        '}'] }) },
+        '// Y makes the way the robot faces right now the new "forward".',
+        'if (gamepad1.y) {',
+        '    ' + n.imu + '.resetYaw();',
+        '}',
+        'telemetry.addData("Heading", "%.0f deg", Math.toDegrees(heading));',
+        'telemetry.update();']) }) },
     { id: 'java-motortest', name: 'Motor Test', lang: 'java', mode: 'teleop', why: null,
-      desc: 'Spins each drive motor for one second and shows its encoder. Use it to check your wiring.',
-      make: J({ mode: 'teleop', title: 'Motor Test', cls: 'MotorTest', about: 'Spins each drive motor in turn so you can check wiring and direction.',
-        body: dm.map((m) => 'testMotor(' + m + ', ' + str(m) + ');').concat(['telemetry.addLine("Test finished");', 'telemetry.update();']),
+      desc: 'Spins each drive motor for one second and shows its encoder. Use it to check your wiring and names.',
+      make: J({ mode: 'teleop', title: 'Motor Test', cls: 'MotorTest', about: 'spins each drive motor in turn so you can check wiring and direction.',
+        body: dm.map((m) => 'testMotor(' + m + ', ' + str(m) + ');'),
         extra: [
           '// Runs one motor forward for a second while showing its encoder count.',
           'void testMotor(DcMotor motor, String label) {',
-          '    ElapsedTime timer = new ElapsedTime();',
           '    motor.setPower(0.5);',
-          '    while (opModeIsActive() && timer.seconds() < 1.0) {',
+          '    for (int i = 0; i < 20 && opModeIsActive(); i++) {',
           '        telemetry.addData("Testing", label);',
           '        telemetry.addData("Encoder", motor.getCurrentPosition());',
           '        telemetry.update();',
+          '        sleep(50);',
           '    }',
           '    motor.setPower(0);',
           '    sleep(300);',
           '}'] }) },
-    { id: 'java-tip', name: 'Tip & Park Auto', lang: 'java', mode: 'auto', why: null,
-      desc: 'Launches 3 POLLEN to tip the HIVE, leaves the wall, then parks. Start facing your HIVE.',
-      make: () => javaSample('auto', cfg) },
+    { id: 'java-tune', name: 'Shooter Tuning TeleOp', lang: 'java', mode: 'teleop', why: f.wheels.length ? null : 'Needs a flywheel shooter',
+      desc: 'D-pad up and down change the wheel power in small steps, A fires. Use it to find the power for any distance.',
+      make: J({ mode: 'teleop', title: 'Shooter Tuning TeleOp', cls: 'ShooterTuningTeleOp', about: 'find the launcher power that reaches your target.', use: ['setDrive'], body: [
+        'double power = 0.60;',
+        'boolean wasUp = false;',
+        'boolean wasDown = false;',
+        ''].concat(loop([
+        'setDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);',
+        '',
+        '// Change the power once per press, not once per loop.',
+        'if (gamepad1.dpad_up && !wasUp) {',
+        '    power = Math.min(1.0, power + 0.05);',
+        '}',
+        'if (gamepad1.dpad_down && !wasDown) {',
+        '    power = Math.max(0.0, power - 0.05);',
+        '}',
+        'wasUp = gamepad1.dpad_up;',
+        'wasDown = gamepad1.dpad_down;',
+        ''].concat(f.spin('power'), [
+        n.feeder + '.setPosition(gamepad1.a ? 1.0 : 0.0);',
+        'telemetry.addData("Launcher power", "%.2f", power);',
+        'telemetry.update();']))) }) },
+    { id: 'java-tags', name: 'AprilTag Reader', lang: 'java', mode: 'teleop', why: need(cfg, ['camera']),
+      desc: 'Drive around and watch the webcam report every AprilTag it sees: ID, range, bearing and yaw.',
+      make: J({ mode: 'teleop', title: 'AprilTag Reader', cls: 'AprilTagReader', about: 'shows every AprilTag the webcam can see.', use: ['setDrive'], body: loop([
+        'setDrive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);',
+        '',
+        'telemetry.addData("Tags in view", aprilTag.getDetections().size());',
+        'for (AprilTagDetection detection : aprilTag.getDetections()) {',
+        '    telemetry.addLine("Tag " + detection.id + ": " + detection.metadata.name);',
+        '    telemetry.addData("  range", "%.1f in", detection.ftcPose.range);',
+        '    telemetry.addData("  bearing", "%.1f deg", detection.ftcPose.bearing);',
+        '    telemetry.addData("  yaw", "%.1f deg", detection.ftcPose.yaw);',
+        '}',
+        'telemetry.update();']) }) },
     { id: 'java-leave', name: 'Leave Only Auto', lang: 'java', mode: 'auto', why: null,
       desc: 'The shortest useful autonomous: drive off the wall for 3 LEAVE points.',
-      make: J({ mode: 'auto', title: 'Leave Only Auto', cls: 'LeaveOnlyAuto', about: 'Drives off the wall for the LEAVE points.', use: ['driveInches'], body: [
+      make: J({ mode: 'auto', title: 'Leave Only Auto', cls: 'LeaveOnlyAuto', about: 'drives off the wall for the LEAVE points.', use: ['setDrive'], body: [
         '// LEAVE is worth 3 points: the robot only has to stop touching the wall.',
-        'driveInches(10, 0.5);'] }) },
+        'setDrive(0.4, 0, 0);',
+        'sleep(600);',
+        'setDrive(0, 0, 0);'] }) },
+    { id: 'java-tip', name: 'Tip & Park Auto', lang: 'java', mode: 'auto', why: null,
+      desc: (f.shooter ? 'Shoots 3 POLLEN to tip the HIVE, leaves the wall, then parks.' : 'Leaves the wall and parks in the LOADING ZONE.') + ' Start facing your HIVE.',
+      make: () => javaSample('auto', cfg) },
     { id: 'java-square', name: 'Square Path Auto', lang: 'java', mode: 'auto', why: null,
       desc: 'Drives a 20 inch square and returns to the start. Great for tuning distances and turns.',
-      make: J({ mode: 'auto', title: 'Square Path Auto', cls: 'SquarePathAuto', about: 'Drives a square to practise encoder distances and turns.', use: ['driveInches', 'turnLeft'], body: [
+      make: J({ mode: 'auto', title: 'Square Path Auto', cls: 'SquarePathAuto', about: 'drives a square to practise encoder distances and turns.', use: ['driveInches', 'turnLeft'], body: [
         '// Four sides, four left turns. If it does not end where it began, tune the numbers.',
         'for (int side = 0; side < 4 && opModeIsActive(); side++) {',
         '    driveInches(20, 0.6);',
         '    turnLeft(90, 0.5);',
         '}'] }) },
-    { id: 'java-distance', name: 'Distance Stop Auto', lang: 'java', mode: 'auto', why: need(['distance']),
+    { id: 'java-distance', name: 'Distance Stop Auto', lang: 'java', mode: 'auto', why: need(cfg, ['distance'], [frontOnly('distance', 'distance sensor')]),
       desc: 'Creeps forward until the distance sensor reads under 12 inches, then stops.',
-      make: J({ mode: 'auto', title: 'Distance Stop Auto', cls: 'DistanceStopAuto', about: 'Uses the distance sensor to stop before hitting something.', use: ['setDrive'], body: [
+      make: J({ mode: 'auto', title: 'Distance Stop Auto', cls: 'DistanceStopAuto', about: 'uses the distance sensor to stop before hitting something.', use: ['setDrive'], body: [
         '// Drive slowly until something is closer than 12 inches, then stop.',
         'setDrive(0.4, 0, 0);',
         'while (opModeIsActive() && ' + n.distance + '.getDistance(DistanceUnit.INCH) > 12) {',
@@ -815,26 +887,41 @@ function exampleList(cfg) {
         '    telemetry.update();',
         '}',
         'setDrive(0, 0, 0);'] }) },
-    { id: 'blocks-drive', name: 'Blocks Drive Only', lang: 'blocks', mode: 'teleop', why: null,
-      desc: 'Two blocks: repeat forever, drive with the gamepad. The best first Blocks program.',
-      make: () => { const loop = mb('forever'); loop.body = [mb('drive_pad'), mb('show', { t: 'Run time', v: 'timer' })]; return [loop]; } },
-    { id: 'blocks-full', name: 'Blocks Full TeleOp', lang: 'blocks', mode: 'teleop', why: null,
-      desc: 'Drives and works every tool on your bot, using if / else blocks for each button.',
-      make: () => blocksSample('teleop', cfg) },
-    { id: 'blocks-tip', name: 'Blocks Tip & Park Auto', lang: 'blocks', mode: 'auto', why: null,
-      desc: 'Launches 3 POLLEN to tip the HIVE, leaves the wall, then parks. Start facing your HIVE.',
-      make: () => blocksSample('auto', cfg) },
-    { id: 'blocks-leave', name: 'Blocks Leave Only', lang: 'blocks', mode: 'auto', why: null,
-      desc: 'One block: drive 10 inches off the wall for 3 LEAVE points.',
-      make: () => [mb('drive_in', { d: 10, p: 0.5 })] },
-    { id: 'blocks-square', name: 'Blocks Square Path', lang: 'blocks', mode: 'auto', why: null,
-      desc: 'Repeats "drive 20 inches, turn left 90" four times to trace a square.',
-      make: () => { const rep = mb('repeat', { n: 4 }); rep.body = [mb('drive_in', { d: 20 }), mb('turn', { dir: 'left', a: 90 })]; return [rep]; } },
-    { id: 'blocks-distance', name: 'Blocks Distance Stop', lang: 'blocks', mode: 'auto', why: need(['distance']),
-      desc: 'Drives forward, waits until the distance sensor reads under 12 inches, then stops.',
-      make: () => [mb('drive_set', { f: 0.4, s: 0, t: 0 }), mb('wait_until', { c: { kind: 'dist', btn: 'a', n: 12, not: false } }), mb('drive_stop')] }
+    { id: 'java-lift', name: 'Lift & Drop Auto', lang: 'java', mode: 'auto', why: need(cfg, ['lift']),
+      desc: 'Raises the lift to FLOWER height with RUN_TO_POSITION, drops one piece, then lowers again.',
+      make: J({ mode: 'auto', title: 'Lift & Drop Auto', cls: 'LiftAndDropAuto', about: 'raises the lift to an exact height, drops a piece and comes back down.', use: ['liftTo', 'dropOne'], body: [
+        '// The top of a FLOWER is 21.5 inches up, so 22 inches clears it.',
+        'liftTo(22, true);',
+        'dropOne();',
+        'liftTo(0, true);'] }) },
+    { id: 'java-tagaim', name: 'AprilTag Aim Auto', lang: 'java', mode: 'auto', why: need(cfg, ['camera'], [frontOnly('camera', 'webcam')]),
+      desc: 'Uses the webcam to turn until your HIVE tag is dead ahead and ' + (f.shooter && !f.face ? 'drive to shooting distance, then fires.' : 'drive to a set distance from it.'),
+      make: J({ mode: 'auto', title: 'AprilTag Aim Auto', cls: 'AprilTagAimAuto', about: 'lines the robot up on an AprilTag using the webcam.', use: ['setDrive', 'findTag'].concat(f.shooter ? ['launchOne'] : []),
+        constLines: ['static final int HIVE_TAG = ' + f.hiveTag + ';            // the tag on your side of your HIVE',
+          'static final double TARGET_RANGE = ' + (f.shooter === 'catapult' ? cataRange : tagRange) + ';     // how many inches from the tag to stop'],
+        body: [
+          '// Keep correcting until the tag is straight ahead and at the right distance (or 10 seconds pass).',
+          'while (opModeIsActive() && runtime.seconds() < 10) {',
+          '    AprilTagDetection tag = findTag(HIVE_TAG);',
+          '    if (tag == null) {',
+          '        setDrive(0, 0, 0.25);          // not in view: turn slowly to look for it',
+          '    } else if (Math.abs(tag.ftcPose.bearing) < 1.5 && Math.abs(tag.ftcPose.range - TARGET_RANGE) < 1.0) {',
+          '        break;                         // lined up',
+          '    } else {',
+          '        // bearing is + when the tag is to the left, and a left turn is a negative turn value.',
+          '        double turn = Range.clip(-tag.ftcPose.bearing * 0.03, -0.3, 0.3);',
+          '        double forward = Range.clip((tag.ftcPose.range - TARGET_RANGE) * 0.05, -0.4, 0.4);',
+          '        setDrive(forward, 0, turn);',
+          '        telemetry.addData("Range", "%.1f in", tag.ftcPose.range);',
+          '        telemetry.addData("Bearing", "%.1f deg", tag.ftcPose.bearing);',
+          '        telemetry.update();',
+          '    }',
+          '}',
+          'setDrive(0, 0, 0);'].concat(f.shooter && !f.face ? [''].concat(
+            f.shooter === 'catapult' ? [] : ['// Spin up, then shoot 3 POLLEN.'].concat(f.spin(BBZ.shotPower(tagShot).toFixed(2)), ['sleep(1500);']),
+            ['for (int i = 0; i < 3 && opModeIsActive(); i++) {', '    launchOne();', '}'], f.spin('0')) : []) }) }
   ];
 }
 
-BBZ.Samples = { java: javaSample, blocks: blocksSample, list: exampleList };
+BBZ.Samples = { java: javaSample, list: exampleList, facts: botFacts, timing, need };
 })();

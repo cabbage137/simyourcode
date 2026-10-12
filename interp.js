@@ -504,7 +504,7 @@ function start(src, host) {
       case 'Id': s = sc.find(n.name); r = !!(s && s.int); break;
       case 'Field':
         if (n.obj.k === 'This') { s = cscope.find(n.name); r = !!(s && s.int); }
-        else r = n.name === 'length' || ((n.name === 'MAX_VALUE' || n.name === 'MIN_VALUE') && n.obj.k === 'Id' && n.obj.name === 'Integer');
+        else r = n.name === 'length' || n.name === 'id' || ((n.name === 'MAX_VALUE' || n.name === 'MIN_VALUE') && n.obj.k === 'Id' && n.obj.name === 'Integer');
         break;
       case 'Index': if (n.obj.k === 'Id') { s = sc.find(n.obj.name); r = !!(s && s.type.dims > 0 && INT_TYPES.has(s.type.name)); } break;
       case 'Un': r = n.op !== '!' && isInt(n.e, sc); break;
@@ -590,7 +590,7 @@ function start(src, host) {
       if (/^[A-Z][A-Z0-9_]*$/.test(n.name)) return n.name;          // enum constant
       return new StaticRef(o.name + '.' + n.name);
     }
-    if (o.arr) { if (n.name === 'length') return o.arr.length; throw err('Arrays only have .length', n); }
+    if (o.arr && !o.__m) { if (n.name === 'length') return o.arr.length; throw err('Arrays only have .length', n); }
     if (typeof o === 'string') throw err('Text has no field "' + n.name + '". Did you mean ' + n.name + '() ?', n);
     if (typeof o !== 'object') throw err('A ' + typeof o + ' has no field "' + n.name + '".', n);
     const g = o.__f && o.__f[n.name];
@@ -678,6 +678,7 @@ function start(src, host) {
       if (name === 'parseDouble') { const v = parseFloat(String(a[0])); if (isNaN(v)) throw err('"' + a[0] + '" is not a number.', n); return v; }
       if (name === 'isNaN') return isNaN(N(0));
     }
+    if (typeof host.statics === 'function') { const r = host.statics(c, name, a); if (r !== undefined) return r; }
     throw err('This simulator does not know ' + c + '.' + name + '(). Check the spelling.', n);
   }
 
@@ -735,7 +736,7 @@ function start(src, host) {
     if (o instanceof StaticRef) return yield* staticCall(o.name, n, args, ints);
     if (typeof o === 'string') return strCall(o, n, args);
     if (typeof o !== 'object') throw err('Numbers and true/false values have no methods.', n);
-    if (o.arr) throw err('Arrays have no methods here. Use .length without brackets.', n);
+    if (o.arr && !o.__m) throw err('Arrays have no methods here. Use .length without brackets.', n);
     const f = o.__m && o.__m[n.name];
     if (typeof f !== 'function') {
       const known = o.__m ? Object.keys(o.__m) : [];

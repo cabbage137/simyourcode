@@ -115,6 +115,25 @@ function defineBlocks() {
     this.appendDummyInput().appendField('call').appendField(dev('distance'), 'DEVICE').appendField('.').appendField('getDistance').appendField(dd(['INCH', 'CM']), 'UNIT');
     this.setOutput(true, 'Number'); this.setColour(FN);
   });
+  /* AprilTag blocks. They read the webcam through one AprilTag processor that the generated Java sets up. */
+  def('aprilTag_isVisible', function () {
+    this.appendValueInput('ID').setCheck('Number').appendField('call').appendField('AprilTag').appendField('.').appendField('isTagVisible').appendField('id');
+    this.setOutput(true, 'Boolean'); this.setColour(FN); this.setTooltip('True while the webcam can see the AprilTag with this ID number.');
+  });
+  def('aprilTag_getProperty', function () {
+    this.appendValueInput('ID').setCheck('Number').appendField('AprilTag').appendField('id');
+    this.appendDummyInput().appendField('.').appendField(dd(['Range', 'Bearing', 'Yaw', 'X', 'Y']), 'PROP');
+    this.setInputsInline(true); this.setOutput(true, 'Number'); this.setColour(GET);
+    this.setTooltip('Range is inches to the tag. Bearing is degrees the robot must turn to face it (left is +). Gives 0 when the tag is out of view.');
+  });
+  def('aprilTag_count', function () {
+    this.appendDummyInput().appendField('call').appendField('AprilTag').appendField('.').appendField('detectionCount');
+    this.setOutput(true, 'Number'); this.setColour(FN); this.setTooltip('How many AprilTags the webcam can see right now.');
+  });
+  def('aprilTag_nearestId', function () {
+    this.appendDummyInput().appendField('AprilTag').appendField('.').appendField('nearestTagId');
+    this.setOutput(true, 'Number'); this.setColour(GET); this.setTooltip('The ID of the closest AprilTag in view, or -1 when none is in view.');
+  });
   const addData = (type, label, check) => def(type, function () {
     this.appendDummyInput().appendField('call').appendField('Telemetry').appendField('.').appendField('addData');
     this.appendValueInput('KEY').setCheck('String').setAlign(B.inputs ? B.inputs.Align.RIGHT : 1).appendField('key');
@@ -150,6 +169,8 @@ function toolbox() {
         b('dcMotor_enum_Direction'), b('dcMotor_enum_RunMode'), b('dcMotor_enum_ZeroPowerBehavior')]),
       cat('Servo', SET, [b('servo_setProperty_Number', { VALUE: n(0) }), b('servo_getProperty_Number')])]),
     cat('Sensors', GET, [b('imu_getYaw'), b('imu_resetYaw'), b('distanceSensor_getDistance')]),
+    cat('Vision', FN, [
+      cat('AprilTag', FN, [b('aprilTag_isVisible', { ID: n(1) }), b('aprilTag_getProperty', { ID: n(1) }), b('aprilTag_count'), b('aprilTag_nearestId')])]),
     cat('Utilities', FN, [
       cat('Telemetry', FN, [b('telemetry_addNumericData', { KEY: t('key'), VALUE: n(123) }), b('telemetry_addTextData', { KEY: t('key'), VALUE: t('text') }), b('telemetry_update')])]),
     { kind: 'sep' },
@@ -281,6 +302,16 @@ function defineGenerator() {
   F.imu_getYaw = (b) => [device(b, 'DEVICE', 'IMU') + '.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)', O.ATOMIC];
   F.imu_resetYaw = (b) => device(b, 'DEVICE', 'IMU') + '.resetYaw();\n';
   F.distanceSensor_getDistance = (b) => [device(b, 'DEVICE', 'distance sensor') + '.getDistance(DistanceUnit.' + (b.getFieldValue('UNIT') === 'CM' ? 'CM' : 'INCH') + ')', O.ATOMIC];
+  const tagId = (b) => '(int) (' + val(b, 'ID', O.NONE, '1.0') + ')';
+  const camera = () => { if (!names('camera').length) gen.errs.push('An AprilTag block needs a webcam. Tick "Webcam (AprilTags)" on the Build Bot tab, or remove that block.'); };
+  F.aprilTag_isVisible = (b) => { camera(); gen.vis.add('findTag'); return ['findTag(' + tagId(b) + ') != null', O.EQ]; };
+  F.aprilTag_getProperty = (b) => {
+    const p = b.getFieldValue('PROP');
+    camera(); gen.vis.add('findTag'); gen.vis.add(p);
+    return ['tag' + p + '(' + tagId(b) + ')', O.ATOMIC];
+  };
+  F.aprilTag_count = () => { camera(); gen.vis.add('any'); return ['(double) aprilTag.getDetections().size()', O.UNARY]; };
+  F.aprilTag_nearestId = () => { camera(); gen.vis.add('nearest'); return ['(double) nearestTagId()', O.UNARY]; };
   F.telemetry_addNumericData = (b) => 'telemetry.addData(' + val(b, 'KEY', O.NONE, '"key"') + ', ' + val(b, 'VALUE', O.NONE, '0.0') + ');\n';
   F.telemetry_addTextData = (b) => 'telemetry.addData(' + val(b, 'KEY', O.NONE, '"key"') + ', ' + val(b, 'VALUE', O.NONE, '""') + ');\n';
   F.telemetry_update = () => 'telemetry.update();\n';
@@ -370,26 +401,31 @@ function generate(prog, c) {
       const type = check && check.indexOf('Boolean') >= 0 ? 'boolean' : check && check.indexOf('String') >= 0 ? 'String' : 'double';
       it.type = it.type && it.type !== type ? 'double' : type;
     });
-    gen = { errs: [], loop: 0,
+    gen = { errs: [], loop: 0, vis: new Set(),
       varName: (id) => (info.get(id) || { name: 'unknown' }).name,
       varType: (id) => (info.get(id) || {}).type || 'double' };
     const body = G.statementToCode(root, 'DO');
     if (gen.errs.length) throw new Error(gen.errs[0]);
 
-    const devs = BBZ.deviceList(c), has = (kind) => devs.some((d) => d.kind === kind);
+    /* Like the Java that FTC Blocks exports, only the devices the blocks really use are declared. */
+    const mentions = (word) => new RegExp('(^|[^A-Za-z0-9_])' + word + '([^A-Za-z0-9_]|$)').test(body);
+    const all = BBZ.deviceList(c), devs = all.filter((d) => d.kind !== 'camera' && mentions(d.name)), has = (kind) => devs.some((d) => d.kind === kind);
+    const vision = gen.vis.size > 0, cam = all.find((d) => d.kind === 'camera');
     const typeOf = (d) => d.kind === 'motor' ? 'DcMotor' : d.kind === 'servo' ? 'Servo' : d.kind === 'imu' ? 'IMU' : 'DistanceSensor';
-    const L = ['// Made from your blocks. The package, import and @ lines are what a real robot needs;', '// the simulator skips them.',
-      'package org.firstinspires.ftc.teamcode;', '',
+    const L = ['package org.firstinspires.ftc.teamcode;', '',
       'import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;',
-      'import com.qualcomm.robotcore.eventloop.opmode.' + (prog.mode === 'auto' ? 'Autonomous' : 'TeleOp') + ';',
-      'import com.qualcomm.robotcore.hardware.DcMotor;'];
+      'import com.qualcomm.robotcore.eventloop.opmode.' + (prog.mode === 'auto' ? 'Autonomous' : 'TeleOp') + ';'];
+    if (has('motor')) L.push('import com.qualcomm.robotcore.hardware.DcMotor;');
     if (has('servo')) L.push('import com.qualcomm.robotcore.hardware.Servo;');
     if (has('imu')) L.push('import com.qualcomm.robotcore.hardware.IMU;', 'import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;', 'import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;');
     if (has('distance')) L.push('import com.qualcomm.robotcore.hardware.DistanceSensor;', 'import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;');
+    if (vision) L.push('import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;', 'import org.firstinspires.ftc.vision.VisionPortal;',
+      'import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;', 'import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;');
     const q = (s) => '"' + String(s).replace(/[\u0000-\u001f]/g, ' ').replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
     L.push('', (prog.mode === 'auto' ? '@Autonomous' : '@TeleOp') + '(name = ' + q(prog.name) + (prog.group ? ', group = ' + q(prog.group) : '') + ')');
     L.push('public class ' + legacy.className(prog.name) + ' extends LinearOpMode {', '');
     devs.forEach((d) => L.push('    private ' + typeOf(d) + ' ' + d.name + ';'));
+    if (vision) L.push('    private AprilTagProcessor aprilTag;', '    private VisionPortal visionPortal;');
     info.forEach((it) => L.push('    ' + (it.type || 'double') + ' ' + it.name + ';'));
     L.push('', '    /**', '     * This function is executed when this OpMode is selected from the Driver Station.', '     */', '    @Override', '    public void runOpMode() {');
     devs.forEach((d) => L.push('        ' + d.name + ' = hardwareMap.get(' + typeOf(d) + '.class, ' + q(d.name) + ');'));
@@ -398,9 +434,21 @@ function generate(prog, c) {
       L.push('        ' + imu + '.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(',
         '                RevHubOrientationOnRobot.LogoFacingDirection.UP,', '                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));');
     }
+    if (vision) L.push('        aprilTag = AprilTagProcessor.easyCreateWithDefaults();',
+      '        visionPortal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class, ' + q(cam ? cam.name : c.names.camera) + '), aprilTag);');
     L.push('');
     body.split('\n').forEach((line) => { if (line.length) L.push('    ' + line); });
-    L.push('    }', '}', '');
+    L.push('    }');
+    const M = (lines) => { L.push(''); lines.forEach((s) => L.push('    ' + s)); };
+    if (gen.vis.has('findTag')) M(['/**', ' * Looks for one AprilTag by its ID. Gives back null when the webcam cannot see it.', ' */',
+      'private AprilTagDetection findTag(int id) {', '    for (AprilTagDetection detection : aprilTag.getDetections()) {', '        if (detection.id == id) {', '            return detection;', '        }', '    }', '    return null;', '}']);
+    ['Range', 'Bearing', 'Yaw', 'X', 'Y'].forEach((p) => {
+      if (gen.vis.has(p)) M(['private double tag' + p + '(int id) {', '    AprilTagDetection detection = findTag(id);', '    if (detection == null) {', '        return 0.0;', '    }',
+        '    return detection.ftcPose.' + p.toLowerCase() + ';', '}']);
+    });
+    if (gen.vis.has('nearest')) M(['private int nearestTagId() {', '    int nearest = -1;', '    double best = 9999.0;', '    for (AprilTagDetection detection : aprilTag.getDetections()) {',
+      '        if (detection.ftcPose.range < best) {', '            best = detection.ftcPose.range;', '            nearest = detection.id;', '        }', '    }', '    return nearest;', '}']);
+    L.push('}', '');
     return L.join('\n');
   } finally { ws.dispose(); gen = null; }
 }
@@ -468,106 +516,108 @@ function render(root, prog, c, api) {
 }
 
 /* ---------- Blocks examples ---------- */
+/* Kept short on purpose: autonomous moves are "set the powers, wait, stop", which is the first way most
+   teams learn. The Java examples show the encoder and IMU versions. */
 function examples(c) {
-  const n = c.names, T = c.tools, mec = c.drive === 'mecanum';
+  const S = BBZ.Samples, f = S.facts(c), n = f.n, T = f.T, four = f.four, time = S.timing;
   const drive = BBZ.driveRoles(c).map((r) => n[r]);
-  const leftSide = mec ? [n.fl, n.bl] : [n.left];
-  const enc = mec ? n.fr : n.right;                        // a right-side motor: its encoder counts up going forward and turning left
-  const tpi = BBZ.ticksPerInch(c), K = BBZ.turnK(c);
-  const speed = (p) => p * 0.85 * BBZ.MOTORS[c.motor].rpm / 60 * Math.PI * BBZ.WHEELS[c.wheel].d;   // inches per second at power p
-  const need = (tools) => { const miss = tools.filter((t) => !T[t]).map((t) => BBZ.TOOLS[t].label); return miss.length ? 'Needs ' + miss.join(' and ') : null; };
+  const leftSide = four ? [n.fl, n.bl] : [n.left];
 
   /* shared pieces */
-  const init = (b) => [b.note('Put initialization blocks here.')].concat(c.realistic ? leftSide.map((m) => b.reverse(m)) : []);
-  const all = (b, p) => b.powers(drive, drive.map(() => b.num(p)));
-  const spin = (b, p) => b.powers(drive, mec ? [b.num(-p), b.num(p), b.num(-p), b.num(p)] : [b.num(-p), b.num(p)]);
+  const init = (b) => c.realistic ? leftSide.map((m) => b.reverse(m)) : [b.note('Put initialization blocks here.')];
+  const set = (b, vals) => b.powers(drive, vals.map((v) => b.num(v)));
+  const fwd = (b, p) => set(b, drive.map(() => p));
+  const spin = (b, p) => set(b, four ? [-p, p, -p, p] : [-p, p]);                 // + turns left
+  const slide = (b, p) => set(b, [-p, p, p, -p]);                                  // + slides left
   const teleop = (b, loop) => b.program(init(b).concat([
     b.blk('linearOpMode_waitForStart'),
-    b.iff([[b.active(), [b.note('Put run blocks here.'), b.loopWhile(b.active(), [b.note('Put loop blocks here.')].concat(loop, [b.update()]))]]])
+    b.iff([[b.active(), [b.loopWhile(b.active(), loop.concat([b.update()]))]]])
   ]));
-  const auto = (b, steps) => b.program(init(b).concat([b.blk('linearOpMode_waitForStart'), b.iff([[b.active(), [b.note('Put run blocks here.')].concat(steps)]])]));
-  /* Drive a distance by watching one encoder. The stop comes a little early because the robot coasts. */
-  const forward = (b, inches, p) => {
-    const ticks = Math.max(1, Math.round((inches - speed(p) * 0.075) * tpi));
-    return [b.set('start', b.pos(enc)), all(b, p),
-      b.loopWhile(b.and(b.active(), b.cmp('LT', b.op('MINUS', b.pos(enc), b.get('start')), b.num(ticks))), []),
-      all(b, 0), b.sleep(250)];
+  const auto = (b, steps) => b.program(init(b).concat([b.blk('linearOpMode_waitForStart'), b.iff([[b.active(), steps]])]));
+  /* One piece through the shooter, whichever kind the bot has. */
+  const fire = (b) => f.shooter === 'catapult'
+    ? [b.servo(n.catapult, b.num(1)), b.sleep(300), b.servo(n.catapult, b.num(0)), b.sleep(700)]
+    : [b.servo(n.feeder, b.num(1)), b.sleep(300), b.servo(n.feeder, b.num(0)), b.sleep(700)];
+  const wheels = (b, p) => f.wheels.length === 2 ? [b.powers(f.wheels, [b.num(p), b.num(p)])] : f.wheels.map((w) => b.power(w, b.num(p)));
+  const stickMix = (b) => {
+    const y = () => b.get('y'), x = () => b.get('x'), t = () => b.get('turn');
+    const pre = [b.set('y', b.neg(b.padN('LeftStickY')))].concat(four ? [b.set('x', b.padN('LeftStickX'))] : [], [b.set('turn', b.padN('RightStickX'))]);
+    return pre.concat([b.powers(drive, four
+      ? [b.op('ADD', b.op('ADD', y(), x()), t()), b.op('MINUS', b.op('MINUS', y(), x()), t()), b.op('ADD', b.op('MINUS', y(), x()), t()), b.op('MINUS', b.op('ADD', y(), x()), t())]
+      : [b.op('ADD', y(), t()), b.op('MINUS', y(), t())])]);
   };
-  /* Turn on the spot: by the IMU if the bot has one, otherwise by counting encoder ticks. */
-  const turn = (b, deg, p) => {
-    const left = deg > 0, a = Math.abs(deg), coast = speed(p) / K * 0.075 * 180 / Math.PI;
-    const out = [];
-    let cond;
-    if (T.imu) {
-      out.push(b.blk('imu_resetYaw', { DEVICE: n.imu }));
-      const yaw = b.blk('imu_getYaw', { DEVICE: n.imu });
-      cond = left ? b.cmp('LT', yaw, b.num(Math.round(a - coast))) : b.cmp('GT', yaw, b.num(-Math.round(a - coast)));
-    } else {
-      out.push(b.set('start', b.pos(enc)));
-      const ticks = Math.round((a - coast) * Math.PI / 180 * K * tpi), delta = b.op('MINUS', b.pos(enc), b.get('start'));
-      cond = left ? b.cmp('LT', delta, b.num(ticks)) : b.cmp('GT', delta, b.num(-ticks));
-    }
-    out.push(spin(b, left ? p : -p), b.loopWhile(b.and(b.active(), cond), []), all(b, 0), b.sleep(250));
-    return out;
-  };
+  const tagVal = (b, id, prop) => b.blk('aprilTag_getProperty', { PROP: prop }, { ID: b.num(id) });
 
   const list = [];
   list.push({ id: 'blocks-drive', name: 'Blocks Drive Only', lang: 'blocks', mode: 'teleop', why: null,
-    desc: 'The classic first program: one stick drives. Y is forward and back, X steers.',
-    make: () => {
-      const b = builder();
-      const y = () => b.get('y'), x = () => b.get('x');
-      const mix = mec ? [b.op('ADD', y(), x()), b.op('MINUS', y(), x()), b.op('ADD', y(), x()), b.op('MINUS', y(), x())] : [b.op('ADD', y(), x()), b.op('MINUS', y(), x())];
-      return teleop(b, [b.set('x', b.padN('RightStickX')), b.set('y', b.neg(b.padN('RightStickY'))), b.powers(drive, mix)]);
-    } });
+    desc: 'The classic first program: the left stick drives' + (four ? ' and slides' : '') + ', the right stick turns.',
+    make: () => { const b = builder(); return teleop(b, stickMix(b)); } });
   list.push({ id: 'blocks-full', name: 'Blocks Full TeleOp', lang: 'blocks', mode: 'teleop', why: null,
-    desc: 'Drives and works every tool on your bot, with an if / else block for each button.',
+    desc: 'Drives and works every tool on your bot, with one if / else block per button.',
     make: () => {
-      const b = builder(), loop = [];
-      const y = () => b.get('y'), x = () => b.get('x'), t = () => b.get('turn');
-      loop.push(b.set('y', b.neg(b.padN('LeftStickY'))));
-      if (mec) loop.push(b.set('x', b.padN('LeftStickX')));
-      loop.push(b.set('turn', b.padN('RightStickX')));
-      loop.push(b.powers(drive, mec
-        ? [b.op('ADD', b.op('ADD', y(), x()), t()), b.op('MINUS', b.op('MINUS', y(), x()), t()), b.op('ADD', b.op('MINUS', y(), x()), t()), b.op('MINUS', b.op('ADD', y(), x()), t())]
-        : [b.op('ADD', y(), t()), b.op('MINUS', y(), t())]));
-      if (T.intake) loop.push(b.iff([[b.padB('RightBumper'), [b.power(n.intake, b.num(1))]], [b.padB('LeftBumper'), [b.power(n.intake, b.num(-1))]]], [b.power(n.intake, b.num(0))]));
-      if (T.launcher) {
-        loop.push(b.power(n.launcher, b.op('MULTIPLY', b.padN('RightTrigger'), b.num(0.75))));
+      const b = builder(), loop = stickMix(b);
+      if (f.roller) loop.push(b.iff([[b.padB('RightBumper'), [b.power(n.intake, b.num(1))]], [b.padB('LeftBumper'), [b.power(n.intake, b.num(-1))]]], [b.power(n.intake, b.num(0))]));
+      if (f.claw) loop.push(b.iff([[b.padB('RightBumper'), [b.servo(n.claw, b.num(1))]]], [b.servo(n.claw, b.num(0))]));
+      if (f.wheels.length) {
+        const trig = () => b.op('MULTIPLY', b.padN('RightTrigger'), b.num(0.75));
+        loop.push(f.wheels.length === 2 ? b.powers(f.wheels, [trig(), trig()]) : b.power(f.wheels[0], trig()));
         loop.push(b.iff([[b.padB('A'), [b.servo(n.feeder, b.num(1))]]], [b.servo(n.feeder, b.num(0))]));
       }
+      if (f.shooter === 'catapult') loop.push(b.iff([[b.padB('A'), [b.servo(n.catapult, b.num(1))]]], [b.servo(n.catapult, b.num(0))]));
       if (T.lift) {
         loop.push(b.iff([[b.padB('DpadUp'), [b.power(n.lift, b.num(0.9))]], [b.padB('DpadDown'), [b.power(n.lift, b.num(-0.9))]]], [b.power(n.lift, b.num(0))]));
         loop.push(b.iff([[b.padB('X'), [b.servo(n.gate, b.num(1))]]], [b.servo(n.gate, b.num(0))]));
       }
-      loop.push(b.numData('Run time', b.blk('linearOpMode_getRuntime')));
       return teleop(b, loop);
     } });
-  list.push({ id: 'blocks-tip', name: 'Blocks Tip & Park Auto', lang: 'blocks', mode: 'auto', why: null,
-    desc: 'Launches 3 POLLEN to tip the HIVE, leaves the wall, then parks. Start facing your HIVE.',
+  list.push({ id: 'blocks-leave', name: 'Blocks Leave Only', lang: 'blocks', mode: 'auto', why: null,
+    desc: 'Three blocks: drive forward, wait, stop. That is enough for the 3 LEAVE points.',
+    make: () => { const b = builder(); return auto(b, [fwd(b, 0.4), b.sleep(600), fwd(b, 0)]); } });
+  list.push({ id: 'blocks-tip', name: 'Blocks Tip & Park Auto', lang: 'blocks', mode: 'auto', why: f.face ? 'Needs the shooter pointing out of the front' : null,
+    desc: (f.shooter ? 'Shoots 3 POLLEN to tip the HIVE, then ' : 'Leaves the wall and ') + 'drives to the LOADING ZONE by time. Start facing your HIVE.',
     make: () => {
       const b = builder(), steps = [];
-      if (T.launcher) {
-        const p = +Math.sqrt((62.6 - (c.length / 2 + 0.05) - 12) / 78).toFixed(2);
-        steps.push(b.note('Spin the launcher up, then feed 3 POLLEN into the HIVE.'), b.power(n.launcher, b.num(p)), b.sleep(1500),
-          b.repeat(3, [b.servo(n.feeder, b.num(1)), b.sleep(300), b.servo(n.feeder, b.num(0)), b.sleep(700)]), b.power(n.launcher, b.num(0)));
-      }
-      steps.push(b.note('Leave the wall, then drive round to the LOADING ZONE and park.'));
-      [].concat(forward(b, 8, 0.5), turn(b, 90, 0.3), forward(b, 40, 0.6), turn(b, -90, 0.3), forward(b, 92, 0.7), turn(b, 90, 0.3), forward(b, 6, 0.4)).forEach((s) => steps.push(s));
+      let gone = 0;                                     // inches already driven forward before the path starts
+      if (f.shooter === 'catapult' && f.cataShift >= 1.5) { steps.push(fwd(b, 0.3), b.sleep(time.drive(c, f.cataShift, 0.3)), fwd(b, 0), b.sleep(300)); gone = f.cataShift; }
+      if (f.wheels.length) wheels(b, f.hivePower).forEach((s) => steps.push(s)), steps.push(b.sleep(1500));
+      if (f.shooter) steps.push(b.repeat(3, fire(b)));
+      if (f.wheels.length) wheels(b, 0).forEach((s) => steps.push(s));
+      if (four) steps.push(slide(b, 0.5), b.sleep(time.strafe(c, 40, 0.5, true)), fwd(b, 0.6), b.sleep(time.drive(c, 100 - gone, 0.6, true)), slide(b, 0.4), b.sleep(time.strafe(c, 9, 0.4)), fwd(b, 0));
+      else steps.push(fwd(b, 0.5), b.sleep(time.drive(c, 8 - Math.min(gone, 6), 0.5)), fwd(b, 0), b.sleep(250),
+        spin(b, 0.3), b.sleep(time.turn(c, 90, 0.3)), fwd(b, 0), b.sleep(250),
+        fwd(b, 0.6), b.sleep(time.drive(c, 40, 0.6)), fwd(b, 0), b.sleep(250),
+        spin(b, -0.3), b.sleep(time.turn(c, 90, 0.3)), fwd(b, 0), b.sleep(250),
+        fwd(b, 0.7), b.sleep(time.drive(c, 92, 0.7)), fwd(b, 0), b.sleep(250),
+        spin(b, 0.3), b.sleep(time.turn(c, 90, 0.3)), fwd(b, 0), b.sleep(250),
+        fwd(b, 0.4), b.sleep(time.drive(c, 6, 0.4)), fwd(b, 0));
       return auto(b, steps);
     } });
-  list.push({ id: 'blocks-leave', name: 'Blocks Leave Only', lang: 'blocks', mode: 'auto', why: null,
-    desc: 'Drive forward for half a second and stop. That is enough for the 3 LEAVE points.',
-    make: () => { const b = builder(); return auto(b, [all(b, 0.4), b.sleep(600), all(b, 0)]); } });
   list.push({ id: 'blocks-square', name: 'Blocks Square Path', lang: 'blocks', mode: 'auto', why: null,
-    desc: 'Repeats "drive 20 inches, turn left 90" four times to trace a square.',
-    make: () => { const b = builder(); return auto(b, [b.repeat(4, forward(b, 20, 0.5).concat(turn(b, 90, 0.3)))]); } });
-  list.push({ id: 'blocks-distance', name: 'Blocks Distance Stop', lang: 'blocks', mode: 'auto', why: need(['distance']),
+    desc: 'Repeats "drive 20 inches, turn left 90" four times, all by time. Change the waits and watch the square change.',
+    make: () => {
+      const b = builder();
+      return auto(b, [b.repeat(4, [fwd(b, 0.5), b.sleep(time.drive(c, 20, 0.5)), fwd(b, 0), b.sleep(250), spin(b, 0.3), b.sleep(time.turn(c, 90, 0.3)), fwd(b, 0), b.sleep(250)])]);
+    } });
+  list.push({ id: 'blocks-distance', name: 'Blocks Distance Stop', lang: 'blocks', mode: 'auto', why: S.need(c, ['distance'], [T.distance && c.layout.distance.face ? 'the distance sensor pointing out of the front' : null]),
     desc: 'Drives forward while the distance sensor reads more than 12 inches, then stops.',
     make: () => {
       const b = builder();
       const dist = () => b.blk('distanceSensor_getDistance', { DEVICE: n.distance, UNIT: 'INCH' });
-      return auto(b, [all(b, 0.35), b.loopWhile(b.and(b.active(), b.cmp('GT', dist(), b.num(12))), [b.numData('Distance', dist()), b.update()]), all(b, 0)]);
+      return auto(b, [fwd(b, 0.35), b.loopWhile(b.and(b.active(), b.cmp('GT', dist(), b.num(12))), [b.numData('Distance', dist()), b.update()]), fwd(b, 0)]);
+    } });
+  list.push({ id: 'blocks-tags', name: 'Blocks AprilTag Reader', lang: 'blocks', mode: 'teleop', why: S.need(c, ['camera']),
+    desc: 'Drive around while telemetry shows the nearest AprilTag, how far away it is and at what angle.',
+    make: () => {
+      const b = builder(), near = () => b.blk('aprilTag_nearestId');
+      const prop = (p) => b.blk('aprilTag_getProperty', { PROP: p }, { ID: near() });
+      return teleop(b, stickMix(b).concat([b.numData('Nearest tag', near()), b.numData('Range', prop('Range')), b.numData('Bearing', prop('Bearing'))]));
+    } });
+  list.push({ id: 'blocks-tagstop', name: 'Blocks AprilTag Stop', lang: 'blocks', mode: 'auto', why: S.need(c, ['camera'], [T.camera && c.layout.camera.face ? 'the webcam pointing out of the front' : null]),
+    desc: 'Drives toward your HIVE and stops when its AprilTag is 30 inches away. Start facing your HIVE.',
+    make: () => {
+      const b = builder(), id = f.hiveTag;
+      const far = b.blk('logic_operation', { OP: 'OR' }, { A: b.blk('logic_negate', null, { BOOL: b.blk('aprilTag_isVisible', null, { ID: b.num(id) }) }), B: b.cmp('GT', tagVal(b, id, 'Range'), b.num(30)) });
+      return auto(b, [fwd(b, 0.3), b.loopWhile(b.and(b.active(), far), [b.numData('Range', tagVal(b, id, 'Range')), b.update()]), fwd(b, 0)]);
     } });
   return list;
 }
@@ -575,6 +625,6 @@ function examples(c) {
 if (ok) { defineBlocks(); defineGenerator(); }
 const javaList = BBZ.Samples.list;
 BBZ.Samples.list = (c) => { cfg = c; return javaList(c).filter((e) => e.lang === 'java').concat(examples(c)); };
-BBZ.Blocks = { render, generate, sanitize, blank, className: legacy.className, resetCursor() {},
+BBZ.Blocks = { render, generate, sanitize, blank, theme, useRobot(c) { cfg = c; }, className: legacy.className, resetCursor() {},
   legacyJava: legacy.generate, legacySanitize: legacy.sanitize, ready: ok };
 })();

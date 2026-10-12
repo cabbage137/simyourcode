@@ -115,12 +115,4 @@ if (gen && window.MutationObserver) {
 }
 document.querySelectorAll('pre.java').forEach((p) => { try { paint(p, p.textContent); } catch (e) { /* leave it plain */ } });
 
-/* ---------- tutorial categories ---------- */
-const TUT = ['drive', 'blocks', 'java'];
-document.querySelectorAll('[data-tut]').forEach((b) => {
-  b.addEventListener('click', () => {
-    TUT.forEach((t) => { const sec = $('tut-' + t); if (sec) sec.hidden = t !== b.dataset.tut; });
-    document.querySelectorAll('[data-tut]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-  });
-});
 })();
