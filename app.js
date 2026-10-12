@@ -296,7 +296,14 @@ function runMatch() {
   endOpMode();
   world.reset(); clearLog(); rebuildHw();
   matchOn = false; world.mode = 'idle';
-  setStatus('Drivers, hands off the controls. AUTO starts after the countdown.');
+  /* The op mode open in the editor plays in the match: as the autonomous or as the TeleOp, whichever it is. */
+  const openNow = openProg(), at = state.programs.indexOf(openNow);
+  if (openNow && at >= 0) {
+    if (openNow.mode === 'auto') state.auto = at; else state.tele = at;
+    matchList($('autoSel'), 'auto', state.auto); matchList($('teleSel'), 'teleop', state.tele); save();
+  }
+  const teleNow = state.programs[state.tele];
+  setStatus('Drivers, hands off the controls. AUTO starts after the countdown.' + (teleNow ? ' TELEOP will run "' + teleNow.name + '".' : ''));
   let n = 3;
   const tick = () => {
     countTimer = 0;

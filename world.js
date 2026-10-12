@@ -618,20 +618,23 @@ class World {
     }
     const ang = o.a + rnd(-1, 1) * spread * Math.PI / 180;
     const dx = Math.cos(ang), dy = Math.sin(ang);
-    let x1 = o.x + dx * range, y1 = o.y + dy * range, dest = null, bvx = dx * 10, bvy = dy * 10;
+    let x1 = o.x + dx * range, y1 = o.y + dy * range, dest = null, wrongSide = false, bvx = dx * 10, bvy = dy * 10;
     ['R', 'B'].forEach((k) => {
       const h = this.hives[k], cy = CELL_Y[h.up];
-      if (x1 > h.x0 && x1 < h.x1 && y1 > cy[0] && y1 < cy[1]) dest = h;
+      if (!(x1 > h.x0 && x1 < h.x1 && y1 > cy[0] && y1 < cy[1])) return;
+      /* A CELL only takes pieces thrown from the side of the field it faces. After a tip the open CELL
+         is on the far side, so the robot has to drive round: lobbing over the top no longer counts. */
+      if (h.up === 'aud' ? o.y < HIVE_BOX.y0 : o.y > HIVE_BOX.y1) dest = h; else wrongSide = true;
     });
     if (!dest && inBox(x1, y1, HIVE_BOX)) {
       const t = segEnter(o.x, o.y, x1, y1, HIVE_BOX) || 0;
       const d = Math.max(0, t * range - 2.5);
       x1 = o.x + dx * d; y1 = o.y + dy * d; bvx = -dx * 14; bvy = -dy * 14;
-      this.emit('info', 'A launched piece bounced off the HIVE. Only the upward-facing CELL catches pieces.');
+      this.emit('info', wrongSide ? 'That CELL faces the other side of the field now. Drive round the HIVE to score in it.' : 'A launched piece bounced off the HIVE. Only the upward-facing CELL catches pieces.');
     }
     if (x1 < 2 || x1 > FIELD - 2 || y1 < 2 || y1 > FIELD - 2) { x1 = clamp(x1, 2, FIELD - 2); y1 = clamp(y1, 2, FIELD - 2); bvx = -dx * 8; bvy = -dy * 8; }
     b.st = 'air'; b.x = o.x; b.y = o.y;
-    b.air = { x0: o.x, y0: o.y, x1, y1, t: 0, T: 0.3 + range / 150, dest, vx: bvx, vy: bvy };
+    b.air = { x0: o.x, y0: o.y, x1, y1, t: 0, T: 0.3 + range / 150, dest, side: dest ? dest.up : null, vx: bvx, vy: bvy };
     if (kit !== 'catapult') {                          // each shot takes energy out of the flywheel
       const keep = kit === 'dual' ? 0.93 : 0.86;
       this.m.launcher.u *= keep; if (this.m.launcher2) this.m.launcher2.u *= keep;
@@ -709,7 +712,9 @@ class World {
         b.x = a.x0 + (a.x1 - a.x0) * k; b.y = a.y0 + (a.y1 - a.y0) * k;
         if (k >= 1) {
           b.air = null;
-          if (a.dest) { b.st = 'cell'; a.dest.cells[a.dest.up].push(b); this.checkTip(a.dest); }
+          /* if the HIVE tipped while this piece was in the air, the CELL it was aimed at has closed */
+          if (a.dest && a.dest.up === a.side) { b.st = 'cell'; a.dest.cells[a.dest.up].push(b); this.checkTip(a.dest); }
+          else if (a.dest) { b.st = 'floor'; b.vx = -a.vx * 1.2; b.vy = -a.vy * 1.2; this.emit('info', 'The HIVE tipped while a piece was in the air, so it bounced off the closed CELL.'); }
           else { b.st = 'floor'; b.vx = a.vx; b.vy = a.vy; }
         }
         continue;
