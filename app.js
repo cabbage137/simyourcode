@@ -839,7 +839,39 @@ function drawBot(cv, cfg, pick, label) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (label) { ctx.fillStyle = col.tileText; ctx.font = '600 ' + Math.round(px / 30) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('FRONT', px / 2, px / 24); }
 }
-function drawPreview() { drawBot($('preview'), state.robot, pickKey, true); }
+/* The big picture shows either a 3D model you can turn, or the flat top view where parts are dragged about. */
+let view3d = true, turning = false, spinRaf = 0, spinAt = 0;
+const mainView = { yaw: -0.9, pitch: 0.62 };
+const has3d = () => !!(BBZ.Bot3D && view3d);
+function drawPreview() {
+  if (has3d()) { if (!col) readColors(); BBZ.Bot3D.draw($('preview'), state.robot, { yaw: mainView.yaw, pitch: mainView.pitch, pick: pickKey, label: true, colors: col }); }
+  else drawBot($('preview'), state.robot, pickKey, true);
+}
+/* The 3D model turns slowly by itself while the Build Bot tab is open. It stops as soon as you grab it,
+   leave the tab, or switch to the top view, and never runs if the device asks for less motion. */
+let calmMotion = false;
+try { calmMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { calmMotion = false; }
+function spinTick(ts) {
+  spinRaf = 0;
+  if (!has3d() || calmMotion || turning || $('view-build').hidden || document.hidden) return;
+  if (ts - spinAt >= 33) { mainView.yaw -= Math.min(0.1, (ts - spinAt) / 1000) * 0.22; spinAt = ts; drawPreview(); }
+  spinRaf = window.requestAnimationFrame(spinTick);
+}
+function startSpin() { if (!spinRaf && has3d() && !calmMotion) { spinAt = window.performance.now(); spinRaf = window.requestAnimationFrame(spinTick); } }
+function setViewMode(on) {
+  view3d = on;
+  document.querySelectorAll('[data-vm]').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.vm === '3d') === on)));
+  $('preview').style.cursor = on ? 'grab' : 'default';
+  describePick(); drawPreview(); startSpin();
+}
+/* A small 3D picture that can be turned by dragging it. `only` shows a single part instead of the whole robot. */
+function mini3d(cv, cfg, only) {
+  if (!BBZ.Bot3D) { drawBot(cv, cfg, '', false); return; }
+  const view = { yaw: -0.9, pitch: 0.6 };
+  const paint = () => { if (!col) readColors(); BBZ.Bot3D.draw(cv, cfg, { yaw: view.yaw, pitch: view.pitch, only, colors: col }); };
+  BBZ.Bot3D.orbit(cv, view, paint);
+  paint();
+}
 /* Turns a pointer position on the preview into robot inches (+x front, +y left). */
 function previewPoint(e) {
   const cv = $('preview'), r = cv.getBoundingClientRect(), k = r.width / PREVIEW_SPAN;
@@ -868,6 +900,11 @@ function movePart(key, pt) {
 function describePick() {
   const c = state.robot, msg = $('layoutMsg'), P = BBZ.PARTS[pickKey];
   $('btnTurnPart').disabled = !(P && P.turns);
+  if (has3d()) {
+    msg.textContent = (P ? P.label + ' is outlined in yellow' + (P.turns ? ' and points out of the ' + BBZ.FACE_NAME[c.layout[pickKey].face] + '. ' : '. ') : 'Drag the picture to look at your robot from any side. ') +
+      'To move a part, switch to Top view' + (P ? ', or use the arrow keys.' : '.');
+    return;
+  }
   if (!P) { msg.textContent = 'Click a part in the picture, or pick one from the list, then drag it where you want it.'; return; }
   const L = c.layout[pickKey];
   msg.textContent = P.label + ' selected' + (P.turns ? ', pointing out of the ' + BBZ.FACE_NAME[L.face] + '.' : '.') +
@@ -880,7 +917,7 @@ function renderPartButtons() {
 function renderPresets() {
   const box = $('presetList'); box.textContent = '';
   BBZ.PRESETS.forEach((p) => {
-    const cv = h('canvas', { width: 220, height: 220, role: 'img', 'aria-label': 'Top view of ' + p.name });
+    const cv = h('canvas', { width: 260, height: 260, role: 'img', 'aria-label': '3D view of ' + p.name + '. Drag to turn it.' });
     box.append(h('div', { class: 'preset' }, cv,
       h('b', { text: p.name }), h('span', { class: 'cat-chip', text: p.style }), h('span', { class: 'hint', text: p.blurb }),
       h('button', { type: 'button', class: 'btn btn-small', 'aria-label': 'Use ' + p.name, onclick: () => {
@@ -888,7 +925,7 @@ function renderPresets() {
         applyRobot(); notify('Loaded "' + p.name + '". Change anything you like, it is your bot now.');
         try { $('view-build').scrollIntoView({ block: 'start' }); } catch (e) { /* ignore */ }
       } }, 'Use this bot')));
-    drawBot(cv, BBZ.presetRobot(p.id, state.robot.alliance), '', false);
+    mini3d(cv, BBZ.presetRobot(p.id, state.robot.alliance));
   });
 }
 function renderBuild() {
@@ -897,7 +934,9 @@ function renderBuild() {
   const dl = $('driveList'); dl.textContent = '';
   Object.keys(BBZ.DRIVES).forEach((k) => {
     const d = BBZ.DRIVES[k];
-    dl.append(h('button', { type: 'button', 'aria-pressed': String(c.drive === k), onclick: () => { c.drive = k; applyRobot(); } }, h('b', { text: d.label }), h('span', { class: 'hint', text: d.blurb })));
+    const pic = h('canvas', { class: 'thumb3d wide', width: 220, height: 150, 'aria-hidden': 'true' });
+    dl.append(h('button', { type: 'button', 'aria-pressed': String(c.drive === k), onclick: () => { c.drive = k; applyRobot(); } }, pic, h('b', { text: d.label }), h('span', { class: 'hint', text: d.blurb })));
+    if (BBZ.Bot3D) { const demo = BBZ.sanitizeRobot(Object.assign({}, c, { drive: k })); BBZ.Bot3D.draw(pic, demo, { only: 'drive', colors: col }); }
   });
   const pl = $('paintList'); pl.textContent = '';
   Object.keys(BBZ.PAINTS).forEach((k) => pl.append(h('button', { type: 'button', class: 'swatch', style: 'background:' + BBZ.PAINTS[k], title: k, 'aria-label': 'Frame colour ' + k, 'aria-pressed': String(c.paint === k), onclick: () => { c.paint = k; applyRobot(); } })));
@@ -914,6 +953,11 @@ function renderBuild() {
     const uses = BBZ.toolRoles(c, t).map((r) => BBZ.ROLES[r].kind === 'motor' ? '1 motor' : BBZ.ROLES[r].kind === 'servo' ? '1 servo' : '1 sensor').join(' + ');
     const label = h('label', { for: id }, h('b', { text: tool.label }), h('span', { class: 'hint', text: tool.blurb }), h('span', { class: 'uses', text: 'Uses ' + uses }));
     const card = h('div', { class: 'tool' + (c.tools[t] ? ' is-on' : '') }, cb, label);
+    if (BBZ.Bot3D) {
+      const pic = h('canvas', { class: 'thumb3d', width: 180, height: 180, role: 'img', 'aria-label': '3D view of the ' + tool.label + '. Drag to turn it.' });
+      card.append(pic);
+      mini3d(pic, c, t === 'imu' ? 'hub' : t);
+    }
     if (kits) {
       const sel = h('select', { id: 'kit-' + t, 'aria-label': 'Type of ' + tool.label, disabled: !c.tools[t], onchange: (e) => { c.kit[t] = e.target.value; applyRobot(); } });
       Object.keys(kits).forEach((k) => sel.append(h('option', { value: k }, kits[k].label)));
@@ -979,7 +1023,14 @@ function wireBuild() {
 
   /* layout editor */
   const cv = $('preview');
+  document.querySelectorAll('[data-vm]').forEach((b) => b.addEventListener('click', () => setViewMode(b.dataset.vm === '3d')));
+  let turnX = 0, turnY = 0;
   cv.addEventListener('pointerdown', (e) => {
+    if (has3d()) {
+      turning = true; turnX = e.clientX; turnY = e.clientY; cv.style.cursor = 'grabbing';
+      try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+      e.preventDefault(); return;
+    }
     const key = partAt(previewPoint(e));
     pickKey = key; dragKey = key;
     if (key) { try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } sfx('lift'); }
@@ -987,13 +1038,23 @@ function wireBuild() {
     e.preventDefault();
   });
   cv.addEventListener('pointermove', (e) => {
+    if (has3d()) {
+      if (!turning) return;
+      mainView.yaw -= (e.clientX - turnX) * 0.011; mainView.pitch = BBZ.clamp(mainView.pitch + (e.clientY - turnY) * 0.008, 0.18, 1.4);
+      turnX = e.clientX; turnY = e.clientY; drawPreview();
+      return;
+    }
     if (!dragKey) { cv.style.cursor = partAt(previewPoint(e)) ? 'grab' : 'default'; return; }
     cv.style.cursor = 'grabbing';
     movePart(dragKey, previewPoint(e)); drawPreview();
   });
-  const drop = () => { if (!dragKey) return; dragKey = ''; sfx('snap'); applyRobot(); };
+  const drop = () => {
+    if (turning) { turning = false; cv.style.cursor = 'grab'; return; }      /* stays where you left it; it only spins again after a tab change */
+    if (!dragKey) return;
+    dragKey = ''; sfx('snap'); applyRobot();
+  };
   cv.addEventListener('pointerup', drop); cv.addEventListener('pointercancel', drop);
-  cv.addEventListener('dblclick', () => { if (pickKey) $('btnTurnPart').click(); });
+  cv.addEventListener('dblclick', () => { if (pickKey && !has3d()) $('btnTurnPart').click(); });
   cv.addEventListener('keydown', (e) => {
     const P = BBZ.PARTS[pickKey], L = P && c().layout[pickKey];
     if (!P) return;
@@ -1027,7 +1088,7 @@ function showView(name, fromHash) {
     el.classList.add('view-in');
   }
   document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === name)));
-  if (name === 'build') { renderBuild(); }
+  if (name === 'build') { renderBuild(); startSpin(); }
   if (name === 'drive') { resizeField(); updateGutter(); }
   if (!fromHash) { try { history.replaceState(null, '', '#' + name); } catch (e) { /* ignore */ } }
 }

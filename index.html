@@ -575,6 +575,14 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(0.4); } }
 @media (prefers-reduced-motion: reduce) { .bee .wing { animation: none; } }
 @media (max-width: 760px) { .choice.three { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- 3D pictures on the Build Bot tab ---------- */
+.viewmode { align-self: center; }
+.viewmode button[aria-pressed="true"] { background: var(--honey); color: var(--on-honey); }
+.thumb3d { width: 90px; height: 90px; flex: none; border-radius: 8px; border: 1px solid var(--line); background: var(--tile); display: block; }
+.thumb3d.wide { width: 100%; height: auto; aspect-ratio: 22 / 15; pointer-events: none; }
+.tool .thumb3d { order: 3; }
+.tool .kit { order: 4; }
 </style>
 
 <canvas id="bgHive" aria-hidden="true"></canvas>
@@ -920,8 +928,12 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
       <div class="col">
         <div class="card">
           <div class="card-head"><h3>Layout editor</h3><span class="cat-chip">Category 6</span></div>
-          <p class="hint">Top view, front at the top. Dashed square = 18 in starting size. <b>Drag any part to move it.</b> Where a part sits and which way it points changes how the robot plays.</p>
-          <div class="preview-wrap"><canvas id="preview" width="520" height="520" tabindex="0" role="application" aria-label="Robot layout editor. Pick a part from the list below, then use the arrow keys to move it and R to turn it."></canvas></div>
+          <div class="seg viewmode" role="group" aria-label="How to show the robot">
+            <button type="button" data-vm="3d" aria-pressed="true">3D view</button>
+            <button type="button" data-vm="top" aria-pressed="false">Top view (move parts)</button>
+          </div>
+          <p class="hint"><b>3D view:</b> drag the picture to look at the robot from any side. <b>Top view:</b> drag any part to move it. Dashed square = 18 in starting size. Where a part sits and which way it points changes how the robot plays.</p>
+          <div class="preview-wrap"><canvas id="preview" width="520" height="520" tabindex="0" role="application" aria-label="Picture of your robot. In 3D view, drag to turn it. Pick a part from the list below, then use the arrow keys to move it and R to turn it."></canvas></div>
           <div class="partbar" id="partList" role="group" aria-label="Parts you can move"></div>
           <div class="row">
             <button type="button" class="btn btn-small" id="btnTurnPart" disabled>&#8635; Turn part 90&deg;</button>
@@ -957,7 +969,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
     </div>
     <div class="card">
       <div class="card-head"><h3>Robots already made</h3><span class="cat-chip">Gallery</span></div>
-      <p class="hint">Pick one to start from, then change anything. These are SimYourCode's own practice designs, drawn in the style of the starter robots that kit makers such as REV Robotics and goBILDA publish each season. They are not the official designs, and SimYourCode is not connected to those companies.</p>
+      <p class="hint">Drag any picture to turn that robot around. Pick one to start from, then change anything. These are SimYourCode's own practice designs, drawn in the style of the starter robots that kit makers such as REV Robotics and goBILDA publish each season. They are not the official designs, and SimYourCode is not connected to those companies.</p>
       <div class="presets" id="presetList"></div>
     </div>
   </section>
@@ -1047,7 +1059,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
           <tbody>
             <tr><td><b>Home</b></td><td>The front page. The cards jump to the other tabs, and the three bees can be dragged and thrown around for fun.</td></tr>
             <tr><td><b>Drive &amp; Code</b></td><td>The field, the Driver Station, the gamepad and the code editor. This is where you run programs.</td></tr>
-            <tr><td><b>Build Bot</b></td><td>Choose the drivetrain, tools and sensors, drag parts around, name your motors, or load a ready-made robot.</td></tr>
+            <tr><td><b>Build Bot</b></td><td>Choose the drivetrain, tools and sensors, look at your robot in 3D, drag parts around, name your motors, or load a ready-made robot.</td></tr>
             <tr><td><b>Step by Step</b></td><td>A ten-step path from your first look at the field to a full match.</td></tr>
             <tr><td><b>Tutorial</b></td><td>This page: a lesson for every feature.</td></tr>
             <tr><td><b>Game Manual</b></td><td>Where to get the official manual, plus a quick reference in our own words.</td></tr>
@@ -1294,7 +1306,8 @@ gate.setPosition(0.0);</pre></article>
         <figure class="fig"><canvas data-fig="layout" width="760" height="380" role="img" aria-label="The same robot before and after moving the intake to the back and the shooter to the side"></canvas>
           <figcaption>Left: the usual layout. Right: intake dragged to the back, shooter moved and turned to point out of the left side.</figcaption></figure>
         <ol>
-          <li>Click a part in the picture, or pick it from the row of buttons under the picture. A dashed outline shows what is selected and a small arrow shows which way it points.</li>
+          <li>The picture opens in <b>3D view</b>: drag it to turn the robot and see every part from any side. Each scoring tool, each sensor and every robot in the gallery has its own small 3D picture you can turn the same way.</li>
+          <li>Press <b>Top view (move parts)</b> to rearrange the robot. Click a part in the picture, or pick it from the row of buttons under the picture. A dashed outline shows what is selected and a small arrow shows which way it points.</li>
           <li><b>Drag</b> it. The intake snaps to whichever side you drag it to. Other parts go anywhere inside the frame.</li>
           <li>Press <b>Turn part 90&deg;</b> (or double-click the part) to change the way it points.</li>
           <li>With the keyboard: click the picture, then use the arrow keys to move the selected part and <kbd>R</kbd> to turn it.</li>
@@ -1633,18 +1646,19 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261012b"></script>
-<script src="interp.js?v=20261012b"></script>
-<script src="world.js?v=20261012b"></script>
-<script src="blockly/blockly_compressed.js?v=20261012b"></script>
-<script src="blockly/blocks_compressed.js?v=20261012b"></script>
-<script src="blockly/en.js?v=20261012b"></script>
-<script src="blocks.js?v=20261012b"></script>
-<script src="ftcblocks.js?v=20261012b"></script>
-<script src="app.js?v=20261012b"></script>
-<script src="home.js?v=20261012b"></script>
-<script src="extras.js?v=20261012b"></script>
-<script src="tutorial.js?v=20261012b"></script>
-<script src="bg.js?v=20261012b"></script>
+<script src="sound.js?v=20261012c"></script>
+<script src="interp.js?v=20261012c"></script>
+<script src="world.js?v=20261012c"></script>
+<script src="bot3d.js?v=20261012c"></script>
+<script src="blockly/blockly_compressed.js?v=20261012c"></script>
+<script src="blockly/blocks_compressed.js?v=20261012c"></script>
+<script src="blockly/en.js?v=20261012c"></script>
+<script src="blocks.js?v=20261012c"></script>
+<script src="ftcblocks.js?v=20261012c"></script>
+<script src="app.js?v=20261012c"></script>
+<script src="home.js?v=20261012c"></script>
+<script src="extras.js?v=20261012c"></script>
+<script src="tutorial.js?v=20261012c"></script>
+<script src="bg.js?v=20261012c"></script>
 </body>
 </html>
