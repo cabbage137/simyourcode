@@ -1557,7 +1557,7 @@ telemetry.update();</pre>
   <!-- ===================== POLICIES ===================== -->
   <section id="view-legal" class="read" hidden>
     <h2>Policies</h2>
-    <p>Written in plain words so students, mentors and parents can all read them. Last updated 11 October 2026.</p>
+    <p>Written in plain words so students, mentors and parents can all read them. Last updated 12 October 2026.</p>
     <div class="row" role="group" aria-label="Jump to a policy">
       <button type="button" class="btn btn-small" data-jump="pol-privacy">Privacy Policy</button>
       <button type="button" class="btn btn-small" data-jump="pol-terms">Terms of Service</button>
@@ -1572,6 +1572,9 @@ telemetry.update();</pre>
         <li><b>No accounts.</b> You never give a name, email address, password, age or school.</li>
         <li><b>No tracking.</b> There are no analytics, no advertising and no social media trackers.</li>
         <li><b>Your work stays with you.</b> The programs you write and the robot you build are saved only inside your own browser, on your own device. The makers of this site cannot see them.</li>
+        <li><b>No camera, no microphone, no location.</b> The &ldquo;Webcam (AprilTags)&rdquo; on the Build Bot tab is a pretend camera on the pretend robot. The site never asks for, switches on or looks through your device's real camera, and it never asks for your microphone or where you are.</li>
+        <li><b>Pictures are drawn on your device.</b> The field, the 3D robot models and the tutorial pictures are drawn by your own browser. No image of your robot or your screen is uploaded.</li>
+        <li><b>Game controllers.</b> If you plug in a controller, the site only reads its sticks and buttons while the page is open, to drive the pretend robot. Nothing about the controller is saved or sent.</li>
         <li><b>Nothing from other websites.</b> The site loads no outside code, fonts or images. Links on the Game Manual tab open other websites, which have their own policies.</li>
         <li><b>Young users.</b> The site is safe for students of any age because it asks for no personal information. Please do not type real names, addresses or other private details into your code or program names.</li>
         <li><b>Feedback.</b> The &ldquo;Report a bug&rdquo; and &ldquo;Send a compliment&rdquo; buttons open GitHub, a separate website. Anything you write there is public, is tied to your GitHub account, and is handled under GitHub's own privacy policy. This site itself never sees or stores it.</li>
@@ -1589,7 +1592,8 @@ telemetry.update();</pre>
         <li><b>No guarantees.</b> The site is in beta and is provided as it is, so expect some bugs. The simulation is simplified, so scores, distances and robot behaviour here will differ from a real field. Always test on your real robot.</li>
         <li><b>Your code is yours.</b> You own whatever you write here. Keep your own copy of anything important, because browser storage can be cleared.</li>
         <li><b>Play fair.</b> Do not try to break, overload or misuse the site, and do not use it to harm others.</li>
-        <li><b>Names and marks.</b> <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; belong to <i>FIRST</i>. The site's own design and code belong to its makers.</li>
+        <li><b>Names and marks.</b> <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; belong to <i>FIRST</i>. REV Robotics and goBILDA are the names of their own companies and are used only to describe real motors and the style of some robots. The site's own design and code belong to its makers.</li>
+        <li><b>The robot models.</b> The 3D robots and the ready-made robots are this site's own simplified drawings. They are not official designs, building instructions or exact copies of any company's kit.</li>
         <li><b>Responsibility.</b> As far as the law allows, the makers are not responsible for any loss that comes from using the site, including lost work or match results.</li>
         <li><b>Changes.</b> The site and these terms may be updated or taken offline at any time.</li>
       </ul>
@@ -1601,7 +1605,7 @@ telemetry.update();</pre>
       <p>To remember your work between visits it uses your browser's <b>local storage</b>, which stays on your device and is never sent anywhere. It holds only:</p>
       <ul>
         <li>your programs (Java code and Blocks),</li>
-        <li>your robot design and device names,</li>
+        <li>your robot design: its drivetrain, parts, frame colour, where each part sits, and the device names,</li>
         <li>which program was open, your match picks and the simulation speed,</li>
         <li>your appearance choices (white or black mode and font colour) and whether sound is on.</li>
       </ul>
@@ -1616,10 +1620,10 @@ telemetry.update();</pre>
       <h3>Accessibility</h3>
       <p>We want every student to be able to use this site. This is what is in place today, and what is not yet.</p>
       <ul>
-        <li><b>Alt text.</b> Every picture has a text description: the field view, the robot preview and the Home page artwork. Decorative shapes and emoji are hidden from screen readers so they are not read out as noise.</li>
+        <li><b>Alt text.</b> Every picture has a text description: the field view, the robot's 3D and top views, the tutorial pictures and the Home page artwork. Decorative shapes and emoji are hidden from screen readers so they are not read out as noise.</li>
         <li><b>Keyboard.</b> Every button, list and text box can be reached with <kbd>Tab</kbd> and shows a clear outline when focused. The robot can be driven entirely from the keyboard.</li>
         <li><b>Colour.</b> The site follows your light or dark setting and keeps text contrast high. Game pieces are also named in text, so colour is never the only clue in the score sheet or match log.</li>
-        <li><b>Motion.</b> If your device is set to reduce motion, the tool that follows the cursor on the Home page is switched off, the bees stay still unless you move them, and tabs appear without sliding.</li>
+        <li><b>Motion.</b> If your device is set to reduce motion, the tool that follows the cursor on the Home page is switched off, the bees stay still unless you move them, tabs appear without sliding, and the 3D robot does not turn by itself.</li>
         <li><b>Layout editor.</b> Parts on the Build Bot tab can be moved without a mouse: pick a part from the row of buttons, then use the arrow keys and <kbd>R</kbd> on the picture.</li>
         <li><b>Sound.</b> Sound effects are extras: nothing depends on hearing them, every one has a matching message on screen, and they can be switched off under Appearance.</li>
         <li><b>Small screens.</b> The layout stacks into one column on phones, and the on-screen gamepad works by touch.</li>
@@ -1646,19 +1650,19 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261012c"></script>
-<script src="interp.js?v=20261012c"></script>
-<script src="world.js?v=20261012c"></script>
-<script src="bot3d.js?v=20261012c"></script>
-<script src="blockly/blockly_compressed.js?v=20261012c"></script>
-<script src="blockly/blocks_compressed.js?v=20261012c"></script>
-<script src="blockly/en.js?v=20261012c"></script>
-<script src="blocks.js?v=20261012c"></script>
-<script src="ftcblocks.js?v=20261012c"></script>
-<script src="app.js?v=20261012c"></script>
-<script src="home.js?v=20261012c"></script>
-<script src="extras.js?v=20261012c"></script>
-<script src="tutorial.js?v=20261012c"></script>
-<script src="bg.js?v=20261012c"></script>
+<script src="sound.js?v=20261012d"></script>
+<script src="interp.js?v=20261012d"></script>
+<script src="world.js?v=20261012d"></script>
+<script src="bot3d.js?v=20261012d"></script>
+<script src="blockly/blockly_compressed.js?v=20261012d"></script>
+<script src="blockly/blocks_compressed.js?v=20261012d"></script>
+<script src="blockly/en.js?v=20261012d"></script>
+<script src="blocks.js?v=20261012d"></script>
+<script src="ftcblocks.js?v=20261012d"></script>
+<script src="app.js?v=20261012d"></script>
+<script src="home.js?v=20261012d"></script>
+<script src="extras.js?v=20261012d"></script>
+<script src="tutorial.js?v=20261012d"></script>
+<script src="bg.js?v=20261012d"></script>
 </body>
 </html>
