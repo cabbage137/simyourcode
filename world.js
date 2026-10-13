@@ -1,4 +1,4 @@
-/* Field, robot, motor/servo and scoring model. */
+/* Field, robot physics and scoring. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
