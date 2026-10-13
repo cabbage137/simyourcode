@@ -1,6 +1,4 @@
-/* FTC-style Blocks, built on Blockly (the same open-source library the real FTC Blocks editor uses).
-   This file defines the robot blocks, turns a block program into Java, runs the editor, and supplies the
-   Blocks examples. Blocks never run directly: the Java they produce goes through the interpreter. */
+/* FTC-style Blocks, built on Blockly. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, h = BBZ.h, legacy = BBZ.Blocks, B = window.Blockly;
@@ -115,7 +113,7 @@ function defineBlocks() {
     this.appendDummyInput().appendField('call').appendField(dev('distance'), 'DEVICE').appendField('.').appendField('getDistance').appendField(dd(['INCH', 'CM']), 'UNIT');
     this.setOutput(true, 'Number'); this.setColour(FN);
   });
-  /* AprilTag blocks. They read the webcam through one AprilTag processor that the generated Java sets up. */
+  /* AprilTag blocks. */
   def('aprilTag_isVisible', function () {
     this.appendValueInput('ID').setCheck('Number').appendField('call').appendField('AprilTag').appendField('.').appendField('isTagVisible').appendField('id');
     this.setOutput(true, 'Boolean'); this.setColour(FN); this.setTooltip('True while the webcam can see the AprilTag with this ID number.');
@@ -384,7 +382,7 @@ function generate(prog, c) {
     B.serialization.workspaces.load(validState(prog.blocks) ? prog.blocks : blank(), ws);
     const root = ws.getTopBlocks(true).find((b) => b.type === 'ftc_runOpMode');
     if (!root) throw new Error('This program has no "to runOpMode" block, so there is nothing to run.');
-    /* variables: pick a Java name and a type for each one */
+    /* variables: each one gets a Java name and a type */
     const devNames = new Set(BBZ.deviceList(c).map((d) => d.name)), used = new Set(), info = new Map();
     ws.getAllVariables().forEach((v) => {
       let nm = String(v.name).replace(/[^A-Za-z0-9_]/g, '_');
@@ -454,8 +452,7 @@ function generate(prog, c) {
   } finally { ws.dispose(); gen = null; }
 }
 
-/* Loads untrusted saved data into a throw-away workspace and saves it back out, which keeps only
-   what Blockly recognises. Anything it cannot read becomes a blank program. */
+/* Cleans saved Blocks data by loading it and saving it back out. */
 function sanitize(s) {
   if (!validState(s)) return blank();
   let copy;
@@ -517,8 +514,7 @@ function render(root, prog, c, api) {
 }
 
 /* ---------- Blocks examples ---------- */
-/* Kept short on purpose: autonomous moves are "set the powers, wait, stop", which is the first way most
-   teams learn. The Java examples show the encoder and IMU versions. */
+/* Short Blocks examples built from timed moves. */
 function examples(c) {
   const S = BBZ.Samples, f = S.facts(c), n = f.n, T = f.T, four = f.four, time = S.timing;
   const drive = BBZ.driveRoles(c).map((r) => n[r]);
@@ -553,7 +549,7 @@ function examples(c) {
   list.push({ id: 'blocks-drive', name: 'Blocks Drive Only', lang: 'blocks', mode: 'teleop', why: null,
     desc: 'The classic first program: the left stick drives' + (four ? ' and slides' : '') + ', the right stick turns.',
     make: () => { const b = builder(); return teleop(b, stickMix(b)); } });
-  /* The whole TeleOp. With `second`, the sticks stay on gamepad1 and every tool moves to gamepad2. */
+  /* The whole TeleOp. */
   const fullBlocks = (second) => {
       const b = builder(), loop = stickMix(b);
       if (second) b.who.pad = 'gamepad2';

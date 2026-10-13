@@ -1,7 +1,4 @@
-/* A 3D picture of the robot for the Build Bot tab, built the way a kit robot is: drilled channel for the
-   frame, wheels with hubs and rollers, motors with gearboxes, clear plastic guards and a magazine that
-   holds the pieces. It is drawn on an ordinary 2D canvas, so it needs no 3D library and no graphics card,
-   and a picture is only redrawn when something changes. */
+/* A 3D picture of the robot for the Build Bot tab. */
 (function () {
 'use strict';
 const BBZ = window.BBZ;
@@ -20,7 +17,7 @@ function builder() {
   const at = (x, y, z) => { const r = rot(x, y, z); return [r[0] + O[0], r[1] + O[1], r[2] + O[2]]; };
   const g = {
     faces, tag: '',
-    /* Run `fn` with everything it draws moved to (x, y, z), turned by `yaw` and tipped up by `pitch`. */
+    /* Runs `fn` with its drawing moved to (x, y, z), turned by `yaw` and tipped by `pitch`. */
     place(x, y, z, yaw, pitch, fn) {
       const oM = M, oO = O, cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
       const R = [cy * cp, -sy, -cy * sp, sy * cp, cy, -sy * sp, sp, 0, cp], N = [];
@@ -34,7 +31,7 @@ function builder() {
       const P = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map((s) => at(c[0] + u[0] * s[0] + v[0] * s[1], c[1] + u[1] * s[0] + v[1] * s[1], c[2] + u[2] * s[0] + v[2] * s[1]));
       faces.push({ p: P, n: rot(n[0], n[1], n[2]), col, a: o.a || 1, bias: o.bias || 0, tag: g.tag });
     },
-    /* A box. Big sides are cut into smaller patches so that sorting far-to-near always looks right. */
+    /* A box. */
     box(x, y, z, sx, sy, sz, col, o) {
       const h = [sx / 2, sy / 2, sz / 2];
       for (let ax = 0; ax < 3; ax++) for (let s = -1; s <= 1; s += 2) {
@@ -74,7 +71,7 @@ function builder() {
       g.sheet([x - a, y, z], [0, b, 0], [0, 0, h]); g.sheet([x + a, y, z], [0, b, 0], [0, 0, h]);
       g.sheet([x, y - b, z], [a, 0, 0], [0, 0, h]); g.sheet([x, y + b, z], [a, 0, 0], [0, 0, h]);
     },
-    /* A length of drilled channel, the metal beam kit robots are built from. `axis` is the way it runs. */
+    /* A length of drilled channel, the metal beam kit robots are built from. */
     beam(x, y, z, len, axis, w, h, col) {
       const sx = axis === 'x' ? len : w, sy = axis === 'y' ? len : axis === 'z' ? h : w, sz = axis === 'z' ? len : h;
       g.box(x, y, z, sx, sy, sz, col);
@@ -334,7 +331,7 @@ function draw(cv, cfg, o) {
   const yaw = o.yaw === undefined ? -0.9 : o.yaw, pitch = o.pitch === undefined ? 0.5 : o.pitch;
   const ca = Math.cos(yaw), sa = Math.sin(yaw), ce = Math.cos(pitch), se = Math.sin(pitch);
   const faces = model(cfg, o.only), part = o.only && o.only !== 'drive';
-  /* centre and size the picture on what is being shown */
+  /* centres and sizes the picture on what is shown */
   let mid = [0, 0, o.only ? 2 : 5], reach = o.only ? 11.5 : 14.2;
   if (part) {
     const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9];
@@ -368,7 +365,7 @@ function draw(cv, cfg, o) {
       ctx.strokeStyle = col.accent; ctx.lineWidth = Math.max(2, W / 150); path(ring); ctx.stroke();
     }
   }
-  /* turn every face to the viewer, drop the ones facing away, then paint from the farthest to the nearest */
+  /* faces are turned to the viewer, hidden ones dropped, and the rest painted far to near */
   const list = [];
   for (let i = 0; i < faces.length; i++) {
     const f = faces[i];
@@ -406,7 +403,7 @@ function draw(cv, cfg, o) {
   if (o.label) { ctx.fillStyle = col.tileText; ctx.font = '600 ' + Math.round(W / 34) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Drag to turn the robot. The arrow on the floor points to the FRONT.', W / 2, H - W / 40); }
 }
 
-/* Lets someone turn a picture by dragging it. `view` holds { yaw, pitch } and `redraw` repaints the canvas. */
+/* Lets someone turn a picture by dragging it. */
 function orbit(cv, view, redraw, onGrab) {
   let on = false, lx = 0, ly = 0;
   cv.style.touchAction = 'none'; cv.style.cursor = 'grab';

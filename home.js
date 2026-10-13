@@ -1,5 +1,4 @@
-/* Home page extras: menu cards, the tool that follows the cursor, policy jump buttons and the erase-data button.
-   Kept separate from the simulator so none of its code had to change. */
+/* Home page extras: menu cards, the tool that follows the cursor, policy jump buttons and the erase-data button. */
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -28,15 +27,12 @@ document.querySelectorAll('[data-jump]').forEach((el) => {
   });
 });
 
-/* Tool emoji pinned to the cursor on the Home tab. It is placed in the same event that reports the
-   pointer position, with no easing, so it never lags behind or drifts. */
+/* Tool emoji pinned to the cursor on the Home tab. */
 if (home && tool) {
   let calm = false;
   try { calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { calm = false; }
   const OFFSET = 10;                         /* just below-right of the pointer tip so it never covers what you click */
-  /* The emoji glides to the pointer on a quick spring and leans into the direction of travel,
-     then settles exactly on the target. Timing is based on real elapsed time, so it feels the
-     same on slow and fast screens. */
+  /* The emoji glides to the pointer and leans the way it is moving. */
   let shown = false, raf = 0, last = 0;
   let tx = 0, ty = 0, x = 0, y = 0, tilt = 0;
   const hide = () => { if (shown) { shown = false; tool.hidden = true; } if (raf) { window.cancelAnimationFrame(raf); raf = 0; } };
@@ -69,12 +65,10 @@ if (home && tool) {
   }
 }
 
-/* Four bees drift around the Home tab as if there were no gravity. Grab one and drag it, or throw it:
-   it glides off, bounces from the edges and the other bees, then settles back to a slow wander. */
+/* Four bees drift around the Home tab as if there were no gravity. */
 const beeLayer = $('bees');
 if (home && beeLayer) {
-  /* A round cartoon bee: fat yellow body with a thick outline, three brown stripes at the back, a little
-     stinger, two small wings on top, one curly antenna and a tiny calm face. Each one needs its own clip id. */
+  /* Draws one round cartoon bee as SVG. */
   const BEE = (i) => '<svg viewBox="0 0 122 104" focusable="false">' +
     '<defs><clipPath id="beeBody' + i + '"><ellipse cx="68" cy="62" rx="50" ry="38"/></clipPath></defs>' +
     '<ellipse class="wing" cx="52" cy="20" rx="16" ry="11" fill="#ffffff" stroke="#111111" stroke-width="4"/>' +
@@ -117,8 +111,7 @@ if (home && beeLayer) {
       if (b.held) { draw(b); return; }
       if (!still) {
         /* a gentle, wandering push, and a slow fade of any extra speed from being thrown */
-        /* Every so often a bee changes its mind: a new heading and a new pace. Sometimes it hovers almost still,
-           sometimes it darts. Between those moments its heading jitters, so no two paths look alike. */
+        /* Every so often a bee changes its mind: a new heading and a new pace. */
         b.mood -= dt;
         if (b.mood <= 0) {
           const roll = Math.random();
@@ -164,7 +157,7 @@ if (home && beeLayer) {
     b.el.addEventListener('pointermove', (e) => {
       if (!b.held) return;
       const p = point(e), now = window.performance.now(), dt = Math.max(0.008, (now - b.lt) / 1000);
-      /* remember how fast the hand is moving so letting go throws the bee */
+      /* records the hand's speed so letting go throws the bee */
       b.vx = b.vx * 0.5 + (p.x - b.lx) / dt * 0.5; b.vy = b.vy * 0.5 + (p.y - b.ly) / dt * 0.5;
       b.lx = p.x; b.ly = p.y; b.lt = now;
       b.x = p.x - b.ox; b.y = p.y - b.oy;
@@ -187,7 +180,7 @@ if (home && beeLayer) {
   wake();
 }
 
-/* erase everything this site saved in the browser (two clicks, because confirm boxes are not available) */
+/* erases everything this site saved in the browser (takes two clicks) */
 const erase = $('btnErase'), msg = $('eraseMsg');
 if (erase && msg) {
   let armed = 0;

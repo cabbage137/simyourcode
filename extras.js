@@ -1,5 +1,4 @@
-/* Add-ons that sit on top of the simulator without changing it:
-   the Appearance panel, colour-coded Java (with matching bracket colours) and the Tutorial category switch. */
+/* Add-ons that sit on top of the simulator without changing it. */
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -40,7 +39,7 @@ const LIT = new Set(['true', 'false', 'null']);
 const isIdStart = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_' || c === '$';
 const isDigit = (c) => c >= '0' && c <= '9';
 
-/* Fills `el` with coloured spans for `code`. Text is only ever added as text nodes. */
+/* Fills `el` with coloured spans for `code`. */
 function paint(el, code) {
   const frag = document.createDocumentFragment();
   let plain = '';

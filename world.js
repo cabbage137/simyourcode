@@ -1,5 +1,4 @@
-/* Field, robot, motor/servo and scoring model. Units: inches, seconds, radians.
-   Field origin is the audience-side corner next to the red alliance; x runs toward blue, y toward the rear wall. */
+/* Field, robot, motor/servo and scoring model. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -23,7 +22,7 @@ const WHEELS = {
   w104: { label: '104 mm (4.09 in)', d: 4.09 },
   w120: { label: '120 mm (4.72 in)', d: 4.72 }
 };
-/* Drivetrains. `holo` ones can slide sideways. kf / ks scale forward and sideways speed against the wheel's rim speed. */
+/* Drivetrains. */
 const DRIVES = {
   mecanum: { label: 'Mecanum', holo: true, kf: 1, ks: 0.85, blurb: '4 motors, roller wheels. Drives, turns and slides sideways.' },
   tank: { label: 'Tank', holo: false, kf: 1, ks: 0, blurb: '2 motors, grippy wheels. Simple and strong, but no sideways moves.' },
@@ -64,7 +63,7 @@ const TOOLS = {
   distance: { label: 'Distance sensor', roles: ['distance'], blurb: 'Measures how far the nearest wall or the HIVE is from the side it points at.' },
   camera: { label: 'Webcam (AprilTags)', roles: ['camera'], blurb: 'Spots the AprilTags on the field and tells your code how far away and at what angle each one is.' }
 };
-/* The different versions of each mechanism. `roles` lists the devices that version puts on the robot. */
+/* The different versions of each mechanism. */
 const KITS = {
   intake: {
     roller: { label: 'Roller intake', roles: ['intake'], blurb: 'A spinning tube across the whole side. Reliable, about a third of a second per piece.' },
@@ -81,7 +80,7 @@ const KITS = {
     arm: { label: 'Swing arm', roles: ['lift', 'gate'], blurb: 'Swings up to 24 in in about half the time, with fewer encoder ticks per inch.' }
   }
 };
-/* Parts you can move in the Build Bot editor. `edge` parts sit on one side of the robot; the others go anywhere. */
+/* Parts you can move in the Build Bot editor. */
 const PARTS = {
   intake: { label: 'Intake', tool: 'intake', edge: true, turns: true, u: 1, v: 0, face: 0, r: 2.2 },
   launcher: { label: 'Shooter', tool: 'launcher', turns: true, u: 0.05, v: 0, face: 0, r: 3.2 },
@@ -180,8 +179,7 @@ function shotPower(dist) { return clamp(Math.sqrt(Math.max(0, dist - 12) / 78), 
 /* How far ahead of the robot's centre the shooter sits, along the way it points. */
 function shooterReach(cfg) { const p = partPos(cfg, 'launcher'), a = p.face * Math.PI / 2; return p.x * Math.cos(a) + p.y * Math.sin(a); }
 
-/* Ready-made robots for the Build Bot gallery. They are this site's own practice designs, drawn in the
-   style of the starter robots that kit makers publish each season. */
+/* Ready-made robots for the Build Bot gallery (this site's own practice designs). */
 const PRESETS = [
   { id: 'bee', name: 'Starter Bee', style: 'SimYourCode default', blurb: 'Mecanum drive with every tool. The easiest bot to learn on.', cfg: {} },
   { id: 'revstyle', name: 'Orange Crate', style: 'In the style of a REV starter bot', blurb: 'Tank drive on 90 mm wheels with HD Hex motors, a roller intake and one flywheel. Simple to build and to code.',
@@ -278,8 +276,7 @@ class Motor {
       if (this.mode === 'RUN_TO_POSITION') {
         const e = this.target - (this.raw - this.off) * this.dir;
         const lim = Math.abs(this.power);
-        /* Like the position controller in a real hub: push toward the target, and ease off as the motor
-           speeds up, so it arrives without running past and creeping back. */
+        /* Position controller: drives toward the target and slows as it arrives. */
         cmd = this.dir * clamp(e * 6 / this.tpr - 2.2 * this.u * this.dir, -lim, lim);
       } else if (this.mode !== 'STOP_AND_RESET_ENCODER') cmd = this.power * this.dir;
     }
@@ -379,7 +376,7 @@ class World {
   emit(kind, text) { this.events.push({ kind, text, t: this.time }); if (kind === 'foul') this.fouls++; }
   device(name) { return this.devices.get(name) || null; }
   newOpMode() { this.motorList.forEach((m) => m.resetSoft()); this.servoList.forEach((s) => s.resetSoft()); }
-  /* Ends a practice run. If it was an autonomous tested on its own, LEAVE and PARK are judged now. */
+  /* Ends a practice run. */
   practiceDone() {
     if (this.mode === 'autotest') { this.autoLeave = this.offWall(); this.autoPark = this.inLoadingZone(); this.autoDone = true; }
     this.mode = 'idle';
@@ -413,7 +410,7 @@ class World {
     if (t !== null) best = Math.min(best, t * 250);
     return clamp(best, 0, 80);
   }
-  /* Every AprilTag the webcam can see right now, nearest first. Worked out once per physics step. */
+  /* Every AprilTag the webcam can see right now, nearest first. */
   tagDetections() {
     if (this.tagAt === this.time) return this.tagList;
     this.tagAt = this.time; this.tagList = [];
@@ -622,8 +619,7 @@ class World {
     ['R', 'B'].forEach((k) => {
       const h = this.hives[k], cy = CELL_Y[h.up];
       if (!(x1 > h.x0 && x1 < h.x1 && y1 > cy[0] && y1 < cy[1])) return;
-      /* A CELL only takes pieces thrown from the side of the field it faces. After a tip the open CELL
-         is on the far side, so the robot has to drive round: lobbing over the top no longer counts. */
+      /* A CELL only takes pieces thrown from the side of the field it faces. */
       if (h.up === 'aud' ? o.y < HIVE_BOX.y0 : o.y > HIVE_BOX.y1) dest = h; else wrongSide = true;
     });
     if (!dest && inBox(x1, y1, HIVE_BOX)) {
@@ -955,8 +951,7 @@ const DRAW = {
   }
 };
 
-/* Robot drawn in its own frame: +x is the front. `st` carries live state (may be sparse for the build preview).
-   Part colours are fixed so every part reads the same in white and black mode. `pick` is the part to highlight. */
+/* Robot drawn in its own frame: +x is the front. */
 function drawRobot(ctx, cfg, st, col, pick) {
   const hl = cfg.length / 2, hw = cfg.width / 2, ac = cfg.alliance === 'red' ? col.red : col.blue;
   const kind = cfg.drive, paint = PAINTS[cfg.paint] || PART.rail;

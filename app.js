@@ -15,8 +15,7 @@ let pid = 1;
 
 /* ---------- storage ---------- */
 const cleanName = (s, def) => (typeof s === 'string' ? s.replace(/[\u0000-\u001f<>]/g, '').slice(0, 40).trim() : '') || def || 'My program';
-/* Blocks programs saved before the editor changed to FTC-style blocks cannot be opened by it,
-   so each one is kept as a Java op mode with the same behaviour. */
+/* Converts Blocks programs from the old editor into Java op modes. */
 function convertLegacy(p) {
   const name = cleanName(p.name), mode = p.mode === 'auto' ? 'auto' : 'teleop', group = cleanGroup(p.group);
   let code;
@@ -35,7 +34,7 @@ function cleanProgram(p) {
     ex: (typeof p.ex === 'string' && /^[a-z-]{1,30}$/.test(p.ex)) ? p.ex : '', sig: (typeof p.sig === 'string' && /^[0-9a-z]{1,16}$/.test(p.sig)) ? p.sig : ''
   };
 }
-/* A short fingerprint of a program's contents. An example whose fingerprint still matches has not been edited. */
+/* A short fingerprint of a program's contents. */
 function sigOf(p) {
   const s = p.lang === 'java' ? p.code : JSON.stringify(p.blocks);
   let a = 2166136261;
@@ -66,9 +65,7 @@ function load() {
   else renewOldExamples();
   fixMatchPicks();
 }
-/* Example op modes saved by an earlier version of the site cannot keep themselves up to date. Each one is
-   swapped for the current example of the same name; the old copy is kept, renamed, in its own group, so
-   nothing anyone wrote is lost. */
+/* Moves example op modes saved by an earlier version into an "Older versions" group. */
 function renewOldExamples() {
   let list = null;
   const fresh = [];
@@ -259,7 +256,7 @@ function endOpMode() {
   runner = null; runProg = null; started = false;
   if (world) world.stopActuators();
 }
-/* Ends a practice run. A lone autonomous run has its LEAVE and PARK checked here, as the end of AUTO would. */
+/* Ends a practice run. */
 function endPractice() {
   if (world.mode !== 'practice' && world.mode !== 'autotest') return false;
   world.practiceDone();
@@ -268,7 +265,7 @@ function endPractice() {
 function runOpen() {
   const p = openProg();
   if (!p) return;
-  /* An autonomous is written for the start spot, so it always begins from a fresh field, like a real match. */
+  /* An autonomous run always begins from a fresh field. */
   const fresh = p.mode === 'auto';
   if (matchOn || world.mode === 'over' || fresh) { endOpMode(); world.reset(); clearLog(); rebuildHw(); }
   matchOn = false;
@@ -469,10 +466,7 @@ const KEYMAP = { KeyQ: 'left_bumper', KeyE: 'right_bumper', KeyZ: 'left_trigger'
   KeyT: 'dpad_up', KeyG: 'dpad_down', KeyF: 'dpad_left', KeyH: 'dpad_right' };
 const DRIVE_KEYS = { KeyW: 1, KeyA: 1, KeyS: 1, KeyD: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1 };
 const typing = (t) => t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
-/* Up to two real controllers, in the order the browser lists them: the first drives gamepad1 and the
-   second drives gamepad2 (Swap turns that round). PlayStation, Xbox and most other controllers report
-   the same "standard" button layout, so a PS5 controller's Cross is A, Circle is B, Square is X and
-   Triangle is Y. The keyboard and the on-screen pad feed whichever gamepad is picked under the sticks. */
+/* Reads up to two controllers: the first is gamepad1 and the second is gamepad2. */
 const padPair = [pad, pad2];
 let screenTo = 0, swapPads = false, padSeen = '';
 const HW_BUTTONS = ['a', 'b', 'x', 'y', 'left_bumper', 'right_bumper', null, null, 'back', 'start', 'left_stick_button', 'right_stick_button', 'dpad_up', 'dpad_down', 'dpad_left', 'dpad_right', 'guide', 'touchpad'];
@@ -890,7 +884,7 @@ function renderChecks() {
   if (!c.tools.launcher && !c.tools.lift) li('INFO', 'info', 'With no shooter and no lift, this bot can only push or carry pieces and park.');
 }
 
-/* The preview doubles as the layout editor: click a part to pick it, drag it to move it. */
+/* The preview is also the layout editor, where parts are picked and dragged. */
 let pickKey = '', dragKey = '';
 const PREVIEW_SPAN = 26;                                    // inches shown across the preview
 function drawBot(cv, cfg, pick, label) {
@@ -912,8 +906,7 @@ function drawPreview() {
   if (has3d()) { if (!col) readColors(); BBZ.Bot3D.draw($('preview'), state.robot, { yaw: mainView.yaw, pitch: mainView.pitch, pick: pickKey, label: true, colors: col }); }
   else drawBot($('preview'), state.robot, pickKey, true);
 }
-/* The 3D model turns slowly by itself while the Build Bot tab is open. It stops as soon as you grab it,
-   leave the tab, or switch to the top view, and never runs if the device asks for less motion. */
+/* The 3D model turns slowly by itself while the Build Bot tab is open. */
 let calmMotion = false;
 try { calmMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { calmMotion = false; }
 function spinTick(ts) {
@@ -929,7 +922,7 @@ function setViewMode(on) {
   $('preview').style.cursor = on ? 'grab' : 'default';
   describePick(); drawPreview(); startSpin();
 }
-/* A small 3D picture that can be turned by dragging it. `only` shows a single part instead of the whole robot. */
+/* A small 3D picture that can be turned by dragging it. */
 function mini3d(cv, cfg, only) {
   if (!BBZ.Bot3D) { drawBot(cv, cfg, '', false); return; }
   const view = { yaw: -0.9, pitch: 0.6 };
@@ -1078,7 +1071,7 @@ function wireBuild() {
     if (!set) return;
     const taken = BBZ.deviceList(c()).filter((d) => roles.indexOf(d.role) < 0).map((d) => d.name);
     if (roles.some((r) => taken.indexOf(set[r]) >= 0)) { $('nameMsg').textContent = 'One of those names is already used by another part, so nothing was changed.'; return; }
-    /* go through temporary names first so swapping two names cannot collide */
+    /* renames through temporary names so two swapped names cannot collide */
     let n = 0;
     roles.forEach((r, i) => { n += renameEverywhere(c().names[r], 'zzTmpName' + i); });
     roles.forEach((r, i) => { renameEverywhere('zzTmpName' + i, set[r]); c().names[r] = set[r]; });
@@ -1145,7 +1138,7 @@ function showView(name, fromHash) {
   const was = VIEWS.find((v) => !$('view-' + v).hidden);
   VIEWS.forEach((v) => { $('view-' + v).hidden = v !== name; });
   if (was !== name) {
-    /* the new tab glides in from the side it sits on in the tab bar, instead of just appearing */
+    /* the new tab glides in from the side it sits on in the tab bar */
     const el = $('view-' + name);
     el.classList.remove('view-in', 'from-left');
     void el.offsetWidth;
@@ -1179,8 +1172,7 @@ function frame(ts) {
   }
 }
 
-/* Runs a program on a private copy of the field with nobody at the controls and reports what happened.
-   Nothing on screen changes. It exists so every example can be checked against every kind of bot. */
+/* Runs a program on a private copy of the field with nobody at the controls and reports what happened. */
 BBZ.dryRun = (src, cfg, mode, seconds, pads) => {
   const keep = { world, started, startAt, stopReq, robot: state.robot, pending: tele.pending, shown: tele.shown };
   const out = { error: null, finished: false };

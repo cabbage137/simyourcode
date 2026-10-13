@@ -1,5 +1,4 @@
-/* Blocks editor, the blocks-to-Java generator, and the example programs.
-   Blocks never run directly: they are turned into Java and that Java goes through the interpreter. */
+/* Blocks editor, the blocks-to-Java generator, and the example programs. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -247,8 +246,7 @@ function helperLines(name, cfg) {
 }
 
 const TYPE_OF = { motor: 'DcMotor', servo: 'Servo', imu: 'IMU', distance: 'DistanceSensor' };
-/* Builds a full OpMode class around `body` (lines relative to the inside of runOpMode), laid out the way
-   the OnBot Java templates are. Only the devices, imports and set-up lines the program really uses are written. */
+/* Builds a full OpMode class around `body`. */
 function scaffold(o) {
   const cfg = o.cfg, n = cfg.names, all = BBZ.deviceList(cfg);
   const use = new Set(o.use || []), consts = new Set(o.consts || []);
@@ -426,7 +424,7 @@ function listReachable(root, target) {
 }
 function clone(b) { return { id: newId(), type: b.type, f: JSON.parse(JSON.stringify(b.f)), body: b.body.map(clone), els: b.els.map(clone) }; }
 
-/* Draws the palette and workspace into `root`. `api.changed()` is called after every edit. */
+/* Draws the palette and workspace into `root`. */
 function render(root, prog, cfg, api) {
   root.textContent = '';
   if (!cursor || !listReachable(prog.blocks, cursor.list)) cursor = { list: prog.blocks, idx: prog.blocks.length };
@@ -642,8 +640,7 @@ function render(root, prog, cfg, api) {
 }
 
 /* ---------- example programs ---------- */
-/* How long to hold a power to cover a distance or an angle. Motors take a moment to speed up, and they
-   coast a little after the power is cut, so the sums below follow the same motor model the field uses. */
+/* How long to hold a power to cover a distance or an angle. */
 const timing = (function () {
   const TAU = 0.1, BRAKE = 0.06;
   const solve = (amount, rate, chained) => {
@@ -667,10 +664,7 @@ function botFacts(cfg) {
   const shooter = T.launcher ? kit.launcher : null, face = cfg.layout.launcher.face;
   const reach = shooter ? BBZ.shooterReach(cfg) : 0;
   const wheels = shooter === 'dual' ? [n.launcher, n.launcher2] : shooter === 'flywheel' ? [n.launcher] : [];
-  /* Every autonomous first gets the robot to the same line in front of its HIVE, facing it. From the
-     "facing your HIVE" start spot it is already there, touching the wall; from the two alliance-wall
-     spots it drives over and stops 36 inches from the audience wall. The middle of the upward CELL is
-     62.6 inches from that wall. */
+  /* Every autonomous starts by driving to the line in front of its HIVE. */
   const startY = cfg.start === 'hive' ? hl + 0.05 : 36;
   /* A catapult cannot change its range, so the robot itself moves until the CELL is exactly one throw away. */
   let shift = 0;
@@ -680,14 +674,12 @@ function botFacts(cfg) {
   }
   const shootY = startY + shift, hiveShot = 62.6 - shootY - reach;
   const half = (v) => Math.round(v * 2) / 2;
-  /* The moves for "tip the HIVE, then park", as a list: ['D', inches forward], ['S', inches to the left],
-     ['T', degrees to the left] and ['SHOOT']. `slides` lets a mecanum or X-drive bot move sideways
-     instead of turning. */
+  /* The list of moves for "tip the HIVE, then park". */
   const route = (slides) => {
     const s = [], toHive = half(59.5 - hl - 0.05);
     if (cfg.start === 'garden') s.push(['D', toHive], ['T', 90]);
     else if (cfg.start === 'zone') {
-      /* a FLOWER stands on the wall between this spot and the HIVE line, so come off the wall first */
+      /* a FLOWER stands on the wall here, so the route leaves the wall first */
       if (slides) s.push(['D', 9], ['S', -48], ['D', toHive - 9], ['T', 90]);
       else s.push(['D', 9], ['T', -90], ['D', 48], ['T', 90], ['D', toHive - 9], ['T', 90]);
     }
@@ -789,8 +781,7 @@ function javaSample(mode, cfg) {
 }
 
 BBZ.Blocks = { SPEC, render, generate, sanitize, makeBlock, countBlocks, className, resetCursor: () => { cursor = null; } };
-/* The example library: every entry has a name, a one-line description and a maker for the current bot.
-   `why` is set when the bot is missing a part the example needs. */
+/* The example library: every entry has a name, a one-line description and a maker for the current bot. */
 function exampleList(cfg) {
   const f = botFacts(cfg), n = f.n;
   const J = (o) => () => scaffold(Object.assign({ cfg, intro: [o.title + ': ' + o.about] }, o));

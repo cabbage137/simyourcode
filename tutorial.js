@@ -1,5 +1,4 @@
-/* Tutorial tab: category switching and the pictures. Every picture is drawn with the simulator's own
-   field and robot code, so the lessons always show exactly what the other tabs show. */
+/* Tutorial tab: category switching and the pictures. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, B = window.Blockly;
@@ -41,7 +40,7 @@ function arrow(ctx, x0, y0, x1, y1, col) {
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 - Math.cos(a - 0.5) * 13, y1 - Math.sin(a - 0.5) * 13); ctx.lineTo(x1 - Math.cos(a + 0.5) * 13, y1 - Math.sin(a + 0.5) * 13); ctx.closePath(); ctx.fill();
   ctx.lineCap = 'butt';
 }
-/* A piece of the real field. `view` is [x0, y0, x1, y1] in field inches; `marks` are numbered badges at field spots. */
+/* A piece of the real field. */
 function fieldScene(cv, o) {
   const col = BBZ.colors(), w = new BBZ.World(o.cfg || bot());
   if (o.setup) o.setup(w);
@@ -56,7 +55,7 @@ function fieldScene(cv, o) {
   (o.marks || []).forEach((m) => badge(ctx, px(m[0]), py(m[1]), m[2], col));
   (o.notes || []).forEach((m) => caption(ctx, px(m[0]), py(m[1]), m[2], col));
 }
-/* One or more robots in a row. Each item: { cfg, st, title, pick, marks: [[robotX, robotY, label]], arrows: 'holo' | 'tank' }. */
+/* One or more robots in a row. */
 function botRow(cv, items) {
   const col = BBZ.colors(), ctx = cv.getContext('2d'), n = items.length, cell = cv.width / n, k = Math.min(cell, cv.height - 44) / 25;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = col.tile; ctx.fillRect(0, 0, cv.width, cv.height);
@@ -154,8 +153,7 @@ function rbox(ctx, x, y, w, h, r, fill, stroke) {
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
 }
 function clear(cv, col) { const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.tile; ctx.fillRect(0, 0, cv.width, cv.height); return ctx; }
-/* Several pieces of the field side by side, each with a title underneath: a little comic strip of one task.
-   Each panel: { title, at: [fieldX, fieldY], span: inchesAcross, cfg, setup, marks, notes }. */
+/* Several pieces of the field side by side, each with a title underneath. */
 function strip(cv, panels) {
   const col = BBZ.colors(), ctx = clear(cv, col), n = panels.length, gap = 10, w = (cv.width - gap * (n + 1)) / n, h = cv.height - 44;
   panels.forEach((p, i) => {
@@ -168,9 +166,9 @@ function strip(cv, panels) {
 }
 const run = (w, n) => { for (let i = 0; i < n; i++) w.step(1 / 120); };
 const pose = (w, x, y, th) => { const r = w.robot; r.x = x; r.y = y; r.th = th; };
-/* Put pieces straight into the upward CELL of the red HIVE, as if they had been launched there. */
+/* Places pieces in the upward CELL of the red HIVE. */
 const fill = (w, n) => { const h = w.hives.R; for (let i = 0; i < n; i++) { const b = w.mk('P', 'cell'); h.cells[h.up].push(b); } };
-/* Small arrows beside each wheel of a mecanum bot: +1 forward, -1 backward, 0 none. Order: fl, fr, bl, br. */
+/* Small arrows beside each wheel of a mecanum bot: +1 forward, -1 backward, 0 none. */
 function wheelArrows(dirs, names) {
   return (ctx, at, k, col) => {
     const hl = 8.5, hw = 8.5, spots = [[hl - 2.6, hw + 2.2], [hl - 2.6, -hw - 2.2], [-hl + 2.6, hw + 2.2], [-hl + 2.6, -hw - 2.2]];
@@ -407,7 +405,7 @@ function drawBlocks(root) {
       const ws = B.inject(el, { readOnly: true, media: 'blockly/media/', sounds: false, renderer: 'geras', theme: BBZ.Blocks.theme(), move: { scrollbars: false, drag: false, wheel: false }, zoom: { controls: false, wheel: false, startScale: 0.7 } });
       B.Events.disable();
       try { B.serialization.workspaces.load(state, ws); } finally { B.Events.enable(); }
-      /* size the picture to the blocks: as wide as the lesson allows, as tall as the program needs */
+      /* sizes the picture to fit the blocks */
       const box = ws.getBlocksBoundingBox(), bw = Math.max(1, box.right - box.left), bh = Math.max(1, box.bottom - box.top);
       const s = Math.min(0.8, (el.clientWidth - 28) / bw);
       el.style.height = Math.ceil(bh * s + 28) + 'px';
@@ -416,7 +414,7 @@ function drawBlocks(root) {
       blockFigs.push(ws);
     } catch (e) { el.textContent = 'Open the Blocks tab on Drive & Code to see these blocks.'; }
   });
-  /* the editor on Drive & Code shares the block definitions, so point its dropdowns back at the student's own bot */
+  /* restores the editor's dropdowns to the student's own bot */
   try { BBZ.Samples.list(BBZ.currentRobot()); } catch (e) { /* ignore */ }
 }
 
@@ -438,7 +436,7 @@ function refresh() {
   drawFigs(sec); drawBlocks(sec);
 }
 document.querySelectorAll('[data-tut]').forEach((b) => b.addEventListener('click', () => show(b.dataset.tut)));
-/* draw when the Tutorial tab opens, and again when the colours change */
+/* redraws when the Tutorial tab opens or the colours change */
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { if (t.dataset.view === 'tutorial') setTimeout(refresh, 0); else clearBlocks(); }));
 document.querySelectorAll('[data-go="tutorial"]').forEach((t) => t.addEventListener('click', () => setTimeout(refresh, 0)));
 try { new MutationObserver(() => setTimeout(refresh, 60)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-look', 'data-ink'] }); } catch (e) { /* ignore */ }

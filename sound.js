@@ -1,5 +1,4 @@
-/* Sound effects, all made on the spot with the Web Audio API (no audio files are loaded).
-   Browsers only allow sound after the first click or key press, so nothing plays before that. */
+/* Sound effects, all made on the spot with the Web Audio API (no audio files are loaded). */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -21,7 +20,7 @@ function audio() {
   if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { /* ignore */ } }
   return ac;
 }
-/* One note. o: f (start Hz), f2 (end Hz), at (delay s), dur (s), type, vol, cut (low-pass Hz). */
+/* One note. */
 function tone(o) {
   const a = audio(); if (!a) return;
   const t = a.currentTime + (o.at || 0), osc = a.createOscillator(), g = a.createGain();
@@ -80,8 +79,7 @@ BBZ.Sound = {
   set(v) { on = !!v; try { window.localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) { /* ignore */ } showState(); }
 };
 
-/* Sounds for ordinary clicks: a short tick for tabs, buttons, lists and checkboxes.
-   The drive pad and block gaps stay silent so they are not noisy while you work. */
+/* Sounds for ordinary clicks: a short tick for tabs, buttons, lists and checkboxes. */
 document.addEventListener('click', (e) => {
   const t = e.target;
   if (!t || !t.closest) return;

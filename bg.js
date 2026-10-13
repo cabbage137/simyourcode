@@ -1,7 +1,4 @@
-/* Living honeycomb behind the page: one comb drifts slowly toward the top-left while raised 3D blocks glide
-   into neighbouring cells or trade places. Decorative only.
-   Built to be cheap: the grid lines and the resting block are each painted once into off-screen images and
-   then just stamped every frame; only the few blocks that are gliding are drawn from scratch. */
+/* Moving honeycomb background behind the page. */
 (function () {
 'use strict';
 const cv = document.getElementById('bgHive');
@@ -55,7 +52,7 @@ function block(g, x, y, rad, a, lift) {
 function makeCanvas(cw, ch) { const c = document.createElement('canvas'); c.width = Math.ceil(cw); c.height = Math.ceil(ch); return c; }
 
 function build() {
-  /* one device pixel per CSS pixel: a soft background does not need retina sharpness, and it is 4x less to paint */
+  /* one device pixel per CSS pixel, which is 4x less to paint */
   w = window.innerWidth; h = window.innerHeight;
   cv.width = w; cv.height = h;
   cols = Math.ceil(w / W) + 3;
@@ -112,8 +109,7 @@ function startSwap() {
 
 function draw() {
   ctx.clearRect(0, 0, w, h);
-  /* the grid image is slid by the drift, wrapped to its repeat distance, so it never runs out;
-     the 1.5-cell shift matches sx/sy so every block stays centred in a cell */
+  /* the grid image slides with the drift and wraps so it never runs out */
   const gx = (((offX - 1.5 * W) % W) + W) % W - W, gy = (((offY - 1.5 * H) % (2 * H)) + 2 * H) % (2 * H) - 2 * H;
   ctx.drawImage(grid, gx, gy);
   for (let i = 0; i < tiles.length; i++) {

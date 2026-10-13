@@ -1,6 +1,4 @@
-/* Java-subset interpreter for the practice sim.
-   Student code is tokenized, parsed to a tree and walked here. It is never handed to
-   eval() or new Function(), so a program can only reach the simulated robot objects. */
+/* Java-subset interpreter for the practice sim. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -961,7 +959,7 @@ function start(src, host) {
   let wakeAt = -1, done = false;
   return {
     className: cls.name,
-    /* Runs one slice of the program. Returns true once the program has finished. */
+    /* Runs one slice of the program. */
     step(now) {
       if (done) return true;
       if (now < wakeAt) return false;
