@@ -1,4 +1,4 @@
-/* Java-subset interpreter for the practice sim. */
+/* Runs the Java code students write. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
