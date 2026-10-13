@@ -1,4 +1,4 @@
-/* Blocks editor, the blocks-to-Java generator, and the example programs. */
+/* Java example programs and code templates. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
