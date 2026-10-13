@@ -1,4 +1,4 @@
-/* Tutorial tab: category switching and the pictures. */
+/* Tutorial tab pictures. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, B = window.Blockly;
