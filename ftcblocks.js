@@ -1,4 +1,4 @@
-/* FTC-style Blocks, built on Blockly. */
+/* Blocks editor and Blocks examples. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, h = BBZ.h, legacy = BBZ.Blocks, B = window.Blockly;
