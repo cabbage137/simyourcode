@@ -1,4 +1,4 @@
-/* A 3D picture of the robot for the Build Bot tab. */
+/* 3D robot pictures. */
 (function () {
 'use strict';
 const BBZ = window.BBZ;
