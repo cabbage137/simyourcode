@@ -1,4 +1,4 @@
-/* Home page extras: menu cards, the tool that follows the cursor, policy jump buttons and the erase-data button. */
+/* Home tab: menu cards and bees. */
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
