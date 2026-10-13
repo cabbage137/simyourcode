@@ -1,4 +1,4 @@
-/* Page wiring: storage, program editor, driver station, gamepad input, instruments and the Build Bot tab. */
+/* Page controls: editor, driver station, gamepads and Build Bot. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, h = BBZ.h, J = BBZ.Java;
