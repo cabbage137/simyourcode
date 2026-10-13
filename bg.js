@@ -1,4 +1,4 @@
-/* Moving honeycomb background behind the page. */
+/* Moving honeycomb background. */
 (function () {
 'use strict';
 const cv = document.getElementById('bgHive');
