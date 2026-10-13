@@ -1,4 +1,4 @@
-/* Sound effects, all made on the spot with the Web Audio API (no audio files are loaded). */
+/* Sound effects. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
