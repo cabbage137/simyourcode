@@ -1,4 +1,4 @@
-/* Add-ons that sit on top of the simulator without changing it. */
+/* White and black mode, and Java colouring. */
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
