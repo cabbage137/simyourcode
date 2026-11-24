@@ -350,10 +350,10 @@ h2 { font-family: var(--font-bubble); font-weight: 700; }
 
 .why { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 26px; display: flex; flex-direction: column; gap: 10px; }
 .why-title { font-size: clamp(26px, 4vw, 38px); }
-.why-title span { color: var(--honey-ink); }
+.why-title span { color: inherit; }
 .why p { font-size: 17px; max-width: 74ch; }
-.c-honey { color: var(--honey-ink); } .c-blue { color: var(--blue); } .c-green { color: var(--good); } .c-red { color: var(--red); }
-.why-fun { font-family: var(--font-bubble); font-weight: 700; font-size: 20px; background: var(--honey); color: var(--on-honey); border-radius: 8px; padding: 1px 10px; white-space: nowrap; }
+.c-honey, .c-blue, .c-green, .c-red { color: inherit; font-weight: 700; }
+.why-fun { font-weight: 700; }
 
 /* code colours */
 .codebox { flex: 1; min-width: 0; position: relative; }
@@ -660,7 +660,7 @@ details.card > summary h3 { display: inline; }
   <div class="stripe" aria-hidden="true"></div>
   <div class="beta-bar" id="betaBar" role="note">
     <span class="beta-pill">Version 2.0</span>
-    <p><b>SimYourCode is still in beta, so you may run into bugs.</b> Found one, or just like the site? Tell us and it goes straight to the team.</p>
+    <p><b>SimYourCode is still in beta, so you may find bugs.</b> Found one, or like the site? Tell us.</p>
     <span class="beta-actions">
       <a class="btn btn-small" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage137/simyourcode/issues/new?labels=bug&amp;title=Bug%3A+&amp;body=What+happened%3F%0A%0A%0AWhat+did+you+expect+to+happen%3F%0A%0A%0AWhich+tab+were+you+on%3F%0A%0A%0AWhat+device+and+browser+are+you+using%3F%0A">Report a bug</a>
       <a class="btn btn-small" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage137/simyourcode/issues/new?title=Feedback%3A+&amp;body=What+do+you+like%2C+or+what+would+you+add%3F%0A">Send a compliment or idea</a>
@@ -693,7 +693,7 @@ details.card > summary h3 { display: inline; }
       <button type="button" class="sw sw-mint" data-ink="mint" aria-pressed="false" aria-label="Mint green font colour" title="Mint"></button>
       <button type="button" class="sw sw-rose" data-ink="rose" aria-pressed="false" aria-label="Rose font colour" title="Rose"></button>
       <button type="button" class="sw sw-violet" data-ink="violet" aria-pressed="false" aria-label="Violet font colour" title="Violet"></button>
-      <span class="hint" id="lookMsg">Each colour has a darker version for white mode and a lighter one for black mode, so text stays easy to read.</span>
+      <span class="hint" id="lookMsg">Each colour shifts a little in white and black mode so it stays easy to read.</span>
     </div>
   </div>
 
@@ -704,7 +704,7 @@ details.card > summary h3 { display: inline; }
       <div class="hero-text">
         <p class="eyebrow">2026&ndash;2027 season &middot; Unofficial practice field</p>
         <h2 class="hero-title">Build it.<br>Code it.<br><span>Drive it.</span></h2>
-        <p class="hero-lead">A free practice field for the BIOBUZZ season. Design a robot, write Java or Blocks, and run a full match in your browser before you ever touch the real field.</p>
+        <p class="hero-lead">A free practice field for BIOBUZZ. Build a robot, write Java or Blocks code, and play a full match right in your browser.</p>
         <div class="row">
           <button type="button" class="btn btn-go btn-big" data-go="drive">Start driving</button>
           <button type="button" class="btn btn-big" data-go="build">Build a bot</button>
@@ -750,16 +750,16 @@ details.card > summary h3 { display: inline; }
 
     <div class="why">
       <h2 class="why-title">Why <span>this</span> website?</h2>
-      <p>This website is not like others, where the program is <b class="c-red">laggy</b> and the confusion sends you down a rabbit hole of knowledge. This one is <b class="c-honey">simple</b> and <b class="c-honey">organized</b>, and it is <b class="c-blue">convenient for new programmers</b>.</p>
-      <p>Everything here is <b class="c-green">free</b>, with <b class="c-green">no ads</b> and <b class="c-green">no sketchy links</b>, so you never have to worry about picking up a virus.</p>
-      <p>Here you can learn the <b class="c-blue">basics of programming</b> so your team is ready for this season's game, <b class="c-honey">BIOBUZZ</b>. <span class="why-fun">Have fun on this simulator!</span></p>
+      <p>Some robot sites are slow and confusing. This one is <b class="c-honey">simple</b>, <b class="c-honey">tidy</b> and <b class="c-blue">easy for new coders</b>.</p>
+      <p>It is all <b class="c-green">free</b>, with <b class="c-green">no ads</b> and <b class="c-green">no sketchy links</b>.</p>
+      <p>Learn the <b class="c-blue">basics of coding</b> so your team is ready for <b class="c-honey">BIOBUZZ</b>. <span class="why-fun">Have fun!</span></p>
     </div>
 
     <div class="fb">
       <div class="fb-text">
         <h2 class="why-title">Help us <span>squash bugs</span></h2>
-        <p>SimYourCode is in <b>beta</b>. Things can break, numbers can be off and buttons can misbehave. If you spot a bug, or you just want to say the site helped your team, send a message. Every one is read by Team 18629 &ndash; Hydra.</p>
-        <p class="hint">Messages are sent through GitHub, so you need a free GitHub account, and what you write is public. Please do not include your name, school or other private details.</p>
+        <p>SimYourCode is still in <b>beta</b>, so some things may break. Found a bug, or did the site help your team? Send us a message. Team 18629 &ndash; Hydra reads every one.</p>
+        <p class="hint">Messages go through GitHub. You need a free GitHub account, and anyone can read what you write, so leave out your name, school and other private details.</p>
       </div>
       <div class="fb-actions">
         <a class="btn btn-go btn-big" target="_blank" rel="noopener noreferrer" href="https://github.com/cabbage137/simyourcode/issues/new?labels=bug&amp;title=Bug%3A+&amp;body=What+happened%3F%0A%0A%0AWhat+did+you+expect+to+happen%3F%0A%0A%0AWhich+tab+were+you+on%3F%0A%0A%0AWhat+device+and+browser+are+you+using%3F%0A">Report a bug</a>
@@ -770,25 +770,25 @@ details.card > summary h3 { display: inline; }
 
     <div class="why versions" id="versions">
       <h2 class="why-title">Version <span>history</span></h2>
-      <p class="hint">You are using <b>Version 2.1</b>. Here is where the site started and what changed most recently.</p>
+      <p class="hint">You are using <b>Version 2.1</b>. Here is where the site started and what changed last.</p>
       <ol class="verlist">
-        <li class="is-now"><span class="ver">Version 2.0</span><span><b>Two controllers.</b> Connect two gamepads and use <code>gamepad1</code> and <code>gamepad2</code> in your code, with a Two Driver TeleOp example.</span></li>
-        <li><span class="ver">Version 1.9</span><span><b>Better guides.</b> 35 pictures in the Tutorial tab, examples that match their titles from any start spot, and four new bees.</span></li>
-        <li><span class="ver">Version 1.8</span><span><b>Robots in 3D.</b> Every robot and part can be viewed in 3D, with models that look like real kit robots.</span></li>
+        <li class="is-now"><span class="ver">Version 2.0</span><span><b>Two controllers.</b> Plug in two gamepads and use <code>gamepad1</code> and <code>gamepad2</code> in your code. Comes with a two-driver TeleOp example.</span></li>
+        <li><span class="ver">Version 1.9</span><span><b>Better guides.</b> 35 pictures in the Tutorial, examples that do what their names say from any start spot, and four new bees.</span></li>
+        <li><span class="ver">Version 1.8</span><span><b>Robots in 3D.</b> See every robot and part in 3D. They look like real kit robots.</span></li>
         <li class="gap" aria-hidden="true"><span class="ver">&hellip;</span><span class="hint">Beta 1.3 to 1.7 are not shown.</span></li>
-        <li><span class="ver">Beta 1.2</span><span><b>Real blocks.</b> The Blocks tab became an FTC-style editor with <code>fl</code>, <code>fr</code>, <code>bl</code> and <code>br</code> drive motors.</span></li>
-        <li><span class="ver">Beta 1.1</span><span><b>Online for everyone.</b> Renamed SimYourCode, published for free, with a beta label and bug report buttons.</span></li>
+        <li><span class="ver">Beta 1.2</span><span><b>Real blocks.</b> Blocks now look and work like FTC Blocks, with <code>fl</code>, <code>fr</code>, <code>bl</code> and <code>br</code> drive motors.</span></li>
+        <li><span class="ver">Beta 1.1</span><span><b>Online for everyone.</b> Named SimYourCode and put online for free, with buttons to report bugs.</span></li>
         <li><span class="ver">Beta 1.0</span><span><b>The first version.</b> A BIOBUZZ practice field where you build a bot and test Java and Blocks code.</span></li>
       </ol>
     </div>
     <h3>Where do you want to go?</h3>
     <div class="menu">
       <button type="button" class="menu-card" data-go="drive"><span class="menu-hex" aria-hidden="true">&#127918;</span><span><b>Drive &amp; Code</b><span class="hint">The field, the gamepad and the code editor. Run one program or play a whole match.</span></span></button>
-      <button type="button" class="menu-card" data-go="build"><span class="menu-hex" aria-hidden="true">&#128295;</span><span><b>Build Bot</b><span class="hint">Pick a drivetrain and tools, drag parts where you want them, name every device, or load a ready-made robot.</span></span></button>
-      <button type="button" class="menu-card" data-go="lab"><span class="menu-hex" aria-hidden="true">&#127919;</span><span><b>Shooter Lab</b><span class="hint">Load your shooter STL, pick the flywheel, material and motor, and watch balls fly into a real-size HIVE CELL.</span></span></button>
+      <button type="button" class="menu-card" data-go="build"><span class="menu-hex" aria-hidden="true">&#128295;</span><span><b>Build Bot</b><span class="hint">Pick wheels and tools, move parts around, name your motors, or start from a ready-made robot.</span></span></button>
+      <button type="button" class="menu-card" data-go="lab"><span class="menu-hex" aria-hidden="true">&#127919;</span><span><b>Shooter Lab</b><span class="hint">Load your shooter's CAD, pick a flywheel and motor, and watch balls fly into the real HIVE.</span></span></button>
       <button type="button" class="menu-card" data-go="learn"><span class="menu-hex" aria-hidden="true">&#128203;</span><span><b>Step by Step</b><span class="hint">Ten short steps from your first look at the field to a full match.</span></span></button>
-      <button type="button" class="menu-card" data-go="tutorial"><span class="menu-hex" aria-hidden="true">&#127891;</span><span><b>Tutorial</b><span class="hint">New to coding? Eight categories of lessons with pictures, from driving to AprilTags.</span></span></button>
-      <button type="button" class="menu-card" data-go="manual"><span class="menu-hex" aria-hidden="true">&#128214;</span><span><b>Game Manual</b><span class="hint">The official manual links, a scoring quick reference and the rules that catch new teams.</span></span></button>
+      <button type="button" class="menu-card" data-go="tutorial"><span class="menu-hex" aria-hidden="true">&#127891;</span><span><b>Tutorial</b><span class="hint">New to coding? Lessons with pictures, from driving to AprilTags.</span></span></button>
+      <button type="button" class="menu-card" data-go="manual"><span class="menu-hex" aria-hidden="true">&#128214;</span><span><b>Game Manual</b><span class="hint">Links to the official manual, how scoring works, and rules new teams often miss.</span></span></button>
       <button type="button" class="menu-card" data-go="legal"><span class="menu-hex" aria-hidden="true">&#128737;&#65039;</span><span><b>Policies</b><span class="hint">Privacy, terms, cookies and accessibility, in plain words.</span></span></button>
     </div>
   </section>
@@ -809,7 +809,7 @@ details.card > summary h3 { display: inline; }
         <div class="field-wrap" id="fieldWrap"><canvas id="field" width="600" height="600" role="img" aria-label="Top-down view of the BIOBUZZ field with your robot"></canvas><div class="count" id="countOverlay" role="status" aria-live="assertive" hidden><span id="countNum">3</span></div></div>
         <div class="legend">
           <span><i class="dot dot-P"></i>POLLEN</span><span><i class="dot dot-R"></i>Red NECTAR</span><span><i class="dot dot-B"></i>Blue NECTAR</span>
-          <span>Solid HIVE cell = facing up. The bar inside shows how close it is to tipping.</span>
+          <span>A filled-in HIVE cell is facing up. The bar inside shows how close it is to tipping.</span>
         </div>
 
         <div class="card">
@@ -896,10 +896,10 @@ details.card > summary h3 { display: inline; }
             <button type="button" class="rc-btn" id="btnDelete">Delete Selected</button>
           </div>
           <div class="rc-panel" id="exPanel" hidden>
-            <div class="rc-head"><span>Example Op Modes</span><span class="hint">Written for the bot you have right now. Press Add to copy one into your list.</span></div>
+            <div class="rc-head"><span>Example Op Modes</span><span class="hint">Made for your current bot. Press Add to copy one to your list.</span></div>
             <div class="tablewrap oplist"><table class="rc-table"><thead><tr><th>Name</th><th>Type</th><th>What it does</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
           </div>
-          <div class="rc-head"><span id="opTitle">My Op Modes</span><span class="hint">Click a name to open it. The arrows change the order of op modes and of whole groups.</span></div>
+          <div class="rc-head"><span id="opTitle">My Op Modes</span><span class="hint">Click a name to open it. Use the arrows to move op modes and groups up or down.</span></div>
           <div class="tablewrap oplist"><table class="rc-table"><thead><tr><th>Order</th><th>Op Mode Name</th><th>Runs in</th><th>What it does</th></tr></thead><tbody id="opBody"></tbody></table></div>
           <div class="rc-edit">
             <label class="field-label rc-grow">Op Mode name<input type="text" id="progName" maxlength="40" autocomplete="off"></label>
@@ -922,7 +922,7 @@ details.card > summary h3 { display: inline; }
             <p class="hl-key" aria-label="What the code colours mean"><span class="hk">keywords</span><span class="ht">Types</span><span class="hf">methods()</span><span class="hs">"text"</span><span class="hn">numbers</span><span class="ha">@notes</span><span class="hc">// comments</span><span><span class="hb0">{</span><span class="hb1">(</span><span class="hb2">[</span><span class="hb3">{</span> brackets match by colour <span class="hb3">}</span><span class="hb2">]</span><span class="hb1">)</span><span class="hb0">}</span></span></p>
           </div>
           <div id="blocksPane" class="col" hidden>
-            <p class="hint">Click a category on the left and drag blocks into the workspace. They snap together like the Blocks editor on a real Robot Controller. Only blocks inside <b>to runOpMode</b> run.</p>
+            <p class="hint">Pick a category on the left and drag blocks in. They snap together like real FTC Blocks. Only blocks inside <b>to runOpMode</b> will run.</p>
             <div id="blocksRoot" class="col"></div>
             <div class="row">
               <button type="button" class="btn btn-small" id="btnViewJava" aria-expanded="false">Show the Java these blocks make</button>
@@ -961,14 +961,14 @@ details.card > summary h3 { display: inline; }
   <!-- ===================== BUILD BOT ===================== -->
   <section id="view-build" class="col" hidden>
     <h2>Build your bot</h2>
-    <p class="hint">Every choice changes how the robot behaves on the field and which device names your code can use. Changing the bot resets the field, and example op modes you have not edited are rewritten to fit it.</p>
+    <p class="hint">Every choice changes how your robot drives and which names your code uses. Changing the bot resets the field, and examples you have not edited update to fit it.</p>
     <div class="build">
       <div class="col">
         <div class="card">
           <div class="card-head"><h3>Identity</h3><span class="cat-chip">Category 1</span></div>
           <label class="field-label">Bot name<input type="text" id="botName" maxlength="24" autocomplete="off"></label>
           <div class="field-label">Frame colour<div class="swatches" id="paintList" role="group" aria-label="Frame colour"></div></div>
-          <p class="hint">The alliance colour (red or blue) is picked on the Drive &amp; Code tab and shows as the outline of your robot.</p>
+          <p class="hint">You pick red or blue on the Drive &amp; Code tab. It shows as the outline of your robot.</p>
         </div>
         <div class="card">
           <div class="card-head"><h3>Drivetrain and wheels</h3><span class="cat-chip">Category 2</span></div>
@@ -977,10 +977,10 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Drive motor<select id="motorSel"></select></label>
             <label class="field-label">Wheel size<select id="wheelSel"></select></label>
           </div>
-          <p class="hint">A faster motor or a bigger wheel means more speed but less pushing power and less precise moves.</p>
+          <p class="hint">A faster motor or bigger wheel goes faster, but pushes less hard and is harder to control.</p>
           <div class="tool" id="realisticBox">
             <input type="checkbox" id="realistic">
-            <label for="realistic"><b>Real-life motor mounting</b><span class="hint">On a real robot the left motors face the opposite way, so they spin backwards until your code reverses them. Turn this off for an easier start.</span></label>
+            <label for="realistic"><b>Real-life motor mounting</b><span class="hint">On a real robot the left motors face the other way, so they spin backwards until your code flips them. Turn this off for an easier start.</span></label>
           </div>
         </div>
         <div class="card">
@@ -989,16 +989,16 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Width: <span id="widthOut"></span><input type="range" id="widthRange" min="12" max="18" step="0.5"></label>
             <label class="field-label">Length: <span id="lengthOut"></span><input type="range" id="lengthRange" min="12" max="18" step="0.5"></label>
           </div>
-          <p class="hint">A small robot slips through gaps; a wide one has a wider intake and is steadier. Nothing may start bigger than 18 in.</p>
+          <p class="hint">A small robot fits through gaps. A wide one picks up more and is steadier. Robots must start no bigger than 18 in.</p>
         </div>
         <div class="card">
           <div class="card-head"><h3>Scoring tools</h3><span class="cat-chip">Category 4</span></div>
-          <p class="hint">Tick the mechanisms you want, then choose which type of each. Every type behaves differently on the field and uses different motors and servos from your limit of 8 + 8.</p>
+          <p class="hint">Tick the parts you want, then pick a type for each. Each type works in its own way and uses some of your 8 motors and 8 servos.</p>
           <div class="tools" id="toolList"></div>
         </div>
         <div class="card">
           <div class="card-head"><h3>Sensors</h3><span class="cat-chip">Category 5</span></div>
-          <p class="hint">Sensors let your code see where the robot is, which is what makes autonomous accurate.</p>
+          <p class="hint">Sensors tell your code where the robot is, so your autonomous can be accurate.</p>
           <div class="tools" id="sensorList"></div>
         </div>
       </div>
@@ -1009,7 +1009,7 @@ details.card > summary h3 { display: inline; }
             <button type="button" data-vm="3d" aria-pressed="true">3D view</button>
             <button type="button" data-vm="top" aria-pressed="false">Top view (move parts)</button>
           </div>
-          <p class="hint"><b>3D view:</b> drag the picture to look at the robot from any side. <b>Top view:</b> drag any part to move it. Dashed square = 18 in starting size. Where a part sits and which way it points changes how the robot plays.</p>
+          <p class="hint"><b>3D view:</b> drag to turn the robot. <b>Top view:</b> drag a part to move it. The dashed square is the 18 in starting size. Where a part sits and which way it faces changes how the robot plays.</p>
           <div class="preview-wrap"><canvas id="preview" width="520" height="520" tabindex="0" role="application" aria-label="Picture of your robot. In 3D view, drag to turn it. Pick a part from the list below, then use the arrow keys to move it and R to turn it."></canvas></div>
           <div class="partbar" id="partList" role="group" aria-label="Parts you can move"></div>
           <div class="row">
@@ -1031,7 +1031,7 @@ details.card > summary h3 { display: inline; }
         </div>
         <div class="card">
           <div class="card-head"><h3>Robot configuration</h3><span class="cat-chip">Category 7</span></div>
-          <p class="hint">Name every motor, servo and sensor, just like the <b>Configure Robot</b> screen on a real Driver Station. Your code and the Blocks dropdowns use these exact names. When you rename a part, your saved op modes are updated to match.</p>
+          <p class="hint">Name every motor, servo and sensor, like on the <b>Configure Robot</b> screen of a real Driver Station. Your code and Blocks use these names. If you rename a part, your saved op modes update too.</p>
           <div class="tablewrap"><table><thead><tr><th>Part</th><th>Type</th><th>Port</th><th>Name in code</th></tr></thead><tbody id="hwNames"></tbody></table></div>
           <p class="hint" id="nameMsg" role="status">Names start with a letter and use only letters, numbers and _ (no spaces).</p>
           <div class="row">
@@ -1046,7 +1046,7 @@ details.card > summary h3 { display: inline; }
     </div>
     <div class="card">
       <div class="card-head"><h3>Robots already made</h3><span class="cat-chip">Gallery</span></div>
-      <p class="hint">Drag any picture to turn that robot around. Pick one to start from, then change anything. These are SimYourCode's own practice designs, drawn in the style of the starter robots that kit makers such as REV Robotics and goBILDA publish each season. They are not the official designs, and SimYourCode is not connected to those companies.</p>
+      <p class="hint">Drag a picture to turn the robot. Pick one to start from, then change anything you like. We made these practice robots in the style of the starter bots that REV Robotics and goBILDA share each season. They are not official designs, and SimYourCode is not linked to those companies.</p>
       <div class="presets" id="presetList"></div>
     </div>
   </section>
@@ -1054,7 +1054,7 @@ details.card > summary h3 { display: inline; }
   <!-- ===================== SHOOTER LAB ===================== -->
   <section id="view-lab" class="col" hidden>
     <h2>Shooter Lab</h2>
-    <p class="hint">Test a flywheel shooter or transfer system before you build it. Load your shooter's STL or STEP file (or start from an example), pick the flywheel, its material and motor, put your robot anywhere on the official BIOBUZZ field, and watch POLLEN or NECTAR fly into the real HIVE. Ball squeeze, friction, spin, air drag and bounces are all worked out with real physics.</p>
+    <p class="hint">Try out a shooter before you build it. Load your shooter's CAD (STL or STEP) or use an example, pick a flywheel and motor, put your robot on the real BIOBUZZ field, and watch the balls fly into the HIVE. Squeeze, grip, spin, air and bounces all follow real physics.</p>
     <div class="lab">
       <div class="col lab-controls">
 
@@ -1077,12 +1077,12 @@ details.card > summary h3 { display: inline; }
           </div>
           <div id="labStlBox" class="col lab-tight" hidden>
             <label class="field-label">STL or STEP file (shooter, hood or transfer)<input type="file" id="labStlFile" accept=".stl,.step,.stp,model/stl,model/step,application/sla,application/octet-stream"></label>
-            <p class="hint" id="labStlInfo">The file is read in your browser and never uploaded. Shots go toward the robot's front (+X) and up is +Z. Drag the shooter, the flywheel and the feed point in the 3D view, or let Auto-place do it.</p>
+            <p class="hint" id="labStlInfo">Your file stays in your browser and is never uploaded. Shots go out the front of the robot. Drag the shooter, flywheel and feed dot in the 3D view, or let Auto-place do it.</p>
             <div class="lab-row">
               <button type="button" class="btn btn-go btn-small" id="labAutoPlace">Auto-place flywheel</button>
               <label class="field-label lab-grow">Target squeeze: <span id="labComp2Out"></span><input type="range" id="labComp2" min="0" max="25" step="0.5"></label>
             </div>
-            <p class="hint" id="labAutoInfo">Auto-place finds where your hood curves round a wheel, puts the flywheel there with the target squeeze, sets the spin direction and puts the feed point at the hood's entry.</p>
+            <p class="hint" id="labAutoInfo">Auto-place finds where your hood curves around a wheel. It puts the flywheel there, picks which way it spins, and finds the best spot to feed balls in.</p>
             <div class="sliders three">
               <label class="field-label">Units (STL)<select id="labStlUnits"><option value="0.001">Millimetres</option><option value="0.0254">Inches</option><option value="1">Metres</option></select></label>
               <label class="field-label">Material<select id="labStlMat"></select></label>
@@ -1095,9 +1095,9 @@ details.card > summary h3 { display: inline; }
               <label class="field-label">Feed point X (mm)<input type="number" id="labFeedX" step="1" value="-90"></label>
               <label class="field-label">Feed point Y (mm)<input type="number" id="labFeedY" step="1" value="0"></label>
               <label class="field-label">Feed point Z (mm)<input type="number" id="labFeedZ" step="1" value="-40"></label>
-              <label class="field-label">Feed direction (°)<input type="number" id="labFeedA" step="5" value="45"></label>
+              <label class="field-label">Feed angle (°)<input type="number" id="labFeedA" step="5" value="45"></label>
             </div>
-            <p class="hint">Positions are in millimetres from the middle of the robot on the floor: X forward, Z up. The feed point is where each ball appears (the honey dot in the 3D view); its direction is measured up from forward.</p>
+            <p class="hint">Sizes are in mm from the middle of the robot on the floor. X is forward and Z is up. The feed point is where each ball starts (the honey dot). Its angle is how far it points up from forward.</p>
           </div>
           <p class="lab-readout" id="labGap"></p>
         </div>
@@ -1110,7 +1110,7 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Width (mm)<input type="number" id="labWheelW" min="8" max="80" step="1"></label>
             <label class="field-label">Mass each (g)<input type="number" id="labWheelM" min="5" max="600" step="1"></label>
             <label class="field-label">Wheels on the shaft<select id="labWheelN"><option>1</option><option>2</option><option>3</option></select></label>
-            <label class="field-label">Steel inertia discs<select id="labDiscs"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+            <label class="field-label">Extra steel weights<select id="labDiscs"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
             <label class="field-label">Spin direction<select id="labDir"><option value="1">Forward</option><option value="-1">Reverse</option></select></label>
           </div>
           <div class="field-label">Flywheel position, from the middle of the robot on the floor</div>
@@ -1128,7 +1128,7 @@ details.card > summary h3 { display: inline; }
             <button type="button" class="btn btn-small" data-orient="0,90">Axle upright (flat wheel)</button>
             <button type="button" class="btn btn-small" data-orient="90,0">Axle front to back</button>
           </div>
-          <p class="hint">Drag the coloured handles on the flywheel in the 3D view to slide it along X (red, forward), Y (green, left) or Z (blue, up). Turn and Tilt point the axle any way you like; a hood from the examples turns with the wheel.</p>
+          <p class="hint">In the 3D view, drag the coloured arrows on the flywheel to slide it: red is forward (X), green is left (Y) and blue is up (Z). Turn and Tilt point the wheel any way you like. Example hoods turn with it.</p>
           <p class="hint" id="labWheelInfo"></p>
           <label class="field-label">Second wheel<select id="labSecond"><option value="none">None</option><option value="double">Double flywheel (opposite spin)</option><option value="transfer">Transfer roller</option></select></label>
           <div class="sliders three" id="labSecondBox" hidden>
@@ -1147,13 +1147,13 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Motor turns per wheel turn<input type="number" id="labRatio" min="0.25" max="10" step="0.05" value="1"></label>
           </div>
           <div class="sliders" id="labCustomBox" hidden>
-            <label class="field-label">Free speed (rpm)<input type="number" id="labCustFree" min="10" max="30000" step="10" value="6000"></label>
-            <label class="field-label">Stall torque (N·m)<input type="number" id="labCustStall" min="0.01" max="20" step="0.005" value="0.144"></label>
+            <label class="field-label">Top speed (rpm)<input type="number" id="labCustFree" min="10" max="30000" step="10" value="6000"></label>
+            <label class="field-label">Push when stopped (N·m)<input type="number" id="labCustStall" min="0.01" max="20" step="0.005" value="0.144"></label>
           </div>
           <label class="field-label">Target flywheel speed: <span id="labRpmOut"></span><input type="range" id="labRpm" min="0" max="6000" step="25"></label>
           <div class="sliders">
             <label class="field-label">Battery: <span id="labVOut"></span><input type="range" id="labV" min="11" max="14" step="0.1" value="12.5"></label>
-            <div class="tool"><input type="checkbox" id="labTested" checked><label for="labTested"><b>Use tested speed</b><span class="hint">Real motors reach about 90% of the catalogue speed.</span></label></div>
+            <div class="tool"><input type="checkbox" id="labTested" checked><label for="labTested"><b>Use tested speed</b><span class="hint">Real motors only reach about 90% of the speed on the box.</span></label></div>
           </div>
           <p class="hint" id="labMotorInfo"></p>
         </div>
@@ -1169,7 +1169,7 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Time between balls (s)<input type="number" id="labInterval" min="0.05" max="5" step="0.05" value="0.6"></label>
             <label class="field-label">Feed speed (m/s)<input type="number" id="labFeedV" min="0" max="5" step="0.1" value="1"></label>
           </div>
-          <div class="tool"><input type="checkbox" id="labWait" checked><label for="labWait"><b>Wait for the flywheel</b><span class="hint">Only feed when the wheel is back within 2% of its target, like a well-written TeleOp.</span></label></div>
+          <div class="tool"><input type="checkbox" id="labWait" checked><label for="labWait"><b>Wait for the flywheel</b><span class="hint">Only shoot when the wheel is back up to speed, like a good TeleOp does.</span></label></div>
         </div>
 
         <div class="card">
@@ -1188,9 +1188,9 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Facing (°)<input type="number" id="labHead" step="1"></label>
           </div>
           <p class="lab-readout" id="labAimInfo"></p>
-          <p class="hint">Drag the robot (or its outline on the floor) to move it round the field. Your alliance's upward CELL is the target and glows in the 3D view. Field X and Y are measured from the centre of the field.</p>
+          <p class="hint">Drag the robot (or its outline on the floor) to move it. Your team's CELL that faces up is the target. It glows in the 3D view. X and Y are measured from the middle of the field.</p>
           <label class="field-label">Your robot's CAD (optional, STL or STEP)<input type="file" id="labRobotFile" accept=".stl,.step,.stp,model/stl,model/step,application/sla,application/octet-stream"></label>
-          <p class="hint" id="labRobotInfo">Without a robot file the lab shows just the flywheel and shooter.</p>
+          <p class="hint" id="labRobotInfo">No robot file? Then you just see the flywheel and shooter.</p>
           <div class="sliders three" id="labRobotBox" hidden>
             <label class="field-label">Units (STL)<select id="labRobUnits"><option value="0.001">Millimetres</option><option value="0.0254">Inches</option><option value="1">Metres</option></select></label>
             <label class="field-label">Spin the robot<select id="labRobRot"><option value="0">As saved</option><option value="x90">90° about X</option><option value="x-90">−90° about X</option><option value="y90">90° about Y</option><option value="y-90">−90° about Y</option><option value="z90">90° about Z</option><option value="z180">180° about Z</option><option value="z-90">−90° about Z</option></select></label>
@@ -1199,30 +1199,30 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Move Z (mm)<input type="number" id="labRobMZ" step="1" value="0"></label>
             <button type="button" class="btn btn-small" id="labRobotRemove">Remove robot</button>
           </div>
-          <div class="tool" id="labRobotHitBox" hidden><input type="checkbox" id="labRobHit" checked><label for="labRobHit"><b>Balls bounce off my robot</b><span class="hint">Turn off if parts of your robot sit where the balls fly and you only want to test the shooter.</span></label></div>
-          <div class="tool"><input type="checkbox" id="labLock"><label for="labLock"><b>Lock parts</b><span class="hint">Stops parts moving when you drag in the 3D view, so dragging only turns the camera.</span></label></div>
+          <div class="tool" id="labRobotHitBox" hidden><input type="checkbox" id="labRobHit" checked><label for="labRobHit"><b>Balls bounce off my robot</b><span class="hint">Turn this off if parts of your robot get in the way and you only want to test the shooter.</span></label></div>
+          <div class="tool"><input type="checkbox" id="labLock"><label for="labLock"><b>Lock parts</b><span class="hint">Stops parts from moving, so dragging only turns the view.</span></label></div>
         </div>
 
         <details class="card lab-cal">
-          <summary><h3>Calibrate with real measurements</h3></summary>
-          <p class="hint">Material numbers are estimates until you measure your own balls and parts. These tests take five minutes and make the lab match your robot. For the HIVE bounce, drop a ball onto a HIVE skin from 1 m: e = √(bounce height ÷ drop height).</p>
+          <summary><h3>Match your real robot</h3></summary>
+          <p class="hint">The lab guesses how your balls and parts behave. A few quick tests make it match your robot. For the HIVE bounce, drop a ball onto the HIVE from 1 m and measure how high it bounces. Bounce = √(bounce height ÷ drop height).</p>
           <div class="sliders three">
             <label class="field-label">Ball mass (g)<input type="number" id="labMass" min="5" max="120" step="0.5"></label>
-            <label class="field-label">Squeeze test weight (g)<input type="number" id="labSqW" min="0" max="10000" step="10" value="0"></label>
-            <label class="field-label">Ball squashed by (mm)<input type="number" id="labSqD" min="0" max="40" step="0.5" value="0"></label>
+            <label class="field-label">Weight on the ball (g)<input type="number" id="labSqW" min="0" max="10000" step="10" value="0"></label>
+            <label class="field-label">How much it squashed (mm)<input type="number" id="labSqD" min="0" max="40" step="0.5" value="0"></label>
             <label class="field-label">Drop height (cm)<input type="number" id="labDropH" min="0" max="300" step="1" value="0"></label>
             <label class="field-label">Bounce height (cm)<input type="number" id="labBounceH" min="0" max="300" step="1" value="0"></label>
             <label class="field-label">Wheel grip: <span id="labMuWOut"></span><input type="range" id="labMuW" min="20" max="300" step="5" value="100"></label>
             <label class="field-label">Hood grip: <span id="labMuHOut"></span><input type="range" id="labMuH" min="20" max="300" step="5" value="100"></label>
-            <label class="field-label">Drag coefficient<input type="number" id="labCd" min="0" max="1.5" step="0.05" value="0.5"></label>
-            <label class="field-label">HIVE bounce (e)<input type="number" id="labHiveE" min="0.05" max="0.95" step="0.05" value="0.4"></label>
-            <label class="field-label">Spin lift: <span id="labClOut"></span><input type="range" id="labCl" min="0" max="200" step="10" value="100"></label>
+            <label class="field-label">Air drag<input type="number" id="labCd" min="0" max="1.5" step="0.05" value="0.5"></label>
+            <label class="field-label">HIVE bounce (0 to 1)<input type="number" id="labHiveE" min="0.05" max="0.95" step="0.05" value="0.4"></label>
+            <label class="field-label">Lift from spin: <span id="labClOut"></span><input type="range" id="labCl" min="0" max="200" step="10" value="100"></label>
           </div>
-          <div class="tool"><input type="checkbox" id="labAir" checked><label for="labAir"><b>Air drag and spin lift</b><span class="hint">Turn off to see how much the air changes the shot.</span></label></div>
+          <div class="tool"><input type="checkbox" id="labAir" checked><label for="labAir"><b>Air and spin</b><span class="hint">Turn off to see how much the air changes the shot.</span></label></div>
           <p class="hint" id="labCalInfo"></p>
           <div class="lab-match">
             <h4>Match a real shot</h4>
-            <p class="hint">Set the lab up like your robot first (same wheel, motor, rpm, squeeze, hood and feed). Then film one real shot from the side in slow motion next to a tape measure. Speed: how far the ball moves between two frames divided by the time between them (at 240 fps, 1 frame = 1/240 s). Angle: the ball's path just after it leaves, measured up from the floor. Landing: along the floor from under the flywheel axle to where the ball first touches the floor.</p>
+            <p class="hint">First set the lab up like your robot (same wheel, motor, rpm, squeeze, hood and feed). Then film one real shot from the side in slow motion, next to a tape measure. Speed: how far the ball moves between two frames, divided by the time between them (at 240 fps, one frame is 1/240 s). Angle: how steep the ball goes up as it leaves. Landing: the distance on the floor from under the flywheel to where the ball first lands.</p>
             <div class="sliders three">
               <label class="field-label">Real exit speed (m/s)<input type="number" id="labRealV" min="0" max="30" step="0.05" value="0"></label>
               <label class="field-label">Real launch angle (°)<input type="number" id="labRealA" min="0" max="89" step="0.5" value="0"></label>
@@ -1232,7 +1232,7 @@ details.card > summary h3 { display: inline; }
               <button type="button" class="btn btn-go btn-small" id="labMatch">Match my shot</button>
               <button type="button" class="btn btn-small" id="labMatchReset">Undo the match</button>
             </div>
-            <p class="lab-readout" id="labMatchInfo">Enter at least one measurement. Speed and landing together are best: speed tunes the grip, landing tunes the air drag.</p>
+            <p class="lab-readout" id="labMatchInfo">Fill in at least one. Speed and landing together work best.</p>
           </div>
         </details>
       </div>
@@ -1259,9 +1259,9 @@ details.card > summary h3 { display: inline; }
               <button type="button" class="btn btn-small" data-cam="top">Top</button>
             </div>
             <p class="lab-xyz" id="labXYZ" aria-live="off"></p>
-            <p class="lab-nogl" id="labNoGl" hidden>Your browser could not start 3D graphics, so the 3D view is off. The physics and results still work.</p>
+            <p class="lab-nogl" id="labNoGl" hidden>Your browser cannot show 3D here, so the 3D view is off. Everything else still works.</p>
           </div>
-          <p class="hint">Drag a part to move it: the flywheel (or one of its X/Y/Z handles), the honey feed dot, your shooter or the robot. Drag empty space to turn the view, scroll or pinch to zoom, shift-drag to pan. Yellow stripes on the wheel show it spinning.</p>
+          <p class="hint">Drag a part to move it: the flywheel (or its arrows), the honey feed dot, your shooter or the robot. Drag empty space to turn the view, scroll to zoom, and hold Shift and drag to slide the view.</p>
         </div>
 
         <div class="card">
@@ -1275,7 +1275,7 @@ details.card > summary h3 { display: inline; }
             <div><span class="hint">Squeeze on last shot</span><b id="labLiveComp">–</b><span class="hint" id="labLiveCompPct">mm</span></div>
           </div>
           <canvas id="labChart" class="lab-chart" aria-label="Flywheel speed over the last few seconds"></canvas>
-          <p class="hint" id="labSlow" hidden>This setup needs more maths than your computer can do in real time, so it is running in slow motion.</p>
+          <p class="hint" id="labSlow" hidden>This setup is a lot of work for your computer, so it is running in slow motion.</p>
         </div>
 
         <div class="card">
@@ -1291,18 +1291,18 @@ details.card > summary h3 { display: inline; }
         </div>
 
         <details class="card">
-          <summary><h3>How the physics works</h3></summary>
+          <summary><h3>How it works</h3></summary>
           <ul class="lab-how">
-            <li><b>Motor:</b> torque falls in a straight line from stall torque at 0 rpm to zero at free speed, scaled by battery voltage. A controller holds the target like <code>setVelocity</code>.</li>
-            <li><b>Flywheel:</b> Newton's second law for rotation, <i>J</i>·dω/dt = motor torque − friction − ball load. Heavier wheels and inertia discs slow down less per shot but take longer to spin up.</li>
-            <li><b>Squeeze:</b> the hollow ball is a spring in series with the wheel's rubber, with damping set by each material's bounce. Soft wheels grow at high rpm, which adds squeeze.</li>
-            <li><b>Grip:</b> Coulomb friction (force ≤ μ × squeeze force) at every contact, using the friction of the two materials touching. Too little grip and the ball slips: slower, less consistent shots.</li>
-            <li><b>Ball:</b> linear and spinning motion of a hollow shell, checked against every triangle of your STL many thousands of times a second while it touches.</li>
-            <li><b>Flight:</b> gravity, air drag and Magnus lift from backspin, solved with the Runge–Kutta (RK4) method.</li>
-            <li><b>Field:</b> the official BIOBUZZ field CAD (HIVES, walls and FLOWERS). Balls bounce off each part with its material's coefficient of restitution and count only when they come to rest inside your alliance's upward CELL.</li>
-            <li><b>Squeeze per shot:</b> the deepest the ball was pressed between the flywheel and the hood (or the second wheel) at the same moment, including any growth of the wheel at speed.</li>
+            <li><b>Motor:</b> a motor pushes hardest when it is still and less as it speeds up. A weaker battery means less push. The lab holds your target speed like <code>setVelocity</code> does.</li>
+            <li><b>Flywheel:</b> the motor speeds the wheel up, and each ball slows it down. Heavy wheels slow down less per shot but take longer to get up to speed.</li>
+            <li><b>Squeeze:</b> the ball and the wheel both act like springs when pressed together. Soft wheels also get a little bigger when they spin fast, which adds squeeze.</li>
+            <li><b>Grip:</b> the harder you squeeze, the more grip you get, and some materials grip better than others. Too little grip and the ball slips, so shots are slower and less even.</li>
+            <li><b>Ball:</b> the lab tracks how the ball moves and spins, and checks it against every part of your CAD thousands of times a second.</li>
+            <li><b>Flight:</b> gravity pulls the ball down, the air slows it, and backspin lifts it a little.</li>
+            <li><b>Field:</b> built from the official BIOBUZZ field CAD (HIVES, walls and FLOWERS). Balls bounce off each part, and a shot only counts when the ball stops inside your team's CELL.</li>
+            <li><b>Squeeze per shot:</b> the most the ball got pressed between the flywheel and the hood (or the second wheel).</li>
           </ul>
-          <p class="hint">Not modelled: the HIVE tipping (empty it with Reset), wear on the balls and wheels, and the holes of each ball facing a different way on each shot, which makes real shots a little less consistent than these. The field is the am-5850 BIOBUZZ field CAD, simplified: screws, rivets and tile edges are left out.</p>
+          <p class="hint">Left out: the HIVE tipping (empty it with Reset), worn balls and wheels, and the ball's holes facing a new way each shot. That makes real shots a bit less even than these. The field is a simpler copy of the am-5850 BIOBUZZ field CAD, without screws, rivets or tile edges.</p>
         </details>
       </div>
     </div>
@@ -1311,69 +1311,69 @@ details.card > summary h3 { display: inline; }
   <!-- ===================== STEP BY STEP ===================== -->
   <section id="view-learn" class="read" hidden>
     <h2>Step by step: from zero to a full match</h2>
-    <p>Follow these in order the first time. Each one takes a couple of minutes.</p>
+    <p>Do these in order the first time. Each one takes a few minutes.</p>
     <ol class="steps">
       <li><div><h4>Look at the field</h4>
-        <p>Open <b>Drive &amp; Code</b>. You are looking down at the 12 ft &times; 12 ft field. The red alliance stands on the left, blue on the right. In the middle is the HIVE structure with a red HIVE and a blue HIVE. Yellow balls are POLLEN, red and blue balls are NECTAR. The four pink shapes on the walls are FLOWERS, and the row of small circles beside each one shows what is stacked inside it.</p></div></li>
+        <p>Open <b>Drive &amp; Code</b>. You are looking down at the 12 ft &times; 12 ft field. Red is on the left and blue is on the right. In the middle is the HIVE, with a red side and a blue side. Yellow balls are POLLEN. Red and blue balls are NECTAR. The four pink shapes on the walls are FLOWERS, and the small circles next to each one show what is inside it.</p></div></li>
       <li><div><h4>Build a bot</h4>
-        <p>Open <b>Build Bot</b>. Pick a drivetrain, a motor, a wheel size and the tools you want, or load one of the <b>Robots already made</b> at the bottom. Drag parts around in the layout editor; the picture and the spec sheet update as you go. The <b>Robot configuration</b> table lists the device names, exactly like the configuration screen on a real Robot Controller. Your code must use these names.</p></div></li>
+        <p>Open <b>Build Bot</b>. Pick your wheels, motor and tools, or load one of the <b>Robots already made</b> at the bottom. Drag parts around and the picture updates as you go. The <b>Robot configuration</b> table lists the name of every part, just like on a real Robot Controller. Your code must use these names.</p></div></li>
       <li><div><h4>Open an example program</h4>
-        <p>Back on <b>Drive &amp; Code</b>, look at the <b>Robot Controller Console</b>. The <b>Blocks</b> and <b>OnBotJava</b> tabs each list your op modes, sorted into groups. You start with four examples. Press <b>Examples</b> for more, each with a name and a line saying what it does. Examples are written for the bot you have right now, so add a fresh one after you change your bot.</p></div></li>
+        <p>Go back to <b>Drive &amp; Code</b> and find the <b>Robot Controller Console</b>. The <b>Blocks</b> and <b>OnBotJava</b> tabs each list your op modes. You start with four examples. Press <b>Examples</b> for more. Each one says what it does. Examples are made for your current bot, so add a new one after you change your bot.</p></div></li>
       <li><div><h4>Run it and drive</h4>
-        <p>Open a TeleOp program and press <b>&#9654; Run open program</b>. Click anywhere outside the code box, then drive with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> and the arrow keys, or drag the on-screen sticks. With the example TeleOp: <kbd>E</kbd> runs the intake, hold <kbd>C</kbd> to spin the launcher and tap <kbd>K</kbd> to shoot, <kbd>T</kbd>/<kbd>G</kbd> move the lift and <kbd>J</kbd> opens the gate. Press <b>&#9632; Stop</b> when you are done.</p></div></li>
-      <li><div><h4>Watch the instruments</h4>
-        <p><b>Telemetry</b> is the Driver Station screen: whatever your code sends with <code>telemetry.addData</code>. <b>Motors &amp; servos</b> shows the power going to each motor, its encoder count and each servo position, live. If the robot does something odd, look here first, just as you would on a real robot.</p></div></li>
+        <p>Open a TeleOp program and press <b>&#9654; Run open program</b>. Click outside the code box, then drive with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> and the arrow keys, or drag the sticks on the screen. In the example TeleOp: <kbd>E</kbd> runs the intake, hold <kbd>C</kbd> to spin up the launcher and tap <kbd>K</kbd> to shoot, <kbd>T</kbd>/<kbd>G</kbd> move the lift and <kbd>J</kbd> opens the gate. Press <b>&#9632; Stop</b> when you are done.</p></div></li>
+      <li><div><h4>Watch the screens</h4>
+        <p><b>Telemetry</b> is the Driver Station screen. It shows whatever your code sends with <code>telemetry.addData</code>. <b>Motors &amp; servos</b> shows the power, encoder count and position of every part, live. If the robot does something strange, look here first, just like on a real robot.</p></div></li>
       <li><div><h4>Change the code</h4>
-        <p>Edit the Java in the box, or click blocks in a Blocks program, then press Run again. Try changing <code>LAUNCH_POWER</code> and see how far the shot goes. If you make a mistake, the box under the editor tells you the line and what is wrong. Your work is saved in this browser automatically.</p></div></li>
+        <p>Change the Java in the box, or click blocks in a Blocks program, then press Run again. Try changing <code>LAUNCH_POWER</code> and see how far the shot goes. If you make a mistake, the box under the code tells you which line is wrong and why. Your work saves in this browser by itself.</p></div></li>
       <li><div><h4>Score your first HIVE TIP</h4>
-        <p>Your upward CELL starts with 3 NECTAR in it. Launch 3 POLLEN into that CELL and the HIVE tips: 20 points, and your human player gets to enter one more NECTAR. After a tip the other CELL faces up and needs 8 POLLEN (or 3 POLLEN and 3 NECTAR) to tip again. Drive around to the other side to reach it.</p></div></li>
+        <p>Your CELL that faces up starts with 3 NECTAR in it. Shoot 3 POLLEN into it and the HIVE tips. That is 20 points, and your human player gets to add one more NECTAR. After a tip, the other CELL faces up. It needs 8 POLLEN (or 3 POLLEN and 3 NECTAR) to tip again. Drive to the other side to reach it.</p></div></li>
       <li><div><h4>Write an autonomous</h4>
-        <p>In AUTO the gamepad is switched off and your code has 30 seconds. Open the example Autonomous and read it top to bottom: it uses <b>encoders</b> to drive exact distances and the <b>IMU</b> to turn exact angles. Run it, then change the distances and watch what happens. Use the <b>Start spot</b> list to try other starting places.</p></div></li>
+        <p>In AUTO the gamepad does nothing and your code runs alone for 30 seconds. Open the example Autonomous and read it from top to bottom. It uses <b>encoders</b> to drive exact distances and the <b>IMU</b> to turn exact angles. Run it, then change the distances and see what happens. Use the <b>Start spot</b> list to try other starting places.</p></div></li>
       <li><div><h4>Play a full match</h4>
-        <p>Choose a <b>Match autonomous</b> and a <b>Match TeleOp</b>, then press <b>Play full match</b>. The clock runs 30 s of AUTO, an 8 s pause, then 2:00 of TELEOP. With 60 s left your remaining NECTAR arrives and NECTAR may go into FLOWERS. Finish by parking in your LOADING ZONE. The <b>Score sheet</b> shows where every point came from.</p></div></li>
-      <li><div><h4>Take it to the real robot</h4>
-        <p>The Java here is written the way the FTC SDK expects, so you can paste it into OnBot Java or Android Studio. Then tune it: real wheels slip, batteries sag, and every number (launch power, inches, degrees) will need small changes. That tuning is part of the competition.</p></div></li>
+        <p>Pick a <b>Match autonomous</b> and a <b>Match TeleOp</b>, then press <b>Play full match</b>. You get 30 s of AUTO, an 8 s break, then 2:00 of TELEOP. With 60 s left, the rest of your NECTAR arrives and NECTAR can go into FLOWERS. Finish by parking in your LOADING ZONE. The <b>Score sheet</b> shows where every point came from.</p></div></li>
+      <li><div><h4>Use it on your real robot</h4>
+        <p>The Java here is written the way FTC expects, so you can paste it into OnBot Java or Android Studio. Then fine-tune it. Real wheels slip and batteries run down, so numbers like launch power, inches and degrees will need small changes. That is part of the game.</p></div></li>
     </ol>
 
     <h3>Java the simulator understands</h3>
     <ul>
-      <li><code>LinearOpMode</code> with <code>runOpMode()</code>, and iterative <code>OpMode</code> with <code>init()</code> and <code>loop()</code>.</li>
+      <li><code>LinearOpMode</code> with <code>runOpMode()</code>, and <code>OpMode</code> with <code>init()</code> and <code>loop()</code>.</li>
       <li><code>waitForStart()</code>, <code>opModeIsActive()</code>, <code>sleep(ms)</code>, <code>idle()</code>, <code>getRuntime()</code>, <code>ElapsedTime</code>.</li>
       <li><code>hardwareMap.get(DcMotor.class, "name")</code> for <code>DcMotor</code>, <code>Servo</code>, <code>IMU</code> and <code>DistanceSensor</code>.</li>
-      <li>Motors: <code>setPower</code>, <code>setDirection</code>, <code>setMode</code> (all four run modes), <code>setTargetPosition</code>, <code>getCurrentPosition</code>, <code>isBusy</code>, <code>setZeroPowerBehavior</code>, <code>setVelocity</code>.</li>
+      <li>Motors: <code>setPower</code>, <code>setDirection</code>, <code>setMode</code> (all four modes), <code>setTargetPosition</code>, <code>getCurrentPosition</code>, <code>isBusy</code>, <code>setZeroPowerBehavior</code>, <code>setVelocity</code>.</li>
       <li>Servos: <code>setPosition</code>, <code>getPosition</code>, <code>setDirection</code>. Sensors: <code>imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES)</code>, <code>imu.resetYaw()</code>, <code>distance.getDistance(DistanceUnit.INCH)</code>.</li>
       <li><code>gamepad1</code> sticks, triggers, bumpers, D-pad and A/B/X/Y. <code>telemetry.addData</code>, <code>addLine</code>, <code>update</code>.</li>
       <li>Variables, <code>if</code>/<code>else</code>, <code>while</code>, <code>for</code>, your own methods, arrays, <code>Math</code>, <code>Range.clip</code>, <code>String.format</code>.</li>
-      <li>AprilTags: <code>AprilTagProcessor.easyCreateWithDefaults()</code>, <code>VisionPortal.easyCreateWithDefaults(...)</code>, <code>getDetections()</code> and each detection's <code>id</code> and <code>ftcPose</code> (range, bearing, yaw, x, y).</li>
-      <li>Not supported yet: <code>switch</code>, your own classes and enums, lambdas, and camera features beyond AprilTags.</li>
+      <li>AprilTags: <code>AprilTagProcessor.easyCreateWithDefaults()</code>, <code>VisionPortal.easyCreateWithDefaults(...)</code>, <code>getDetections()</code>, and each tag's <code>id</code> and <code>ftcPose</code> (range, bearing, yaw, x, y).</li>
+      <li>Not working yet: <code>switch</code>, your own classes and enums, lambdas, and camera features other than AprilTags.</li>
     </ul>
 
-    <h3>How the motors and servos are imitated</h3>
+    <h3>How the motors and servos act</h3>
     <ul>
-      <li>Motors take time to speed up and slow down, and they brake or coast depending on <code>ZeroPowerBehavior</code>.</li>
-      <li>Every motor has an encoder with the real ticks-per-turn for the motor you chose. <code>RUN_TO_POSITION</code> works like the real thing, and forgetting <code>setTargetPosition</code> first gives the same error.</li>
-      <li>Mecanum wheels strafe about 15% slower than they drive, like real ones.</li>
-      <li>Servos take about a third of a second to swing end to end. The launcher wheel loses speed with every shot and needs a moment to recover.</li>
-      <li>The lift has hard stops at 0 and 26 inches. The robot can hold 4 pieces at most.</li>
+      <li>Motors take time to speed up and slow down. They brake or coast based on <code>ZeroPowerBehavior</code>.</li>
+      <li>Every motor has an encoder with the real ticks per turn for the motor you picked. <code>RUN_TO_POSITION</code> works like the real thing, and if you forget <code>setTargetPosition</code> first you get the same error.</li>
+      <li>Mecanum wheels slide sideways about 15% slower than they drive forward, like real ones.</li>
+      <li>Servos take about a third of a second to move all the way. The launcher wheel slows down with every shot and needs a moment to speed back up.</li>
+      <li>The lift stops at 0 and 26 inches. The robot can hold 4 pieces at most.</li>
     </ul>
 
     <h3>Safety and privacy</h3>
     <div class="notice">
-      <p><b>Nothing you do here leaves your device.</b> The site has no accounts, no passwords, no server, no database, no ads and no tracking. It loads no code or fonts from other websites.</p>
+      <p><b>Nothing you do here leaves your device.</b> There are no accounts, no passwords, no ads and no tracking, and nothing is stored on a server.</p>
       <ul>
-        <li>Your Java is read by a small interpreter built for this site. It is never run as real browser code, so a program can only touch the pretend robot, never your files, camera, or other websites.</li>
-        <li>Programs that loop forever cannot freeze the page: each one gets a limited number of steps per frame, and <b>Stop</b> always works.</li>
-        <li>Everything you type is shown as plain text, so pasted code cannot inject scripts into the page.</li>
-        <li>Saved programs live only in this browser's storage. They are checked and cleaned every time they are loaded.</li>
+        <li>Your Java runs in a small, safe reader made for this site. It can only move the pretend robot. It can never touch your files, your camera or other websites.</li>
+        <li>A program that loops forever cannot freeze the page, and <b>Stop</b> always works.</li>
+        <li>Everything you type is shown as plain text, so pasted code cannot run anything on the page.</li>
+        <li>Saved programs live only in this browser. They are checked every time they load.</li>
       </ul>
-      <p class="hint">No website can promise it is impossible to attack. This one keeps the risk low by having nothing to steal and nowhere to send it.</p>
+      <p class="hint">No website can be 100% safe. This one keeps the risk low by having nothing to steal and nowhere to send it.</p>
     </div>
   </section>
 
   <!-- ===================== TUTORIAL ===================== -->
   <section id="view-tutorial" class="read" hidden>
     <h2>Tutorial: everything the site and the robot can do</h2>
-    <p>Pick a category and work down the lessons. Every picture is drawn live from the simulator, so it always matches what you will see on the other tabs. Keep <b>Drive &amp; Code</b> handy so you can try each idea straight away.</p>
+    <p>Pick a topic and go through the lessons. The pictures come straight from the simulator, so they match what you see on the other tabs. Keep <b>Drive &amp; Code</b> open so you can try each idea right away.</p>
     <div class="seg tutnav" role="group" aria-label="Tutorial category">
       <button type="button" data-tut="tour" aria-pressed="true">1 &middot; Tour of the site</button>
       <button type="button" data-tut="drive" aria-pressed="false">2 &middot; Driving</button>
@@ -1391,28 +1391,29 @@ details.card > summary h3 { display: inline; }
         <div class="tablewrap"><table>
           <thead><tr><th>Tab</th><th>What you do there</th></tr></thead>
           <tbody>
-            <tr><td><b>Home</b></td><td>The front page. The cards jump to the other tabs, and the four bees can be dragged and thrown around for fun.</td></tr>
+            <tr><td><b>Home</b></td><td>The first page. The cards take you to other tabs, and you can drag and throw the bees for fun.</td></tr>
             <tr><td><b>Drive &amp; Code</b></td><td>The field, the Driver Station, the gamepad and the code editor. This is where you run programs.</td></tr>
-            <tr><td><b>Build Bot</b></td><td>Choose the drivetrain, tools and sensors, look at your robot in 3D, drag parts around, name your motors, or load a ready-made robot.</td></tr>
-            <tr><td><b>Step by Step</b></td><td>A ten-step path from your first look at the field to a full match.</td></tr>
+            <tr><td><b>Build Bot</b></td><td>Pick wheels, tools and sensors, see your robot in 3D, move parts, name your motors, or load a ready-made robot.</td></tr>
+            <tr><td><b>Shooter Lab</b></td><td>Test a shooter on the real field, with your own CAD if you have it.</td></tr>
+            <tr><td><b>Step by Step</b></td><td>Ten steps from your first look at the field to a full match.</td></tr>
             <tr><td><b>Tutorial</b></td><td>This page: a lesson for every feature.</td></tr>
-            <tr><td><b>Game Manual</b></td><td>Where to get the official manual, plus a quick reference in our own words.</td></tr>
+            <tr><td><b>Game Manual</b></td><td>Where to get the official manual, plus a short summary in our own words.</td></tr>
             <tr><td><b>Policies</b></td><td>Privacy, terms, cookies and accessibility, and the button that erases your saved data.</td></tr>
           </tbody>
         </table></div>
-        <p>The <b>Appearance</b> button at the top right switches white and black mode, changes the font colour and turns sounds on or off. Tabs slide in when you switch, and everything you make is saved in this browser only.</p></article>
+        <p>The <b>Appearance</b> button at the top right changes white or black mode, the text colour and the sounds. Everything you make is saved in this browser only.</p></article>
       <article class="lesson"><h3>Lesson 2: the Drive &amp; Code screen</h3>
 <figure class="fig"><canvas data-fig="screen" width="760" height="550" role="img" aria-label="A map of the Drive and Code screen with nine numbered areas"></canvas>
           <figcaption>Where everything is on Drive &amp; Code: 1 the score bar, 2 the field, 3 the Driver Station, 4 the gamepad, 5 the console, 6 the editor, 7 the problems box, 8 telemetry and motors, 9 the score sheet and match log.</figcaption></figure>
         <figure class="fig"><canvas data-fig="field" width="760" height="760" role="img" aria-label="The field seen from above with numbered parts"></canvas>
           <figcaption>The field from above. The numbers match the list below.</figcaption></figure>
         <ol>
-          <li><b>Your robot.</b> The chevron shows its front. The outline is your alliance colour.</li>
-          <li><b>The HIVE structure</b> in the middle, with a red HIVE and a blue HIVE. The brighter box is the CELL that faces up.</li>
-          <li><b>A FLOWER.</b> There are four, one on each wall. The row of circles beside it shows what is stacked inside.</li>
+          <li><b>Your robot.</b> The arrow shows its front. The outline is your alliance colour.</li>
+          <li><b>The HIVE</b> in the middle, with a red side and a blue side. The brighter box is the CELL that faces up.</li>
+          <li><b>A FLOWER.</b> There are four, one on each wall. The circles next to it show what is inside.</li>
           <li><b>Your LOADING ZONE</b>, the taped box where you PARK and where your human player adds NECTAR.</li>
           <li><b>Your GARDEN</b>, the strip along the wall. Pieces resting in it score.</li>
-          <li><b>An AprilTag.</b> The small black-and-white plates with a number are targets for the webcam.</li>
+          <li><b>An AprilTag.</b> The small black-and-white squares with a number help the webcam find its way.</li>
         </ol>
         <p>Above the field are the <b>phase badge</b> (READY, PRACTICE, AUTO, PAUSE, TELEOP, ENDGAME, FINAL), the <b>clock</b>, your <b>score</b>, your <b>tips</b> and four dots showing what the robot is <b>carrying</b>.</p></article>
       <article class="lesson"><h3>Lesson 3: every button on the Driver Station</h3>
@@ -1420,9 +1421,9 @@ details.card > summary h3 { display: inline; }
           <figcaption>The Driver Station: 1 alliance, 2 start spot, 3 speed, 4 run, 5 stop, 6 reset, 7 the two match programs, 8 play a full match.</figcaption></figure>
         <ul>
           <li><b>Red / Blue</b> picks your alliance. <b>Start spot</b> picks where the robot begins.</li>
-          <li><b>&#9654; Run open program</b> starts the op mode showing in the editor. There is no clock, so practise as long as you like. An Autonomous always starts from a fresh field at your start spot, and the Score sheet marks its LEAVE, PARK and tips as AUTO when it finishes.</li>
+          <li><b>&#9654; Run open program</b> starts the op mode open in the editor. There is no clock, so practise as long as you like. An Autonomous always starts on a fresh field, and its points count as AUTO.</li>
           <li><b>Play full match</b> counts down 3, 2, 1, then runs your match autonomous for 30 seconds, pauses 8 seconds and runs your match TeleOp for 2 minutes.</li>
-          <li><b>Match autonomous</b> and <b>Match TeleOp</b> choose which op modes the full match uses. The op mode open in the editor is picked for you when you press Play full match: as the autonomous if it is one, otherwise as the TeleOp.</li>
+          <li><b>Match autonomous</b> and <b>Match TeleOp</b> pick which op modes the full match uses. When you press Play full match, the op mode open in the editor is used too.</li>
           <li><b>&#9632; Stop</b> ends the program. Motors switch off, just like the real STOP button.</li>
           <li><b>&#8634; Reset field</b> puts every piece and the robot back.</li>
           <li><b>1&times; 2&times; 4&times;</b> speeds up time, which is handy for testing an autonomous quickly.</li>
@@ -1432,11 +1433,11 @@ details.card > summary h3 { display: inline; }
           <figcaption>The console: 1 Blocks or Java, 2 the buttons that make, copy and delete op modes, 3 a group, 4 the list (click a name to open it), 5 the editor, 6 the problems box.</figcaption></figure>
         <ul>
           <li><b>Blocks</b> and <b>OnBotJava</b> switch between your block programs and your Java programs.</li>
-          <li><b>Create New &hellip; Op Mode</b> makes a blank program. <b>Examples</b> opens a list of ready-made ones; press <b>Add</b> to copy one in.</li>
-          <li><b>Copy Selected</b> duplicates the open op mode. <b>Delete Selected</b> removes it (click twice to confirm).</li>
-          <li>In the list, click a <b>name</b> to open it. The <b>&#9650; &#9660;</b> arrows reorder op modes and whole groups.</li>
+          <li><b>Create New &hellip; Op Mode</b> makes a blank program. <b>Examples</b> shows ready-made ones. Press <b>Add</b> to copy one.</li>
+          <li><b>Copy Selected</b> makes a copy of the open op mode. <b>Delete Selected</b> deletes it (click twice to be sure).</li>
+          <li>In the list, click a <b>name</b> to open it. The <b>&#9650; &#9660;</b> arrows move op modes and groups up or down.</li>
           <li><b>Op Mode name</b>, <b>Runs in</b> (TeleOp or Autonomous), <b>Group</b> and <b>Description</b> are yours to edit.</li>
-          <li>The box under the editor reports problems with a line number. A red bar marks the line.</li>
+          <li>The box under the editor shows mistakes and their line number. A red bar marks the line.</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 5: the instruments</h3>
 <figure class="fig"><canvas data-fig="instruments" width="760" height="350" role="img" aria-label="Four instrument panels: telemetry, motors and servos, score sheet and match log"></canvas>
@@ -1451,7 +1452,7 @@ details.card > summary h3 { display: inline; }
     <!-- ---------- 2. driving ---------- -->
     <div id="tut-drive" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the controls</h3>
-        <p><b>Two controllers:</b> plug in or pair up to two controllers (PS5, PS4, Xbox and most others work) and press a button on each. The first is <code>gamepad1</code> and the second is <code>gamepad2</code>, and the Gamepads card names them. On a PlayStation controller Cross is <code>a</code>, Circle is <code>b</code>, Square is <code>x</code> and Triangle is <code>y</code>; you can also write <code>gamepad2.cross</code>. <b>Swap controllers</b> switches which one is gamepad1. With no second controller, switch the keyboard and on-screen pad to <b>Gamepad 2</b> to test that code.</p>
+        <p><b>Two controllers:</b> plug in up to two controllers (PS5, PS4, Xbox and most others work) and press a button on each. The first is <code>gamepad1</code> and the second is <code>gamepad2</code>. On a PlayStation controller, Cross is <code>a</code>, Circle is <code>b</code>, Square is <code>x</code> and Triangle is <code>y</code>. You can also write <code>gamepad2.cross</code>. <b>Swap controllers</b> switches them. Only have one? Set the keyboard and screen pad to <b>Gamepad 2</b> to test that code.</p>
         <figure class="fig"><canvas data-fig="pad" width="760" height="420" role="img" aria-label="A gamepad with the keyboard key for each control"></canvas>
           <figcaption>Each control with its keyboard key. A real controller plugged into your computer works too.</figcaption></figure>
         <p>The <b>Full TeleOp</b> example uses these. Click outside the code box first so your keys go to the robot.</p>
@@ -1484,12 +1485,12 @@ details.card > summary h3 { display: inline; }
         <ul>
           <li><b>Mecanum</b>: four motors named <code>fl</code>, <code>fr</code>, <code>bl</code>, <code>br</code>. Drives, turns and slides sideways. Sliding is about 15% slower than driving.</li>
           <li><b>Tank</b>: two motors, <code>leftDrive</code> and <code>rightDrive</code>. It cannot slide sideways, so it has to turn first.</li>
-          <li><b>X-drive</b>: four omni wheels set at 45 degrees. About 40% faster and slides at full speed, but the same motor turns the wheel further per inch, so it is less exact.</li>
+          <li><b>X-drive</b>: four omni wheels set at an angle. About 40% faster and slides at full speed, but it is harder to drive exact distances.</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 4: why the left motors are reversed</h3>
 <figure class="fig"><canvas data-fig="reverse" width="760" height="320" role="img" aria-label="Two robots with wheel arrows: one spinning, one driving straight"></canvas>
           <figcaption>Arrows show which way each wheel turns when every motor gets the same positive power.</figcaption></figure>
-        <p>On a real robot the left motors are bolted on facing the other way. Give all four the same power and the robot spins on the spot. Every example fixes this once at the top with <code>setDirection(DcMotor.Direction.REVERSE)</code> on the left motors. You can switch this off with <b>Real-life motor mounting</b> on the Build Bot tab while you are learning.</p></article>
+        <p>On a real robot the left motors face the other way. Give all four the same power and the robot spins in place. Every example fixes this at the top with <code>setDirection(DcMotor.Direction.REVERSE)</code> on the left motors. While you learn, you can turn this off with <b>Real-life motor mounting</b> on the Build Bot tab.</p></article>
     </div>
 
     <!-- ---------- 3. the game ---------- -->
@@ -1505,7 +1506,7 @@ details.card > summary h3 { display: inline; }
             <tr><td><b>TELEOP</b></td><td>2 minutes</td><td>The drivers. The last 60 seconds are the endgame.</td></tr>
           </tbody>
         </table></div>
-        <p>The rest of this category covers each thing your robot can do for points. The <b>Game Manual</b> tab has the full list and the official wording always wins.</p></article>
+        <p>The lessons below show each way to score. The <b>Game Manual</b> tab has the full list, and the official manual always wins.</p></article>
       <article class="lesson"><h3>Lesson 2: LEAVE the wall (3 points, AUTO)</h3>
 <figure class="fig"><canvas data-fig="leave" width="760" height="300" role="img" aria-label="Before and after: a robot touching the wall, then clear of it"></canvas>
           <figcaption>LEAVE only needs the robot to stop touching the wall.</figcaption></figure>
@@ -1522,7 +1523,7 @@ setDrive(0, 0, 0);</pre>
         <ul>
           <li>Your upward CELL starts with 3 NECTAR in it. Add <b>3 POLLEN</b> and the HIVE tips.</li>
           <li>After a tip the other CELL faces up and is empty. It needs <b>8 POLLEN</b>, or 3 POLLEN and 3 NECTAR.</li>
-          <li>A CELL only takes pieces launched from the side of the field it faces. After a tip you must drive round the HIVE to score again; a piece lobbed over the top bounces off.</li>
+          <li>A CELL only takes pieces shot from the side it faces. After a tip, drive around the HIVE to score again. A ball thrown over the top bounces off.</li>
           <li>Each tip in your own HIVE lets your human player add one NECTAR to your LOADING ZONE.</li>
           <li>Tipping the other alliance's HIVE scores for them, so watch your aim.</li>
           <li>4 tips earns POLLINATOR 1 and 7 tips earns POLLINATOR 2.</li>
@@ -1559,7 +1560,7 @@ setDrive(0, 0, 0);</pre>
           <li><b>G410</b>: no NECTAR in a FLOWER before the last 60 seconds.</li>
           <li><b>G402</b>: stay on your own half during AUTO.</li>
         </ul>
-        <p>When one of these happens the Match log says so and you hear a warning tone. Real referees decide real fouls.</p></article>
+        <p>If one happens, the Match log tells you and you hear a beep. In real matches, the referees decide.</p></article>
     </div>
 
     <!-- ---------- 4. robot parts ---------- -->
@@ -1589,7 +1590,7 @@ setDrive(0, 0, 0);</pre>
           <tbody>
             <tr><td>Roller</td><td>1 motor</td><td>Takes a piece anywhere along that side. About 0.3 s per piece.</td></tr>
             <tr><td>Compliant wheels</td><td>1 motor</td><td>Faster and reaches further out, but only the middle of the side grabs.</td></tr>
-            <tr><td>Servo claw</td><td>1 servo</td><td>Closing grabs one piece; opening lets that piece go. Hold it closed to carry.</td></tr>
+            <tr><td>Servo claw</td><td>1 servo</td><td>Close it to grab one piece and open it to let go. Keep it closed to carry the piece.</td></tr>
           </tbody>
         </table></div>
 <pre class="java">// Roller or compliant wheels: a motor. Positive pulls in, negative pushes out.
@@ -1630,7 +1631,7 @@ catapult.setPosition(0.0);</pre>
       <article class="lesson"><h3>Lesson 4: the two lifts</h3>
         <figure class="fig"><canvas data-fig="lifts" width="760" height="300" role="img" aria-label="Linear slide and swing arm"></canvas>
           <figcaption>Left: linear slide. Right: swing arm.</figcaption></figure>
-        <p>Both use one motor and a <b>gate</b> servo. The slide reaches 26 in and is exact. The arm reaches 24 in in about half the time, with fewer encoder ticks per inch. Either way the lift must be at 21.5 in or more to drop into a FLOWER.</p>
+        <p>Both use one motor and a <b>gate</b> servo. The slide goes up to 26 in and is exact. The arm goes up to 24 in about twice as fast, but is less exact. Either way, the lift must be at 21.5 in or more to drop into a FLOWER.</p>
 <pre class="java">// Drive the lift by hand.
 lift.setPower(0.9);
 
@@ -1646,7 +1647,7 @@ gate.setPosition(0.0);</pre></article>
       <article class="lesson"><h3>Lesson 5: where a part sits matters</h3>
 <figure class="fig"><canvas data-fig="sides" width="760" height="300" role="img" aria-label="Two robots launching: one with the shooter on the front, one with it turned to the left side"></canvas>
           <figcaption>The piece flies the way the shooter points, not the way the robot faces.</figcaption></figure>
-        <p>In the Build Bot layout editor you can drag parts and turn them. The physics follows:</p>
+        <p>On Build Bot you can drag parts and turn them, and the robot acts on it:</p>
         <ul>
           <li>The <b>intake</b> only collects on the side it is mounted on.</li>
           <li>The <b>shooter</b> throws the way it points, starting from where it sits.</li>
@@ -1670,13 +1671,13 @@ gate.setPosition(0.0);</pre></article>
           <li><b>Layout editor</b>: drag parts around the robot.</li>
           <li><b>Robot configuration</b>: name every motor, servo and sensor.</li>
         </ol>
-        <p>The <b>Spec sheet</b> checks the motor and servo limits, the 18 inch size rule, top speed and encoder ticks per inch.</p></article>
+        <p>The <b>Spec sheet</b> checks your motor and servo count, the 18 inch size rule and your top speed.</p></article>
       <article class="lesson"><h3>Lesson 2: move parts in the layout editor</h3>
         <figure class="fig"><canvas data-fig="layout" width="760" height="380" role="img" aria-label="The same robot before and after moving the intake to the back and the shooter to the side"></canvas>
           <figcaption>Left: the usual layout. Right: intake dragged to the back, shooter moved and turned to point out of the left side.</figcaption></figure>
         <ol>
-          <li>The picture opens in <b>3D view</b>: drag it to turn the robot and see every part from any side. Each scoring tool, each sensor and every robot in the gallery has its own small 3D picture you can turn the same way.</li>
-          <li>Press <b>Top view (move parts)</b> to rearrange the robot. Click a part in the picture, or pick it from the row of buttons under the picture. A dashed outline shows what is selected and a small arrow shows which way it points.</li>
+          <li>The picture starts in <b>3D view</b>. Drag it to turn the robot. Each tool, sensor and gallery robot has its own small 3D picture you can turn too.</li>
+          <li>Press <b>Top view (move parts)</b> to move things around. Click a part, or pick it from the buttons under the picture. A dashed outline shows which part is picked, and a small arrow shows which way it faces.</li>
           <li><b>Drag</b> it. The intake snaps to whichever side you drag it to. Other parts go anywhere inside the frame.</li>
           <li>Press <b>Turn part 90&deg;</b> (or double-click the part) to change the way it points.</li>
           <li>With the keyboard: click the picture, then use the arrow keys to move the selected part and <kbd>R</kbd> to turn it.</li>
@@ -1685,10 +1686,10 @@ gate.setPosition(0.0);</pre></article>
       <article class="lesson"><h3>Lesson 3: name your motors</h3>
 <figure class="fig"><canvas data-fig="names" width="760" height="320" role="img" aria-label="Robots from above with each drive motor labelled with its name"></canvas>
           <figcaption>The names a new bot starts with, and which wheel each one is.</figcaption></figure>
-        <p>The <b>Robot configuration</b> table works like <i>Configure Robot</i> on a real Driver Station: each device has a type, a port and a name. Your code must use the name exactly, capitals included.</p>
+        <p>The <b>Robot configuration</b> table works like <i>Configure Robot</i> on a real Driver Station. Each part has a type, a port and a name. Your code must use the name exactly, with the same capitals.</p>
         <ul>
           <li>Type a new name and press <kbd>Enter</kbd>. Names start with a letter and use letters, numbers and <code>_</code>.</li>
-          <li>Your saved op modes are updated to the new name: the Java text and the dropdowns inside your blocks.</li>
+          <li>Your saved op modes switch to the new name, in both Java and Blocks.</li>
           <li>The three buttons under the table rename all the drive motors at once: <code>fl, fr, bl, br</code>, <code>frontLeft&hellip;</code> or <code>leftFront&hellip;</code>.</li>
         </ul>
 <pre class="java">// If you rename "fl" to "frontLeft", this line becomes:
@@ -1696,13 +1697,13 @@ frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");</pre></article>
       <article class="lesson"><h3>Lesson 4: start from a robot already made</h3>
         <figure class="fig"><canvas data-fig="gallery" width="760" height="300" role="img" aria-label="Three ready-made robots from the gallery"></canvas>
           <figcaption>Three of the gallery robots: Orange Crate, Yellow Jacket and Grab and Reach.</figcaption></figure>
-        <p>At the bottom of Build Bot, <b>Robots already made</b> shows seven designs, from a two-motor Push Bot to an X-drive with a webcam. Press <b>Use this bot</b>, then change anything you like. They are this site's own practice designs in the style of popular starter robots, not the official ones.</p></article>
+        <p>At the bottom of Build Bot, <b>Robots already made</b> shows seven designs, from a two-motor Push Bot to an X-drive with a webcam. Press <b>Use this bot</b>, then change anything you like. We made these practice robots in the style of popular starter bots. They are not official designs.</p></article>
     </div>
 
     <!-- ---------- 6. blocks ---------- -->
     <div id="tut-blocks" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the Blocks workspace</h3>
-        <p>The Blocks tab works like the Blocks editor on a real Robot Controller, because it is built on the same block library. Blocks snap together like puzzle pieces and run from top to bottom.</p>
+        <p>Blocks here work like FTC Blocks on a real Robot Controller, because they are built the same way. Blocks snap together like puzzle pieces and run from top to bottom.</p>
         <ul>
           <li>The strip on the left is the <b>toolbox</b>. Click a category to see its blocks, then drag one into the workspace.</li>
           <li>Drag a block onto the <b>bin</b> in the corner to delete it. Use <b>+</b> and <b>&minus;</b> to zoom.</li>
@@ -1719,7 +1720,7 @@ frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");</pre></article>
           <li><b>Utilities</b>: <code>call Telemetry . addData</code> and <code>call Telemetry . update</code>.</li>
           <li><b>Logic, Loops, Math, Text, Variables</b>: <code>if</code>, <code>repeat while</code>, numbers, sums and your own named values.</li>
         </ul>
-        <p>The dropdown in a motor or servo block lists the names from your Robot configuration, so renamed parts show up straight away.</p></article>
+        <p>The dropdown in a motor or servo block lists the names from your Robot configuration, so new names show up right away.</p></article>
       <article class="lesson"><h3>Lesson 3: the shape of every Blocks program</h3>
         <div class="blkfig" data-blk="blank" role="img" aria-label="The blank Blocks program: to runOpMode, call waitForStart, if opModeIsActive, repeat while opModeIsActive, Telemetry update"></div>
         <p>Press <b>Create New Blocks Op Mode</b> and you get this skeleton. Set-up blocks go first, things to do once go inside the <b>if</b>, and things to do again and again go inside the <b>repeat while</b>.</p></article>
@@ -1798,7 +1799,7 @@ void setDrive(double forward, double strafe, double turn) {
       <article class="lesson"><h3>Lesson 5: driving exact distances with encoders</h3>
 <figure class="fig"><canvas data-fig="encoder" width="760" height="230" role="img" aria-label="A wheel with encoder marks and the sum that turns 20 inches into encoder ticks"></canvas>
           <figcaption>Inches become encoder ticks, and the motor runs until it has counted that many.</figcaption></figure>
-        <p>Timed moves change when the battery sags. Encoders count wheel turns instead, so <code>driveInches(20, 0.6)</code> goes 20 inches every time. The examples that use it show the helper underneath: it sets a target with <code>setTargetPosition</code>, switches to <code>RUN_TO_POSITION</code>, waits while <code>isBusy()</code>, then stops. <code>turnLeft(90, 0.5)</code> uses the IMU the same way for turns.</p>
+        <p>Moves based on time change when the battery gets weak. Encoders count wheel turns instead, so <code>driveInches(20, 0.6)</code> goes 20 inches every time. The examples show how it works: it sets a target with <code>setTargetPosition</code>, switches to <code>RUN_TO_POSITION</code>, waits while <code>isBusy()</code>, then stops. <code>turnLeft(90, 0.5)</code> does the same for turns, using the IMU.</p>
         <p>Examples to open: <b>Square Path Auto</b> and <b>Tip &amp; Park Auto</b>.</p></article>
       <article class="lesson"><h3>Lesson 6: fixing errors</h3>
         <div class="tablewrap"><table>
@@ -1828,12 +1829,12 @@ double inches = distance.getDistance(DistanceUnit.INCH);</pre>
       <article class="lesson"><h3>Lesson 2: what an AprilTag is</h3>
         <figure class="fig"><canvas data-fig="tags" width="760" height="520" role="img" aria-label="A robot with a webcam looking at an AprilTag, with range and bearing marked"></canvas>
           <figcaption>The pale blue wedge is what the webcam can see. A blue line joins the camera to each tag in view.</figcaption></figure>
-        <p>An AprilTag is a square pattern, a bit like a big QR code, that a camera can recognise. From one look the camera works out which tag it is and where the tag is compared with the robot. That is a big step up from encoders, because it tells the robot where it really is on the field.</p>
+        <p>An AprilTag is a square pattern, a bit like a big QR code. From one look, the camera knows which tag it is and where it is. That beats encoders, because it tells the robot where it really is on the field.</p>
         <ul>
           <li><b>id</b>: which tag it is.</li>
           <li><b>range</b>: inches from the camera to the tag.</li>
           <li><b>bearing</b>: degrees the robot must turn to face the tag. Left is positive.</li>
-          <li><b>yaw</b>: how much the tag is turned away from facing the camera square-on.</li>
+          <li><b>yaw</b>: how much the tag is turned away from the camera.</li>
         </ul></article>
       <article class="lesson"><h3>Lesson 3: the practice tags on this field</h3>
 <figure class="fig"><canvas data-fig="tagmap" width="760" height="760" role="img" aria-label="The whole field with each of the eight AprilTags numbered"></canvas>
@@ -1842,9 +1843,9 @@ double inches = distance.getDistance(DistanceUnit.INCH);</pre>
           <thead><tr><th>ID</th><th>Where it is</th></tr></thead>
           <tbody id="tagTable"></tbody>
         </table></div>
-        <p class="hint">These IDs and places are practice ones made for this simulator. Check the official game manual for the tags on a real field.</p></article>
+        <p class="hint">These tags are made up for practice. Check the official game manual for the tags on a real field.</p></article>
       <article class="lesson"><h3>Lesson 4: AprilTags in Java</h3>
-        <p>Tick <b>Webcam (AprilTags)</b> under Sensors on the Build Bot tab first. The code is the same as the FTC SDK's easy AprilTag set-up.</p>
+        <p>Tick <b>Webcam (AprilTags)</b> under Sensors on the Build Bot tab first. The code is the same as the easy AprilTag setup in FTC.</p>
 <pre class="java">// Set up once, before waitForStart().
 aprilTag = AprilTagProcessor.easyCreateWithDefaults();
 visionPortal = VisionPortal.easyCreateWithDefaults(
@@ -1868,13 +1869,13 @@ telemetry.update();</pre>
   <section id="view-manual" class="read" hidden>
     <h2>BIOBUZZ game manual</h2>
     <div class="notice">
-      <p><b>The official Competition Manual is the only source of rules.</b> It belongs to <i>FIRST</i>, so this site links to it instead of copying it. Read it before you compete, and check the Team Updates every week.</p>
+      <p><b>Only the official Competition Manual sets the rules.</b> It belongs to <i>FIRST</i>, so we link to it instead of copying it. Read it before you compete, and check the Team Updates every week.</p>
       <div class="links">
         <a href="https://ftc-resources.firstinspires.org/ftc/game/manual" target="_blank" rel="noopener noreferrer">Open the official Competition Manual (PDF)</a>
         <a href="https://www.firstinspires.org/programs/ftc/game-and-season" target="_blank" rel="noopener noreferrer">BIOBUZZ Game &amp; Season page</a>
         <a href="https://ftc-resources.firstinspires.org/ftc/field/eventfieldguide" target="_blank" rel="noopener noreferrer">Event Field Setup Guide</a>
       </div>
-      <p class="hint"><b>Copyright and trademarks.</b> The <i>2026&ndash;2027 FIRST&reg; Tech Challenge Competition Manual: BIOBUZZ&trade; presented by RTX</i> and the <i>Event Field Setup Guide</i> are &copy; <i>FIRST</i> (For Inspiration and Recognition of Science and Technology). All rights reserved by <i>FIRST</i>. <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; are trademarks of <i>FIRST</i>. This practice site is made by fans. It is not affiliated with, sponsored by, or endorsed by <i>FIRST</i>, RTX or any field vendor.</p>
+      <p class="hint"><b>Copyright and trademarks.</b> The <i>2026&ndash;2027 FIRST&reg; Tech Challenge Competition Manual: BIOBUZZ&trade; presented by RTX</i> and the <i>Event Field Setup Guide</i> are &copy; <i>FIRST</i> (For Inspiration and Recognition of Science and Technology). All rights reserved by <i>FIRST</i>. <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; are trademarks of <i>FIRST</i>. This practice site is made by Team 18629 &ndash; Hydra. It is not part of, paid for or approved by <i>FIRST</i>, RTX or any field maker.</p>
     </div>
 
     <h3>Quick reference, in our own words</h3>
@@ -1882,16 +1883,16 @@ telemetry.update();</pre>
 
     <h4>The match</h4>
     <ul>
-      <li>Two alliances of two robots each. This simulator gives you one robot on an empty field.</li>
-      <li><b>AUTO</b> 30 seconds: robots run on code only. Then an <b>8 second</b> pause with no powered movement. Then <b>TELEOP</b> 2 minutes with drivers.</li>
-      <li>Robots collect POLLEN and NECTAR, launch them into their HIVE to tip it, place them in FLOWERS and GARDENS, and finish in their LOADING ZONE.</li>
+      <li>Two teams of two robots each (called alliances). Here you get one robot on its own.</li>
+      <li><b>AUTO</b> 30 seconds: robots run on code only. Then an <b>8 second</b> break where nothing may move. Then 2 minutes of <b>TELEOP</b> with drivers.</li>
+      <li>Robots pick up POLLEN and NECTAR, shoot them into their HIVE to tip it, put them in FLOWERS and GARDENS, and end in their LOADING ZONE.</li>
     </ul>
 
     <h4>The pieces and the field</h4>
     <ul>
       <li><b>POLLEN</b>: yellow balls about 2.8 in across, 40 per match. <b>NECTAR</b>: red or blue balls about 3.6 in across, 8 per alliance.</li>
-      <li>At the start: 4 POLLEN in each FLOWER, 4 in each GARDEN, 4 pre-loaded in each robot, 3 NECTAR in each alliance's upward CELL, and 5 NECTAR waiting with each alliance's human player.</li>
-      <li><b>HIVE</b>: each alliance has one, with two CELLS on a pivot. One CELL faces up at a time. Field staff set it to tip at 8 POLLEN, or at 3 POLLEN plus 3 NECTAR.</li>
+      <li>At the start: 4 POLLEN in each FLOWER, 4 in each GARDEN, 4 pre-loaded in each robot, 3 NECTAR in each alliance's CELL that faces up, and 5 NECTAR waiting with each alliance's human player.</li>
+      <li><b>HIVE</b>: each alliance has one, with two CELLS on a hinge. One CELL faces up at a time. It is set to tip at 8 POLLEN, or 3 POLLEN plus 3 NECTAR.</li>
       <li><b>FLOWER</b>: four on the walls. Pieces go in at the top (about 21.5 in high). Only POLLEN may be taken out, and only from the bottom.</li>
       <li><b>GARDEN</b>: a thin taped strip in one corner per alliance (red on tile A1, blue on tile F6). <b>LOADING ZONE</b>: a 23 in by 11 in taped box against each alliance wall (red on A5, blue on F2).</li>
     </ul>
@@ -1903,7 +1904,7 @@ telemetry.update();</pre>
         <tr><td>LEAVE: robot no longer touching the wall at the end of AUTO</td><td class="num">3</td><td class="num">&ndash;</td></tr>
         <tr><td>PARK: robot at least partly in its LOADING ZONE at the end of the period</td><td class="num">5</td><td class="num">5</td></tr>
         <tr><td>HIVE TIP, each time</td><td class="num">20</td><td class="num">20</td></tr>
-        <tr><td>Each piece left in your upward CELL at the end</td><td class="num">&ndash;</td><td class="num">2</td></tr>
+        <tr><td>Each piece left in your CELL that faces up at the end</td><td class="num">&ndash;</td><td class="num">2</td></tr>
         <tr><td>Each piece in a FLOWER you own</td><td class="num">&ndash;</td><td class="num">2</td></tr>
         <tr><td>Bottom NECTAR bonus (your NECTAR is the lowest in a FLOWER)</td><td class="num">&ndash;</td><td class="num">5</td></tr>
         <tr><td>Each piece in your GARDEN at the end</td><td class="num">&ndash;</td><td class="num">1</td></tr>
@@ -1918,25 +1919,25 @@ telemetry.update();</pre>
     <ul>
       <li><b>G407</b>: control at most 4 pieces at once. <b>G408</b>: never control the other alliance's NECTAR.</li>
       <li><b>G410</b>: NECTAR may only go into FLOWERS in the last 60 seconds. Earlier is a major foul for each one.</li>
-      <li><b>G417 / G418</b>: only LAUNCHING into the upward CELL may tip a HIVE; do not push or hold it. Use FLOWERS only from the top (in) and bottom (POLLEN out).</li>
-      <li><b>G402</b>: in AUTO, stay on your own half (columns A&ndash;C for red, D&ndash;F for blue). <b>G403 / G404</b>: no powered movement in the 8 second pause or after the final buzzer.</li>
+      <li><b>G417 / G418</b>: only shooting into the CELL that faces up may tip a HIVE. Do not push or hold it. Put pieces into FLOWERS from the top, and take POLLEN out only from the bottom.</li>
+      <li><b>G402</b>: in AUTO, stay on your own half (columns A&ndash;C for red, D&ndash;F for blue). <b>G403 / G404</b>: nothing may move during the 8 second break or after the final buzzer.</li>
       <li><b>G426</b>: your human player may enter one NECTAR each time your HIVE tips, and all the rest once 60 seconds remain.</li>
       <li><b>R102</b>: the robot starts inside an 18 in cube. <b>R105</b>: it may grow to 18 &times; 24 in and 29 in tall. <b>R503</b>: at most 8 motors and 8 servos.</li>
     </ul>
 
     <h4>What this simulator simplifies</h4>
     <ul>
-      <li>The view is flat, from above. Heights are handled with numbers (lift height, FLOWER opening) instead of 3D.</li>
-      <li>The exact FLOWER positions along the walls are our best estimate from the public documents. Measure the real field, or use the official CAD model, before you rely on distances.</li>
-      <li>The bottom piece in a FLOWER sits in the retrieval opening and is treated as not scoring. Tipping is worked out from the 8 POLLEN and 3 + 3 calibration points.</li>
-      <li>There are no partner or opponent robots, no referees and no penalties in the score. Fouls appear as warnings in the Match log.</li>
+      <li>Drive &amp; Code shows the field flat, from above, so heights are just numbers there (lift height, FLOWER opening). The Shooter Lab uses the full 3D field.</li>
+      <li>On Drive &amp; Code, the FLOWER spots are our best guess. Measure a real field before you trust the distances.</li>
+      <li>The bottom piece in a FLOWER does not score. A HIVE tips at 8 POLLEN, or 3 POLLEN plus 3 NECTAR.</li>
+      <li>There are no other robots, no referees and no penalties. Fouls show up as warnings in the Match log.</li>
     </ul>
   </section>
 
   <!-- ===================== POLICIES ===================== -->
   <section id="view-legal" class="read" hidden>
     <h2>Policies</h2>
-    <p>Written in plain words so students, mentors and parents can all read them. Last updated 24 November 2026.</p>
+    <p>Written in plain words for students, mentors and parents. Last updated 24 November 2026.</p>
     <div class="row" role="group" aria-label="Jump to a policy">
       <button type="button" class="btn btn-small" data-jump="pol-privacy">Privacy Policy</button>
       <button type="button" class="btn btn-small" data-jump="pol-terms">Terms of Service</button>
@@ -1950,15 +1951,15 @@ telemetry.update();</pre>
       <ul>
         <li><b>No accounts.</b> You never give a name, email address, password, age or school.</li>
         <li><b>No tracking.</b> There are no analytics, no advertising and no social media trackers.</li>
-        <li><b>Your work stays with you.</b> The programs you write and the robot you build are saved only inside your own browser, on your own device. The makers of this site cannot see them.</li>
-        <li><b>No camera, no microphone, no location.</b> The &ldquo;Webcam (AprilTags)&rdquo; on the Build Bot tab is a pretend camera on the pretend robot. The site never asks for, switches on or looks through your device's real camera, and it never asks for your microphone or where you are.</li>
-        <li><b>Files you open stay on your device.</b> An STL or STEP file you open in the Shooter Lab (a shooter or a whole robot) is read by your own browser to build the 3D model. It is never uploaded, and it is forgotten when you close or reload the page.</li>
-        <li><b>Pictures are drawn on your device.</b> The field, the 3D robot models and the tutorial pictures are drawn by your own browser. No image of your robot or your screen is uploaded.</li>
-        <li><b>Game controllers.</b> If you plug in a controller, the site only reads its sticks and buttons while the page is open, to drive the pretend robot. Nothing about the controller is saved or sent.</li>
+        <li><b>Your work stays with you.</b> Your programs and robots are saved only in your own browser. We cannot see them.</li>
+        <li><b>No camera, no microphone, no location.</b> The &ldquo;Webcam (AprilTags)&rdquo; on Build Bot is a pretend camera. The site never uses your real camera or microphone, and never asks where you are.</li>
+        <li><b>Files you open stay on your device.</b> CAD files (STL or STEP) you open in the Shooter Lab stay in your browser. They are never uploaded, and are forgotten when you close or reload the page.</li>
+        <li><b>Pictures are drawn on your device.</b> Your browser draws the field, the 3D robots and the tutorial pictures. No picture of your robot or screen is ever uploaded.</li>
+        <li><b>Game controllers.</b> The site only reads a controller's sticks and buttons to drive the pretend robot. Nothing about it is saved or sent.</li>
         <li><b>Nothing from other websites.</b> The site loads no outside code, fonts or images. Links on the Game Manual tab open other websites, which have their own policies.</li>
-        <li><b>Young users.</b> The site is safe for students of any age because it asks for no personal information. Please do not type real names, addresses or other private details into your code or program names.</li>
-        <li><b>Feedback.</b> The &ldquo;Report a bug&rdquo; and &ldquo;Send a compliment&rdquo; buttons open GitHub, a separate website. Anything you write there is public, is tied to your GitHub account, and is handled under GitHub's own privacy policy. This site itself never sees or stores it.</li>
-        <li><b>The hosting service.</b> Like any web host, the service that delivers this page may keep basic technical records, such as the time of a visit. Team 18629 &ndash; Hydra does not receive or use those records.</li>
+        <li><b>Young users.</b> The site is safe for any age because it never asks for personal details. Please do not type real names, addresses or other private details into your code.</li>
+        <li><b>Feedback.</b> The &ldquo;Report a bug&rdquo; and &ldquo;Send a compliment&rdquo; buttons open GitHub, a different website. What you write there is public, linked to your GitHub account, and covered by GitHub's privacy policy. This site never sees or keeps it.</li>
+        <li><b>The hosting service.</b> Like any website, the company that hosts this page may keep basic records, such as when someone visited. Team 18629 &ndash; Hydra never gets or uses them.</li>
       </ul>
       <p>If this policy changes, the date at the top of this page changes with it.</p>
     </article>
@@ -1967,27 +1968,28 @@ telemetry.update();</pre>
       <h3>Terms of Service</h3>
       <p>By using SimYourCode you agree to these terms.</p>
       <ul>
-        <li><b>What it is for.</b> The site is a free learning tool for practising robot code and driving. Use it for education, team practice and fun.</li>
-        <li><b>Not official.</b> The site is made by Team 18629 &ndash; Hydra. It is not affiliated with, sponsored by or endorsed by <i>FIRST</i>. The official Competition Manual and Team Updates are the only source of rules.</li>
-        <li><b>No guarantees.</b> The site is in beta and is provided as it is, so expect some bugs. The simulation is simplified, so scores, distances and robot behaviour here will differ from a real field. Always test on your real robot.</li>
+        <li><b>What it is for.</b> A free tool to practise robot code and driving. Use it to learn, practise with your team and have fun.</li>
+        <li><b>Not official.</b> The site is made by Team 18629 &ndash; Hydra. It is not part of, paid for or approved by <i>FIRST</i>. Only the official Competition Manual and Team Updates set the rules.</li>
+        <li><b>No guarantees.</b> The site is in beta, so expect some bugs. It is simpler than real life, so scores, distances and how robots act will be a bit different on a real field. Always test on your real robot.</li>
         <li><b>Your code is yours.</b> You own whatever you write here. Keep your own copy of anything important, because browser storage can be cleared.</li>
         <li><b>Play fair.</b> Do not try to break, overload or misuse the site, and do not use it to harm others.</li>
-        <li><b>Names and marks.</b> <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; belong to <i>FIRST</i>. REV Robotics and goBILDA are the names of their own companies and are used only to describe real motors and the style of some robots. The site's own design and code belong to its makers.</li>
-        <li><b>The robot models.</b> The 3D robots and the ready-made robots are this site's own simplified drawings. They are not official designs, building instructions or exact copies of any company's kit.</li>
-        <li><b>Responsibility.</b> As far as the law allows, the makers are not responsible for any loss that comes from using the site, including lost work or match results.</li>
-        <li><b>Changes.</b> The site and these terms may be updated or taken offline at any time.</li>
+        <li><b>Names and marks.</b> <i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; belong to <i>FIRST</i>. REV Robotics and goBILDA are real companies. We only use their names to describe real motors and the style of some robots. The site's own design and code belong to its makers.</li>
+        <li><b>The robot models.</b> The 3D robots and ready-made robots are our own simple drawings. They are not official designs, build guides or copies of any company's kit.</li>
+        <li><b>Responsibility.</b> As far as the law allows, we are not responsible for any loss from using the site, such as lost work or match results.</li>
+        <li><b>Changes.</b> We may change the site and these terms, or take the site down, at any time.</li>
       </ul>
     </article>
 
     <article class="policy" id="pol-cookies" tabindex="-1">
       <h3>Cookie Policy</h3>
       <p><b>This site sets no cookies.</b> There is nothing to accept or decline.</p>
-      <p>To remember your work between visits it uses your browser's <b>local storage</b>, which stays on your device and is never sent anywhere. It holds only:</p>
+      <p>To remember your work, it uses your browser's <b>local storage</b>. It stays on your device and is never sent anywhere. It only holds:</p>
       <ul>
         <li>your programs (Java code and Blocks),</li>
         <li>your robot design: its drivetrain, parts, frame colour, where each part sits, and the device names,</li>
         <li>which program was open, your match picks and the simulation speed,</li>
-        <li>your appearance choices (white or black mode and font colour) and whether sound is on.</li>
+        <li>your Shooter Lab settings,</li>
+          <li>your appearance choices (white or black mode and font colour) and whether sound is on.</li>
       </ul>
       <p>You can erase all of it at any time with the button below, or by clearing site data in your browser settings.</p>
       <div class="row">
@@ -1998,16 +2000,16 @@ telemetry.update();</pre>
 
     <article class="policy" id="pol-access" tabindex="-1">
       <h3>Accessibility</h3>
-      <p>We want every student to be able to use this site. This is what is in place today, and what is not yet.</p>
+      <p>We want every student to be able to use this site. Here is what works today, and what does not yet.</p>
       <ul>
-        <li><b>Alt text.</b> Every picture has a text description: the field view, the robot's 3D and top views, the tutorial pictures and the Home page artwork. Decorative shapes and emoji are hidden from screen readers so they are not read out as noise.</li>
-        <li><b>Keyboard.</b> Every button, list and text box can be reached with <kbd>Tab</kbd> and shows a clear outline when focused. The robot can be driven entirely from the keyboard.</li>
-        <li><b>Colour.</b> The site follows your light or dark setting and keeps text contrast high. Game pieces are also named in text, so colour is never the only clue in the score sheet or match log.</li>
-        <li><b>Motion.</b> If your device is set to reduce motion, the tool that follows the cursor on the Home page is switched off, the bees stay still unless you move them, tabs appear without sliding, and the 3D robot does not turn by itself.</li>
+        <li><b>Alt text.</b> Every picture has a text description for screen readers. Shapes and emoji that are just for looks are skipped.</li>
+        <li><b>Keyboard.</b> Every button, list and text box can be reached with <kbd>Tab</kbd> and shows a clear outline. You can drive the robot with just the keyboard.</li>
+        <li><b>Colour.</b> The site follows your light or dark setting and keeps text easy to read. Game pieces are also named in words, so you never need to tell colours apart.</li>
+        <li><b>Motion.</b> If your device is set to reduce motion, the Home page cursor tool turns off, the bees stay still, tabs stop sliding, and the 3D robot stops turning by itself.</li>
         <li><b>Layout editor.</b> Parts on the Build Bot tab can be moved without a mouse: pick a part from the row of buttons, then use the arrow keys and <kbd>R</kbd> on the picture.</li>
-        <li><b>Sound.</b> Sound effects are extras: nothing depends on hearing them, every one has a matching message on screen, and they can be switched off under Appearance.</li>
+        <li><b>Sound.</b> Sounds are just extras. Every sound also shows a message on screen, and you can turn them off under Appearance.</li>
         <li><b>Small screens.</b> The layout stacks into one column on phones, and the on-screen gamepad works by touch.</li>
-        <li><b>Known limits.</b> The field is a live picture, so a screen reader cannot follow the robot as it moves. The Telemetry, Motors &amp; servos, Score sheet and Match log panels give the same information as text. Dragging the on-screen sticks needs a pointer; the keyboard keys do the same job.</li>
+        <li><b>Known limits.</b> A screen reader cannot follow the robot as it moves on the field. The Telemetry, Motors &amp; servos, Score sheet and Match log panels show the same things as text. The on-screen sticks need a mouse or finger, but the keyboard keys do the same job.</li>
       </ul>
       <p>If something is hard to use, tell a member of Team 18629 &ndash; Hydra so it can be fixed.</p>
     </article>
@@ -2015,7 +2017,7 @@ telemetry.update();</pre>
 
   <footer class="foot">
     <p class="foot-own"><b>&copy; 2026 Bruno and Team 18629 &ndash; Hydra.</b> All rights reserved. The design, text, artwork, sound effects and code of SimYourCode belong to its makers.</p>
-    <p>SimYourCode is an unofficial learning tool. It is not affiliated with, sponsored by or endorsed by any organisation or company named on this site.</p>
+    <p>SimYourCode is an unofficial learning tool. It is not part of, paid for or approved by any group or company named on this site.</p>
     <ul class="foot-list">
       <li><i>FIRST</i>&reg;, <i>FIRST</i>&reg; Tech Challenge and BIOBUZZ&trade; are trademarks of For Inspiration and Recognition of Science and Technology (<i>FIRST</i>). The game, its rules and the Competition Manual are &copy; <i>FIRST</i>; see the Game Manual tab for the official documents.</li>
       <li>RTX is a trademark of RTX Corporation, the presenting sponsor of the BIOBUZZ season.</li>
@@ -2032,22 +2034,22 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261124c"></script>
-<script src="interp.js?v=20261124c"></script>
-<script src="world.js?v=20261124c"></script>
-<script src="bot3d.js?v=20261124c"></script>
-<script src="lab-phys.js?v=20261124c"></script>
-<script src="lab-gl.js?v=20261124c"></script>
-<script src="blockly/blockly_compressed.js?v=20261124c"></script>
-<script src="blockly/blocks_compressed.js?v=20261124c"></script>
-<script src="blockly/en.js?v=20261124c"></script>
-<script src="blocks.js?v=20261124c"></script>
-<script src="ftcblocks.js?v=20261124c"></script>
-<script src="app.js?v=20261124c"></script>
-<script src="home.js?v=20261124c"></script>
-<script src="extras.js?v=20261124c"></script>
-<script src="tutorial.js?v=20261124c"></script>
-<script src="lab-ui.js?v=20261124c"></script>
-<script src="bg.js?v=20261124c"></script>
+<script src="sound.js?v=20261124d"></script>
+<script src="interp.js?v=20261124d"></script>
+<script src="world.js?v=20261124d"></script>
+<script src="bot3d.js?v=20261124d"></script>
+<script src="lab-phys.js?v=20261124d"></script>
+<script src="lab-gl.js?v=20261124d"></script>
+<script src="blockly/blockly_compressed.js?v=20261124d"></script>
+<script src="blockly/blocks_compressed.js?v=20261124d"></script>
+<script src="blockly/en.js?v=20261124d"></script>
+<script src="blocks.js?v=20261124d"></script>
+<script src="ftcblocks.js?v=20261124d"></script>
+<script src="app.js?v=20261124d"></script>
+<script src="home.js?v=20261124d"></script>
+<script src="extras.js?v=20261124d"></script>
+<script src="tutorial.js?v=20261124d"></script>
+<script src="lab-ui.js?v=20261124d"></script>
+<script src="bg.js?v=20261124d"></script>
 </body>
 </html>
