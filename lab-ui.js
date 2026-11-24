@@ -9,10 +9,10 @@ if (!L || !$('view-lab')) return;
 
 /* ---------- settings ---------- */
 const EXAMPLES = [
-  { id: 'hood90', name: 'Single flywheel, 90° hood', blurb: 'The most common FTC shooter: one wheel under a curved hood. The ball rolls between the spinning wheel and the still hood, so it leaves at about half the wheel\'s rim speed with backspin.', wrap: 90, second: 'none' },
-  { id: 'hood150', name: 'Single flywheel, long 150° wrap', blurb: 'Balls enter low at the front and ride round the back of the wheel. A longer wrap gives more time to grip, so it copes with less compression.', wrap: 150, second: 'none' },
-  { id: 'double', name: 'Double flywheel, no hood', blurb: 'Two wheels spinning opposite ways squeeze the ball between them. It leaves with almost no spin.', wrap: 0, second: 'double' },
-  { id: 'transfer', name: '90° hood with a transfer roller', blurb: 'A slow roller pushes each ball up a ramp into the hood, like a real transfer system. Watch how the roller speed changes the feed.', wrap: 90, second: 'transfer' }
+  { id: 'hood90', name: 'Single flywheel, 90° hood', blurb: 'The most common FTC shooter: one wheel under a curved hood. The ball rolls between the wheel and the hood, so it leaves at about half the wheel\'s speed, with backspin.', wrap: 90, second: 'none' },
+  { id: 'hood150', name: 'Single flywheel, long 150° wrap', blurb: 'Balls go in low at the front and ride around the back of the wheel. A longer hood grips the ball for longer, so it needs less squeeze.', wrap: 150, second: 'none' },
+  { id: 'double', name: 'Double flywheel, no hood', blurb: 'Two wheels spin opposite ways and squeeze the ball between them. It leaves with almost no spin.', wrap: 0, second: 'double' },
+  { id: 'transfer', name: '90° hood with a transfer roller', blurb: 'A slow roller pushes each ball up a ramp into the hood, like a real transfer. Try changing the roller speed.', wrap: 90, second: 'transfer' }
 ];
 const DEF = {
   src: 'ex', example: 'hood90', launch: 45, wrap: 90, comp: 4, exMat: 'pla',
@@ -280,7 +280,7 @@ function build(light) {
   }
   feeding = false; fed = 0; lastFeed = -9; startT = null; spinUp = null; seen = 0;
   readGap();
-  $('labCalInfo').textContent = cal.text.length ? 'Using your measurements: ' + cal.text.join(', ') + '.' : 'No measurements entered yet, so the lab uses typical values.';
+  $('labCalInfo').textContent = cal.text.length ? 'Using your numbers: ' + cal.text.join(', ') + '.' : 'No numbers yet, so the lab uses normal values.';
   wheelInfo(); aimInfo();
   uploadMoving(); uploadTarget();
   setTargets();
@@ -307,9 +307,9 @@ function readGap() {
   let gap = Infinity;
   if (sim.wheels[1] && sim.wheels[1].role === 'double') gap = V.len(V.sub(sim.wheels[1].c, w.c)) - w.r - sim.wheels[1].r;
   else { const m = sim.meshes.filter((x) => x.tag === 'shooter'); if (m.length) gap = L.rimGap(w, m).gap; }
-  if (!isFinite(gap)) { out.textContent = S.src === 'stl' && !cad ? 'Load your shooter to see the gap between the wheel and the hood.' : 'No hood surface faces the wheel rim, so nothing squeezes the ball. Drag the flywheel under the hood, or press Auto-place flywheel.'; return; }
+  if (!isFinite(gap)) { out.textContent = S.src === 'stl' && !cad ? 'Load your shooter to see the gap between the wheel and the hood.' : 'Nothing faces the wheel, so nothing squeezes the ball. Drag the flywheel under the hood, or press Auto-place flywheel.'; return; }
   const c = D - gap;
-  out.textContent = 'Narrowest gap ' + (gap * 1000).toFixed(1) + ' mm → squeeze ' + (c * 1000).toFixed(1) + ' mm (' + Math.round(c / D * 100) + '% of the ball) before the wheel spins';
+  out.textContent = 'Smallest gap ' + (gap * 1000).toFixed(1) + ' mm, so the ball gets squeezed ' + (c * 1000).toFixed(1) + ' mm (' + Math.round(c / D * 100) + '% of the ball)';
   if (c < 0) out.textContent += '. The ball is smaller than the gap and will not be gripped.';
   else if (c / D > 0.35) out.textContent += '. That is a lot of squeeze: balls may jam.';
 }
@@ -317,11 +317,11 @@ function readGap() {
 function wheelInfo() {
   const w = sim.wheels[0], spec = w.spec, tgt = S.rpm * Math.PI / 30;
   const grow = L.wheelGrowth(spec, tgt) * 1000;
-  $('labWheelInfo').textContent = 'Spinning inertia J = ' + (w.J * 1e4).toFixed(2) + ' kg·cm². Rim speed at the target: ' + (tgt * w.r).toFixed(1) + ' m/s. Grip μ ≈ ' +
-    spec.mu.toFixed(2) + ' on the ball' + (grow > 0.05 ? '. This soft wheel grows about ' + grow.toFixed(1) + ' mm in radius at this speed, which adds squeeze.' : '.');
+  $('labWheelInfo').textContent = 'At this speed the edge of the wheel moves at ' + (tgt * w.r).toFixed(1) + ' m/s.' +
+    (grow > 0.05 ? ' This soft wheel gets about ' + grow.toFixed(1) + ' mm bigger when it spins this fast, which adds squeeze.' : '');
   const mx = maxWheelRpm(), m = motorOf(S.motor);
-  $('labMotorInfo').textContent = 'Fastest this motor can turn the flywheel: ' + Math.round(mx) + ' rpm at ' + (+S.V).toFixed(1) + ' V. Stall torque ' + m.stall.toFixed(3) + ' N·m.' +
-    (S.rpm > mx * 0.97 ? ' The target is at or past the limit, so the wheel will never quite reach it.' : '') + (spinUp != null ? ' Spin-up to 98%: ' + spinUp.toFixed(2) + ' s.' : '');
+  $('labMotorInfo').textContent = 'This motor can spin the flywheel up to ' + Math.round(mx) + ' rpm.' +
+    (S.rpm > mx * 0.97 ? ' Your target is too high, so the wheel will never quite get there.' : '') + (spinUp != null ? ' It gets up to speed in ' + spinUp.toFixed(2) + ' s.' : '');
 }
 
 function xyzInfo() {
@@ -335,8 +335,8 @@ function aimInfo() {
   const o = world.wheelC, d = Math.hypot(t.center[0] - o[0], t.center[1] - o[1]);
   const want = Math.atan2(t.center[1] - o[1], t.center[0] - o[0]) * 180 / Math.PI;
   let off = ((S.heading - want) % 360 + 540) % 360 - 180;
-  el.textContent = 'Flywheel to the middle of the ' + S.alliance + ' CELL: ' + (d / IN).toFixed(1) + ' in across the floor, ' + ((t.center[2] - o[2]) / IN).toFixed(1) + ' in up. ' +
-    (Math.abs(off) < 1 ? 'Aimed straight at it.' : 'Pointing ' + Math.abs(off).toFixed(0) + '° to the ' + (off > 0 ? 'left' : 'right') + ' of it.');
+  el.textContent = 'The ' + S.alliance + ' CELL is ' + (d / IN).toFixed(1) + ' in away and ' + ((t.center[2] - o[2]) / IN).toFixed(1) + ' in up from the flywheel. ' +
+    (Math.abs(off) < 1 ? 'Aimed right at it.' : 'Aimed ' + Math.abs(off).toFixed(0) + '° to the ' + (off > 0 ? 'left' : 'right') + ' of it.');
 }
 
 /* ---------- auto-place: put the flywheel where the hood wraps round it ---------- */
@@ -479,7 +479,7 @@ async function autoPlaceRun() {
     /* the axle runs along the side whose two other sides are equal (the round face) */
     const roundness = (k) => { const o = [0, 1, 2].filter((i) => i !== k).map((i) => size[i]); return Math.abs(o[0] - o[1]) / Math.max(o[0], o[1]); };
     const axle = [0, 1, 2].reduce((a, k) => (roundness(k) < roundness(a) ? k : a), 0);
-    if (roundness(axle) > 0.12) { info.textContent = 'The flywheel in your CAD is not lined up with the robot\'s X, Y or Z, so the lab cannot tell which way its axle points. Set Turn and Tilt in Step 2 by hand.'; return; }
+    if (roundness(axle) > 0.12) { info.textContent = 'The flywheel in your CAD is at an odd angle, so the lab cannot tell which way it faces. Set Turn and Tilt in Step 2 yourself.'; return; }
     S.wheelYaw = axle === 0 ? 90 : 0; S.wheelTilt = axle === 2 ? 90 : 0;
     const others = [0, 1, 2].filter((k) => k !== axle), dia = (size[others[0]] + size[others[1]]) / 2, rw = dia / 2;
     S.wheelD = Math.round(dia * 1000); S.wheelW = Math.max(8, Math.round(size[axle] * 1000));
@@ -489,16 +489,16 @@ async function autoPlaceRun() {
     const near = segs.length ? arcAt(0, 0, segs, rw + D + 0.004, rw + 0.001) : { dmin: Infinity, run: 0 };
     const gap = near.pathMin - rw;
     if (!segs.length || near.run < 4 || !isFinite(gap)) {
-      info.textContent = 'Placed the flywheel where your CAD has it (' + S.wheelD + ' mm), but no hood surface curves round it, so set the spin direction and feed point by hand.';
+      info.textContent = 'Put the flywheel where your CAD has it (' + S.wheelD + ' mm), but no hood curves around it. Set the spin and feed dot yourself.';
     } else {
-      const f = await bestFeed(0, 0, rw, local, wheelSpec(), (q) => { info.textContent = 'Test-firing balls from spots round the wheel… ' + Math.round(q * 100) + '%'; });
+      const f = await bestFeed(0, 0, rw, local, wheelSpec(), (q) => { info.textContent = 'Testing shots from spots around the wheel… ' + Math.round(q * 100) + '%'; });
       if (f.best) {
         placeFeed(c, f.best);
-        info.textContent = 'Used the flywheel from your CAD (' + cad.wheelNames.join(', ') + ', ' + S.wheelD + ' mm) and test-fired ' + f.tried + ' balls from spots round it. Best: feed at the honey dot, wheel spinning ' +
-          (f.best.dir === 1 ? 'forward' : 'in reverse') + ', ' + f.best.v.toFixed(1) + ' m/s at ' + Math.round(f.best.ang) + '° with ' + (f.best.comp * 1000).toFixed(1) + ' mm of squeeze. If your balls really come in somewhere else, drag the dot there. Check the wheel type in Step 2 matches yours.';
+        info.textContent = 'Used the flywheel from your CAD (' + S.wheelD + ' mm) and tested ' + f.tried + ' shots. Best: feed at the honey dot, wheel spinning ' +
+          (f.best.dir === 1 ? 'forward' : 'backward') + ', ' + f.best.v.toFixed(1) + ' m/s at ' + Math.round(f.best.ang) + '°, ' + (f.best.comp * 1000).toFixed(1) + ' mm squeeze. If your balls come in somewhere else, drag the dot there. Check the wheel type in Step 2 matches yours.';
       } else {
         const r = finishPlace(0, 0, arcAt(0, 0, segs, near.pathMin + 0.006, rw + 0.001), rw, gap, c);
-        info.textContent = 'Used the flywheel from your CAD (' + cad.wheelNames.join(', ') + '), but no test shot came out cleanly. Spin set to ' + (r.dir === 1 ? 'forward' : 'reverse') + '; drag the feed dot to where your balls come in.';
+        info.textContent = 'Used the flywheel from your CAD, but no test shot came out well. Spin is set to ' + (r.dir === 1 ? 'forward' : 'backward') + '. Drag the feed dot to where your balls come in.';
       }
     }
     save(); writeUI(); rebuild();
@@ -508,7 +508,7 @@ async function autoPlaceRun() {
   S.wheelYaw = 0; S.wheelTilt = 0;
   const spec = wheelSpec(), rw = spec.d / 2000, gap = D - S.comp / 1000, want = rw + gap;
   const box = boxOf(raw), y0 = (box.lo[1] + box.hi[1]) / 2, segs = slice(raw, y0);
-  if (segs.length < 3) { info.textContent = 'The middle of your shooter has no surfaces for a ball to roll on. Drag the flywheel into place instead.'; return; }
+  if (segs.length < 3) { info.textContent = 'The middle of your shooter has nothing for a ball to roll on. Drag the flywheel into place instead.'; return; }
   let lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
   for (const s of segs) for (const p of s) { lo = [Math.min(lo[0], p[0]), Math.min(lo[1], p[1])]; hi = [Math.max(hi[0], p[0]), Math.max(hi[1], p[1])]; }
   let best = null;
@@ -518,17 +518,17 @@ async function autoPlaceRun() {
     const score = a.run - Math.abs(a.dmin - want) * 1000;
     if (!best || score > best.score) best = Object.assign({ score, cx, cz }, a);
   }
-  if (!best || best.run < 6) { info.textContent = 'No part of your shooter curves round a ' + spec.d + ' mm wheel with that squeeze. Try another wheel size or squeeze, or drag the flywheel into place.'; return; }
+  if (!best || best.run < 6) { info.textContent = 'Nothing in your shooter curves around a ' + spec.d + ' mm wheel with that squeeze. Try another wheel size or squeeze, or drag the flywheel into place.'; return; }
   const c = [best.cx, y0, best.cz];
-  const f = await bestFeed(0, 0, rw, trisToWheel(raw, c), spec, (q) => { info.textContent = 'Test-firing balls from spots round the wheel… ' + Math.round(q * 100) + '%'; });
+  const f = await bestFeed(0, 0, rw, trisToWheel(raw, c), spec, (q) => { info.textContent = 'Testing shots from spots around the wheel… ' + Math.round(q * 100) + '%'; });
   if (f.best) {
     placeFeed(c, f.best);
-    info.textContent = 'Placed the flywheel where your hood wraps ' + Math.round(best.run * 360 / BINS) + '° round it with ' + S.comp + ' mm of squeeze, then test-fired ' + f.tried + ' balls. Best: wheel spinning ' +
-      (f.best.dir === 1 ? 'forward' : 'in reverse') + ', ' + f.best.v.toFixed(1) + ' m/s at ' + Math.round(f.best.ang) + '°. Drag the feed dot if your balls come in somewhere else.';
+    info.textContent = 'Put the flywheel under your hood with ' + S.comp + ' mm of squeeze and tested ' + f.tried + ' shots. Best: wheel spinning ' +
+      (f.best.dir === 1 ? 'forward' : 'backward') + ', ' + f.best.v.toFixed(1) + ' m/s at ' + Math.round(f.best.ang) + '°. Drag the feed dot if your balls come in somewhere else.';
   } else {
     const r = finishPlace(best.cx, best.cz, best, rw, gap, [0, y0, 0]);
-    info.textContent = 'Placed: your hood wraps ' + r.wrap + '° round the wheel with ' + S.comp + ' mm of squeeze, the wheel spins ' + (r.dir === 1 ? 'forward' : 'in reverse') +
-      '. No test shot came out cleanly, so drag the feed dot to where your balls come in.';
+    info.textContent = 'Put the flywheel under your hood with ' + S.comp + ' mm of squeeze, spinning ' + (r.dir === 1 ? 'forward' : 'backward') +
+      '. No test shot came out well, so drag the feed dot to where your balls come in.';
   }
   save(); writeUI(); rebuild();
 }
@@ -583,33 +583,33 @@ let matching = false;
 async function matchShot() {
   if (matching) return;
   const info = $('labMatchInfo');
-  if (!(S.realV > 0) && !(S.realLand > 0)) { info.textContent = 'Enter at least the real exit speed or where the ball landed.'; return; }
+  if (!(S.realV > 0) && !(S.realLand > 0)) { info.textContent = 'Fill in the real speed or where the ball landed.'; return; }
   matching = true; $('labMatch').disabled = true;
   try {
-    info.textContent = 'Firing test shots…';
+    info.textContent = 'Testing shots…';
     await breathe();
     const before = testShot(S.muW / 100, S.kScale);
-    if (!before) { info.textContent = 'The lab\'s own shot does not leave the shooter, so there is nothing to match yet. Check the feed point and spin first.'; return; }
+    if (!before) { info.textContent = 'The lab\'s own shot does not come out yet. Check the feed dot and spin first.'; return; }
     /* the speed to aim for: measured, or worked out backwards from the landing spot at the measured (or simulated) angle */
     let wantV = S.realV;
     if (!(wantV > 0)) {
       const ang = (S.realA > 0 ? S.realA : before.ang) * Math.PI / 180, h = Math.hypot(before.vel[0], before.vel[1]) || 1, dirH = [before.vel[0] / h, before.vel[1] / h];
       const withV = (v) => landFrom(Object.assign({}, before, { vel: [dirH[0] * v * Math.cos(ang), dirH[1] * v * Math.cos(ang), v * Math.sin(ang)] }), +S.Cd);
       const r = await fit(async (v) => withV(v), S.realLand * IN, 0.5, 30, 30);
-      if (!r || r.edge) { info.textContent = 'That landing spot cannot be reached at that angle from this height. Check the measurements.'; return; }
+      if (!r || r.edge) { info.textContent = 'A ball cannot land there at that angle. Check your numbers.'; return; }
       wantV = r.f;
     }
     /* tune grip if the ball's stiffness was measured with the squeeze test, otherwise tune the squeeze stiffness */
     const squeezeKnown = S.sqW > 0 && S.sqD > 0;
     const speedAt = async (f) => { await breathe(); const e = squeezeKnown ? testShot(f, S.kScale) : testShot(S.muW / 100, f); return e ? e.v : null; };
-    info.textContent = 'Tuning the ' + (squeezeKnown ? 'grip' : 'squeeze stiffness') + ' to ' + wantV.toFixed(2) + ' m/s…';
+    info.textContent = 'Matching ' + wantV.toFixed(2) + ' m/s…';
     /* speed does not always rise with grip or stiffness, so try a spread of values and keep the closest */
     let r = null;
     const tries = squeezeKnown ? [0.3, 0.5, 0.7, 0.85, 1, 1.2, 1.5, 2, 2.5] : [0.1, 0.2, 0.35, 0.5, 0.7, 1, 1.4, 2, 3, 5, 8];
     let lo = Infinity, hi = -Infinity;
     for (const f of tries) { const v = await speedAt(f); if (v == null) continue; lo = Math.min(lo, v); hi = Math.max(hi, v); if (!r || Math.abs(v - wantV) < Math.abs(r.v - wantV)) r = { f, v }; }
     if (r && Math.abs(r.v - wantV) > 0.04 * wantV) r.edge = wantV > hi ? 'high' : 'low';
-    if (!r) { info.textContent = 'A test shot did not leave the shooter while tuning. Check the feed point and spin.'; return; }
+    if (!r) { info.textContent = 'A test shot did not come out. Check the feed dot and spin.'; return; }
     const ideal = (secondMode() === 'double' ? 1 : 0.5) * S.rpm * Math.PI / 30 * wheelSpec().d / 2000;
     const lines = [];
     if (r.edge === 'high') lines.push('Your real ball is faster (' + wantV.toFixed(2) + ' m/s) than this setup can throw even with perfect grip (' + r.v.toFixed(2) + ' m/s, no-slip speed ≈ ' + ideal.toFixed(1) + ' m/s). Check the rpm, gear ratio and wheel size match your robot: a real wheel often spins faster than its target.');
@@ -672,7 +672,7 @@ function splitWheels(f) {
 function describe(f, isRobot) {
   const b = boxOf(f.tris);
   return f.name + ': ' + (f.tris.length / 9).toLocaleString() + ' triangles, ' + [0, 1, 2].map((k) => (b.hi[k] - b.lo[k]).toFixed(1)).join(' × ') + (f.step ? ' mm' : ' in file units') +
-    '. Read in your browser only; nothing was uploaded.' + (f.wheelNames.length ? ' Found a modelled wheel (' + f.wheelNames.join(', ') + '): ' + (isRobot ? 'it is left out of the bounces so it cannot block the balls.' : 'the lab’s spinning flywheel replaces it, and Auto-place uses its exact spot.') : '');
+    '. It stays in your browser and was not uploaded.' + (f.wheelNames.length ? ' Found a wheel in it (' + f.wheelNames.join(', ') + '): ' + (isRobot ? 'balls pass through it so it does not block them.' : 'the lab’s spinning flywheel takes its place, and Auto-place uses its exact spot.') : '');
 }
 
 /* ---------- 3D ---------- */
@@ -1004,17 +1004,17 @@ function results() {
 function advice(shots, speeds) {
   if (!shots.length) return '';
   const c = (r) => shots.filter((s) => s.result === r).length, n = shots.length, tips = [];
-  if (c('Jammed in the shooter') > 0) tips.push('Balls are jamming: lower the compression or feed them faster into the wheel.');
-  if (c('Never reached the flywheel') > 0) tips.push('Some balls never reached the flywheel: move the feed point closer, feed them faster, or speed up the transfer roller.');
-  if (c('Short') / n > 0.3) tips.push('Shots fall short: raise the flywheel speed, raise the launch angle or move closer.');
-  if (c('Long') / n > 0.3) tips.push('Shots go long: lower the flywheel speed or move further back.');
-  if (c('Hit the CELL rim') / n > 0.3) tips.push('Shots clip the CELL rim: a small change in speed (about 50 rpm) or a steeper arc should drop them in.');
-  if (c('Hit the HIVE') / n > 0.3) tips.push('Shots hit the HIVE: check Aim at the HIVE, then adjust the speed so the ball drops into the CELL opening.');
-  if (c('Bounced out') / n > 0.2) tips.push('Balls bounce back out: a higher, slower arc lands them more softly.');
+  if (c('Jammed in the shooter') > 0) tips.push('Balls are getting stuck: use less squeeze, or feed them in faster.');
+  if (c('Never reached the flywheel') > 0) tips.push('Some balls never reached the flywheel: move the feed dot closer, feed faster, or speed up the roller.');
+  if (c('Short') / n > 0.3) tips.push('Shots fall short: spin the flywheel faster, aim higher, or move closer.');
+  if (c('Long') / n > 0.3) tips.push('Shots go too far: spin the flywheel slower, or move back.');
+  if (c('Hit the CELL rim') / n > 0.3) tips.push('Shots hit the edge of the CELL: change the speed a little (about 50 rpm) or shoot a higher arc.');
+  if (c('Hit the HIVE') / n > 0.3) tips.push('Shots hit the HIVE: press Aim at the HIVE, then change the speed until balls drop in.');
+  if (c('Bounced out') / n > 0.2) tips.push('Balls bounce back out: a higher, slower shot lands more softly.');
   const w = sim.wheels[0], ideal = (secondMode() === 'double' ? 1 : 0.5) * S.rpm * Math.PI / 30 * w.r;
   const m = speeds.reduce((a, b) => a + b, 0) / (speeds.length || 1);
-  if (speeds.length && m < 0.7 * ideal) tips.push('The ball leaves at ' + Math.round(m / ideal * 100) + '% of the no-slip speed, so it is slipping: add compression, or use a grippier wheel or hood material.');
-  if (speeds.length > 2) { const sd = Math.sqrt(speeds.reduce((a, v) => a + (v - m) * (v - m), 0) / speeds.length); if (sd > 0.12) tips.push('Exit speed varies by ±' + sd.toFixed(2) + ' m/s: wait longer between balls, add an inertia disc, or turn on Wait for the flywheel.'); }
+  if (speeds.length && m < 0.7 * ideal) tips.push('The ball is slipping (it leaves at ' + Math.round(m / ideal * 100) + '% of full speed): add squeeze, or use a grippier wheel or hood.');
+  if (speeds.length > 2) { const sd = Math.sqrt(speeds.reduce((a, v) => a + (v - m) * (v - m), 0) / speeds.length); if (sd > 0.12) tips.push('Shot speed changes by ±' + sd.toFixed(2) + ' m/s: wait longer between balls, add a steel weight, or turn on Wait for the flywheel.'); }
   return tips.join(' ');
 }
 
@@ -1062,7 +1062,7 @@ $('labAim').addEventListener('click', () => {
 });
 $('labAutoPlace').addEventListener('click', autoPlace);
 $('labMatch').addEventListener('click', matchShot);
-$('labMatchReset').addEventListener('click', () => { S.kScale = 1; S.muW = 100; S.Cd = 0.5; $('labMatchInfo').textContent = 'Back to the lab\'s own estimates.'; save(); writeUI(); rebuild(); });
+$('labMatchReset').addEventListener('click', () => { S.kScale = 1; S.muW = 100; S.Cd = 0.5; $('labMatchInfo').textContent = 'Back to the normal values.'; save(); writeUI(); rebuild(); });
 document.querySelectorAll('[data-orient]').forEach((b) => b.addEventListener('click', () => {
   const [yaw, tilt] = b.dataset.orient.split(',').map(Number);
   S.wheelYaw = yaw; S.wheelTilt = tilt; save(); writeUI(); rebuild();
@@ -1084,7 +1084,7 @@ document.querySelectorAll('[data-cam]').forEach((b) => b.addEventListener('click
 $('labStlFile').addEventListener('change', async () => {
   const f = $('labStlFile').files[0];
   if (!f) return;
-  $('labStlInfo').textContent = /\.(step|stp)$/i.test(f.name) ? 'Reading the STEP file… big assemblies can take a minute.' : 'Reading…';
+  $('labStlInfo').textContent = /\.(step|stp)$/i.test(f.name) ? 'Reading the STEP file… big files can take a minute.' : 'Reading…';
   try {
     const got = await readCad(f);
     if (got.tris.length / 9 > 400000) throw new Error('This model has ' + Math.round(got.tris.length / 9).toLocaleString() + ' triangles. Export only the shooter, or with a coarser mesh (under 400,000).');
@@ -1097,7 +1097,7 @@ $('labStlFile').addEventListener('change', async () => {
 $('labRobotFile').addEventListener('change', async () => {
   const f = $('labRobotFile').files[0];
   if (!f) return;
-  $('labRobotInfo').textContent = /\.(step|stp)$/i.test(f.name) ? 'Reading the STEP file… big assemblies can take a minute.' : 'Reading…';
+  $('labRobotInfo').textContent = /\.(step|stp)$/i.test(f.name) ? 'Reading the STEP file… big files can take a minute.' : 'Reading…';
   try {
     const got = await readCad(f);
     if (got.tris.length / 9 > 600000) throw new Error('This robot has ' + Math.round(got.tris.length / 9).toLocaleString() + ' triangles. Export it with a coarser mesh (under 600,000).');
@@ -1105,11 +1105,11 @@ $('labRobotFile').addEventListener('change', async () => {
     /* stand the robot on the floor, centred on the robot's middle, unless it was moved before */
     const b = boxOf(cadToRobot(got.solid, got.step ? '0.001' : S.robUnits, S.robRot, 0, 0, 0));
     S.robMX = Math.round(-(b.lo[0] + b.hi[0]) / 2 * 1000); S.robMY = Math.round(-(b.lo[1] + b.hi[1]) / 2 * 1000); S.robMZ = Math.round(-b.lo[2] * 1000);
-    $('labRobotInfo').textContent = describe(got, true) + ' It has been stood on the floor in the middle of the robot; use the boxes below to line it up.';
+    $('labRobotInfo').textContent = describe(got, true) + ' It now sits on the floor in the middle of the robot. Use the boxes below to line it up.';
     save(); writeUI(); rebuild();
   } catch (err) { $('labRobotInfo').textContent = err.message || 'This file could not be read.'; }
 });
-$('labRobotRemove').addEventListener('click', () => { robot = null; $('labRobotFile').value = ''; $('labRobotInfo').textContent = 'Without a robot file the lab shows just the flywheel and shooter.'; writeUI(); rebuild(); });
+$('labRobotRemove').addEventListener('click', () => { robot = null; $('labRobotFile').value = ''; $('labRobotInfo').textContent = 'No robot file? Then you just see the flywheel and shooter.'; writeUI(); rebuild(); });
 
 $('labExDownload').addEventListener('click', () => {
   const parts = shooterParts(wheelSpec());
