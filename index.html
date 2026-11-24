@@ -635,6 +635,7 @@ details.card > summary h3 { display: inline; }
 .lab-axis { border-left: 3px solid; padding-left: 6px; }
 .lab-x { border-color: #e6332a; } .lab-y { border-color: #26b340; } .lab-z { border-color: #3373f2; }
 .lab-grow { flex: 1 1 180px; }
+.lab-match { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
 </style>
 
 <canvas id="bgHive" aria-hidden="true"></canvas>
@@ -1211,14 +1212,28 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Ball squashed by (mm)<input type="number" id="labSqD" min="0" max="40" step="0.5" value="0"></label>
             <label class="field-label">Drop height (cm)<input type="number" id="labDropH" min="0" max="300" step="1" value="0"></label>
             <label class="field-label">Bounce height (cm)<input type="number" id="labBounceH" min="0" max="300" step="1" value="0"></label>
-            <label class="field-label">Wheel grip: <span id="labMuWOut"></span><input type="range" id="labMuW" min="40" max="160" step="5" value="100"></label>
-            <label class="field-label">Hood grip: <span id="labMuHOut"></span><input type="range" id="labMuH" min="40" max="160" step="5" value="100"></label>
+            <label class="field-label">Wheel grip: <span id="labMuWOut"></span><input type="range" id="labMuW" min="20" max="300" step="5" value="100"></label>
+            <label class="field-label">Hood grip: <span id="labMuHOut"></span><input type="range" id="labMuH" min="20" max="300" step="5" value="100"></label>
             <label class="field-label">Drag coefficient<input type="number" id="labCd" min="0" max="1.5" step="0.05" value="0.5"></label>
             <label class="field-label">HIVE bounce (e)<input type="number" id="labHiveE" min="0.05" max="0.95" step="0.05" value="0.4"></label>
             <label class="field-label">Spin lift: <span id="labClOut"></span><input type="range" id="labCl" min="0" max="200" step="10" value="100"></label>
           </div>
           <div class="tool"><input type="checkbox" id="labAir" checked><label for="labAir"><b>Air drag and spin lift</b><span class="hint">Turn off to see how much the air changes the shot.</span></label></div>
           <p class="hint" id="labCalInfo"></p>
+          <div class="lab-match">
+            <h4>Match a real shot</h4>
+            <p class="hint">Set the lab up like your robot first (same wheel, motor, rpm, squeeze, hood and feed). Then film one real shot from the side in slow motion next to a tape measure. Speed: how far the ball moves between two frames divided by the time between them (at 240 fps, 1 frame = 1/240 s). Angle: the ball's path just after it leaves, measured up from the floor. Landing: along the floor from under the flywheel axle to where the ball first touches the floor.</p>
+            <div class="sliders three">
+              <label class="field-label">Real exit speed (m/s)<input type="number" id="labRealV" min="0" max="30" step="0.05" value="0"></label>
+              <label class="field-label">Real launch angle (°)<input type="number" id="labRealA" min="0" max="89" step="0.5" value="0"></label>
+              <label class="field-label">Real landing (in)<input type="number" id="labRealLand" min="0" max="400" step="0.5" value="0"></label>
+            </div>
+            <div class="lab-row">
+              <button type="button" class="btn btn-go btn-small" id="labMatch">Match my shot</button>
+              <button type="button" class="btn btn-small" id="labMatchReset">Undo the match</button>
+            </div>
+            <p class="lab-readout" id="labMatchInfo">Enter at least one measurement. Speed and landing together are best: speed tunes the grip, landing tunes the air drag.</p>
+          </div>
         </details>
       </div>
 
@@ -2017,22 +2032,22 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261124b"></script>
-<script src="interp.js?v=20261124b"></script>
-<script src="world.js?v=20261124b"></script>
-<script src="bot3d.js?v=20261124b"></script>
-<script src="lab-phys.js?v=20261124b"></script>
-<script src="lab-gl.js?v=20261124b"></script>
-<script src="blockly/blockly_compressed.js?v=20261124b"></script>
-<script src="blockly/blocks_compressed.js?v=20261124b"></script>
-<script src="blockly/en.js?v=20261124b"></script>
-<script src="blocks.js?v=20261124b"></script>
-<script src="ftcblocks.js?v=20261124b"></script>
-<script src="app.js?v=20261124b"></script>
-<script src="home.js?v=20261124b"></script>
-<script src="extras.js?v=20261124b"></script>
-<script src="tutorial.js?v=20261124b"></script>
-<script src="lab-ui.js?v=20261124b"></script>
-<script src="bg.js?v=20261124b"></script>
+<script src="sound.js?v=20261124c"></script>
+<script src="interp.js?v=20261124c"></script>
+<script src="world.js?v=20261124c"></script>
+<script src="bot3d.js?v=20261124c"></script>
+<script src="lab-phys.js?v=20261124c"></script>
+<script src="lab-gl.js?v=20261124c"></script>
+<script src="blockly/blockly_compressed.js?v=20261124c"></script>
+<script src="blockly/blocks_compressed.js?v=20261124c"></script>
+<script src="blockly/en.js?v=20261124c"></script>
+<script src="blocks.js?v=20261124c"></script>
+<script src="ftcblocks.js?v=20261124c"></script>
+<script src="app.js?v=20261124c"></script>
+<script src="home.js?v=20261124c"></script>
+<script src="extras.js?v=20261124c"></script>
+<script src="tutorial.js?v=20261124c"></script>
+<script src="lab-ui.js?v=20261124c"></script>
+<script src="bg.js?v=20261124c"></script>
 </body>
 </html>
