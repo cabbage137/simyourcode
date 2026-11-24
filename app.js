@@ -1132,7 +1132,7 @@ function wireBuild() {
 }
 
 /* ---------- navigation and the frame loop ---------- */
-const VIEWS = ['home', 'drive', 'build', 'learn', 'tutorial', 'manual', 'legal'];
+const VIEWS = ['home', 'drive', 'build', 'lab', 'learn', 'tutorial', 'manual', 'legal'];
 function showView(name, fromHash) {
   if (VIEWS.indexOf(name) < 0) name = 'home';
   const was = VIEWS.find((v) => !$('view-' + v).hidden);
@@ -1148,6 +1148,7 @@ function showView(name, fromHash) {
   document.querySelectorAll('.tab').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === name)));
   if (name === 'build') { renderBuild(); startSpin(); }
   if (name === 'drive') { resizeField(); updateGutter(); }
+  document.dispatchEvent(new CustomEvent('bbz:view', { detail: name }));
   if (!fromHash) { try { history.replaceState(null, '', '#' + name); } catch (e) { /* ignore */ } }
 }
 function resizeField() {
