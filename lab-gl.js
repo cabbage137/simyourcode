@@ -125,6 +125,13 @@ function create(canvas) {
     geos[key] = { bufs, count: g.p.length / 3, mode: mode || gl.TRIANGLES };
   }
   view.setTris = (key, tris, col) => upload(key, fromTris(tris, col || [1, 1, 1]));
+  /* Many parts in one buffer, each with its own colour: [{ tris, color }] */
+  view.setParts = (key, parts) => {
+    const n = parts.reduce((a, q) => a + q.tris.length, 0), P = new Float32Array(n), N = new Float32Array(n), C = new Float32Array(n);
+    let k = 0;
+    for (const q of parts) { const g = fromTris(q.tris, q.color); P.set(g.p, k); N.set(g.n, k); C.set(g.c, k); k += q.tris.length; }
+    upload(key, { p: P, n: N, c: C });
+  };
   view.setLines = (key, pts, col) => {
     const p = new Float32Array(pts), c = new Float32Array(pts.length);
     for (let i = 0; i < c.length; i += 3) c.set(col, i);
@@ -148,6 +155,8 @@ function create(canvas) {
     const c = view.cam, cp = Math.cos(c.pitch);
     const eye = [c.target[0] + c.dist * cp * Math.cos(c.yaw), c.target[1] + c.dist * cp * Math.sin(c.yaw), c.target[2] + c.dist * Math.sin(c.pitch)];
     const vp = M.mul(M.persp(0.8, w / h, Math.max(0.005, c.dist * 0.01), c.dist * 40), M.look(eye, c.target, [0, 0, 1]));
+    const zb = norm([eye[0] - c.target[0], eye[1] - c.target[1], eye[2] - c.target[2]]), xb = norm(cross([0, 0, 1], zb));
+    view.basis = { eye, x: xb, y: cross(zb, xb), z: zb, asp: w / h };
     gl.uniformMatrix4fv(loc.uVP, false, vp);
     const solid = items.filter((it) => !it.tint || it.tint[3] == null || it.tint[3] >= 1);
     const clear = items.filter((it) => it.tint && it.tint[3] != null && it.tint[3] < 1);
@@ -167,11 +176,32 @@ function create(canvas) {
     gl.depthMask(true);
   };
 
-  /* drag to turn, scroll or pinch to zoom, right-drag or shift-drag to pan */
+  /* A ray from the camera through a point on the canvas, for picking and dragging parts. */
+  view.ray = function (cx, cy) {
+    const b = view.basis; if (!b) return null;
+    const r = canvas.getBoundingClientRect(), t = Math.tan(0.4);
+    const nx = ((cx - r.left) / r.width * 2 - 1) * t * b.asp, ny = (1 - (cy - r.top) / r.height * 2) * t;
+    return { o: b.eye, d: norm([-b.z[0] + b.x[0] * nx + b.y[0] * ny, -b.z[1] + b.x[1] * nx + b.y[1] * ny, -b.z[2] + b.x[2] * nx + b.y[2] * ny]) };
+  };
+
+  /* Drag a part when the press lands on one (view.pick returns a handle), otherwise turn the camera.
+     Scroll or pinch zooms, right-drag or shift-drag pans. */
   const pts = new Map();
-  let last = null;
-  canvas.addEventListener('pointerdown', (e) => { pts.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); last = null; });
+  let last = null, grab = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    pts.set(e.pointerId, [e.clientX, e.clientY]); canvas.setPointerCapture(e.pointerId); last = null;
+    if (pts.size === 1 && e.button === 0 && !e.shiftKey && view.pick) {
+      const ray = view.ray(e.clientX, e.clientY);
+      grab = ray && view.pick(ray);
+      if (grab) canvas.style.cursor = 'grabbing';
+    }
+  });
   canvas.addEventListener('pointermove', (e) => {
+    if (grab && pts.has(e.pointerId)) { const ray = view.ray(e.clientX, e.clientY); if (ray) view.dragTo(grab, ray); return; }
+    if (!pts.size && view.pick && e.pointerType === 'mouse') {
+      const ray = view.ray(e.clientX, e.clientY);
+      canvas.style.cursor = ray && view.pick(ray, true) ? 'move' : '';
+    }
     if (!pts.has(e.pointerId)) return;
     const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
     const c = view.cam;
@@ -190,7 +220,10 @@ function create(canvas) {
     }
     view.moved = true;
   });
-  const up = (e) => { pts.delete(e.pointerId); last = null; };
+  const up = (e) => {
+    pts.delete(e.pointerId); last = null;
+    if (grab && !pts.size) { const g = grab; grab = null; canvas.style.cursor = ''; view.dragEnd(g); }
+  };
   canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   canvas.addEventListener('wheel', (e) => { e.preventDefault(); view.cam.dist = Math.min(30, Math.max(0.1, view.cam.dist * Math.exp(e.deltaY * 0.0012))); view.moved = true; }, { passive: false });
