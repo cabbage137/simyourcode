@@ -631,6 +631,9 @@ details.card > summary h3 { display: inline; }
 }
 #view-lab [hidden] { display: none !important; }
 .lab-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.lab-xyz { position: absolute; left: 8px; bottom: 8px; margin: 0; padding: 4px 8px; border-radius: 6px; font: 12px/1.3 var(--font-mono); background: color-mix(in srgb, var(--surface) 85%, transparent); font-variant-numeric: tabular-nums; pointer-events: none; }
+.lab-axis { border-left: 3px solid; padding-left: 6px; }
+.lab-x { border-color: #e6332a; } .lab-y { border-color: #26b340; } .lab-z { border-color: #3373f2; }
 .lab-grow { flex: 1 1 180px; }
 </style>
 
@@ -1089,6 +1092,7 @@ details.card > summary h3 { display: inline; }
             </div>
             <div class="sliders three">
               <label class="field-label">Feed point X (mm)<input type="number" id="labFeedX" step="1" value="-90"></label>
+              <label class="field-label">Feed point Y (mm)<input type="number" id="labFeedY" step="1" value="0"></label>
               <label class="field-label">Feed point Z (mm)<input type="number" id="labFeedZ" step="1" value="-40"></label>
               <label class="field-label">Feed direction (°)<input type="number" id="labFeedA" step="5" value="45"></label>
             </div>
@@ -1107,9 +1111,23 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Wheels on the shaft<select id="labWheelN"><option>1</option><option>2</option><option>3</option></select></label>
             <label class="field-label">Steel inertia discs<select id="labDiscs"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
             <label class="field-label">Spin direction<select id="labDir"><option value="1">Forward</option><option value="-1">Reverse</option></select></label>
-            <label class="field-label">Axle X from robot centre (mm)<input type="number" id="labWheelX" step="1"></label>
-            <label class="field-label">Axle height (mm)<input type="number" id="labWheelZ" step="1"></label>
           </div>
+          <div class="field-label">Flywheel position, from the middle of the robot on the floor</div>
+          <div class="sliders three">
+            <label class="field-label lab-axis lab-x">X forward (mm)<input type="number" id="labWheelX" step="1"></label>
+            <label class="field-label lab-axis lab-y">Y left (mm)<input type="number" id="labWheelY" step="1"></label>
+            <label class="field-label lab-axis lab-z">Z up (mm)<input type="number" id="labWheelZ" step="1"></label>
+          </div>
+          <div class="sliders">
+            <label class="field-label">Turn (about Z): <span id="labWheelYawOut"></span><input type="range" id="labWheelYaw" min="-180" max="180" step="5"></label>
+            <label class="field-label">Tilt (about X): <span id="labWheelTiltOut"></span><input type="range" id="labWheelTilt" min="-90" max="90" step="5"></label>
+          </div>
+          <div class="lab-row">
+            <button type="button" class="btn btn-small" data-orient="0,0">Axle sideways</button>
+            <button type="button" class="btn btn-small" data-orient="0,90">Axle upright (flat wheel)</button>
+            <button type="button" class="btn btn-small" data-orient="90,0">Axle front to back</button>
+          </div>
+          <p class="hint">Drag the coloured handles on the flywheel in the 3D view to slide it along X (red, forward), Y (green, left) or Z (blue, up). Turn and Tilt point the axle any way you like; a hood from the examples turns with the wheel.</p>
           <p class="hint" id="labWheelInfo"></p>
           <label class="field-label">Second wheel<select id="labSecond"><option value="none">None</option><option value="double">Double flywheel (opposite spin)</option><option value="transfer">Transfer roller</option></select></label>
           <div class="sliders three" id="labSecondBox" hidden>
@@ -1225,9 +1243,10 @@ details.card > summary h3 { display: inline; }
               <button type="button" class="btn btn-small" data-cam="hive">HIVE</button>
               <button type="button" class="btn btn-small" data-cam="top">Top</button>
             </div>
+            <p class="lab-xyz" id="labXYZ" aria-live="off"></p>
             <p class="lab-nogl" id="labNoGl" hidden>Your browser could not start 3D graphics, so the 3D view is off. The physics and results still work.</p>
           </div>
-          <p class="hint">Drag a part to move it: the flywheel, the honey feed dot, your shooter or the robot. Drag empty space to turn the view, scroll or pinch to zoom, shift-drag to pan. Yellow stripes on the wheel show it spinning.</p>
+          <p class="hint">Drag a part to move it: the flywheel (or one of its X/Y/Z handles), the honey feed dot, your shooter or the robot. Drag empty space to turn the view, scroll or pinch to zoom, shift-drag to pan. Yellow stripes on the wheel show it spinning.</p>
         </div>
 
         <div class="card">
@@ -1998,22 +2017,22 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261124a"></script>
-<script src="interp.js?v=20261124a"></script>
-<script src="world.js?v=20261124a"></script>
-<script src="bot3d.js?v=20261124a"></script>
-<script src="lab-phys.js?v=20261124a"></script>
-<script src="lab-gl.js?v=20261124a"></script>
-<script src="blockly/blockly_compressed.js?v=20261124a"></script>
-<script src="blockly/blocks_compressed.js?v=20261124a"></script>
-<script src="blockly/en.js?v=20261124a"></script>
-<script src="blocks.js?v=20261124a"></script>
-<script src="ftcblocks.js?v=20261124a"></script>
-<script src="app.js?v=20261124a"></script>
-<script src="home.js?v=20261124a"></script>
-<script src="extras.js?v=20261124a"></script>
-<script src="tutorial.js?v=20261124a"></script>
-<script src="lab-ui.js?v=20261124a"></script>
-<script src="bg.js?v=20261124a"></script>
+<script src="sound.js?v=20261124b"></script>
+<script src="interp.js?v=20261124b"></script>
+<script src="world.js?v=20261124b"></script>
+<script src="bot3d.js?v=20261124b"></script>
+<script src="lab-phys.js?v=20261124b"></script>
+<script src="lab-gl.js?v=20261124b"></script>
+<script src="blockly/blockly_compressed.js?v=20261124b"></script>
+<script src="blockly/blocks_compressed.js?v=20261124b"></script>
+<script src="blockly/en.js?v=20261124b"></script>
+<script src="blocks.js?v=20261124b"></script>
+<script src="ftcblocks.js?v=20261124b"></script>
+<script src="app.js?v=20261124b"></script>
+<script src="home.js?v=20261124b"></script>
+<script src="extras.js?v=20261124b"></script>
+<script src="tutorial.js?v=20261124b"></script>
+<script src="lab-ui.js?v=20261124b"></script>
+<script src="bg.js?v=20261124b"></script>
 </body>
 </html>
