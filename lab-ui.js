@@ -15,15 +15,15 @@ const EXAMPLES = [
   { id: 'transfer', name: '90° hood with a transfer roller', blurb: 'A slow roller pushes each ball up a ramp into the hood, like a real transfer system. Watch how the roller speed changes the feed.', wrap: 90, second: 'transfer' }
 ];
 const DEF = {
-  src: 'ex', example: 'hood90', launch: 45, wrap: 90, comp: 10, exMat: 'pla',
+  src: 'ex', example: 'hood90', launch: 45, wrap: 90, comp: 4, exMat: 'pla',
   stlUnits: '0.001', stlMat: 'pla', stlRot: '0', stlX: 0, stlY: 0, stlZ: 0, feedX: -90, feedZ: 265, feedA: 45,
   wheel: 'tpe96', wheelD: 96, wheelW: 38, wheelM: 75, wheelN: 1, discs: 1, dir: 1, wheelX: 0, wheelY: 0, wheelZ: 305, wheelYaw: 0, wheelTilt: 0, feedY: 0,
   second: 'none', roller: 'roller48', rollerRpm: 1200, rollerMotor: 'gb1620', secX: 0, secZ: 155,
-  motor: 'gb6000', ratio: 1, custFree: 6000, custStall: 0.144, rpm: 2650, V: 12.5, tested: true,
+  motor: 'gb6000', ratio: 1, custFree: 6000, custStall: 0.144, rpm: 2700, V: 12.5, tested: true,
   ball: 'P', count: 6, interval: 0.6, feedV: 1, wait: true,
   alliance: 'blue', robotX: 12.75, robotY: 60, heading: -90,
   robUnits: '0.001', robRot: '0', robMX: 0, robMY: 0, robMZ: 0, robHit: true, lock: false,
-  mass: 0, sqW: 0, sqD: 0, dropH: 0, bounceH: 0, muW: 100, muH: 100, Cd: 0.5, Cl: 100, air: true, hiveE: 0.4
+  mass: 0, sqW: 0, sqD: 0, dropH: 0, bounceH: 0, muW: 100, muH: 100, Cd: 0.5, Cl: 100, air: true, hiveE: 0.4, kScale: 1, realV: 0, realA: 0, realLand: 0
 };
 let S = Object.assign({}, DEF);
 try { const saved = JSON.parse(localStorage.getItem('bbz-lab2') || 'null'); if (saved && typeof saved === 'object') for (const k in DEF) if (typeof saved[k] === typeof DEF[k]) S[k] = saved[k]; } catch (e) { /* storage blocked */ }
@@ -53,9 +53,9 @@ const FIELDS = { labExample: 'example', labLaunch: 'launch', labWrap: 'wrap', la
   labRpm: 'rpm', labV: 'V', labTested: 'tested', labCount: 'count', labInterval: 'interval', labFeedV: 'feedV', labWait: 'wait',
   labRobX: 'robotX', labRobY: 'robotY', labHead: 'heading', labRobUnits: 'robUnits', labRobRot: 'robRot', labRobMX: 'robMX', labRobMY: 'robMY', labRobMZ: 'robMZ',
   labRobHit: 'robHit', labLock: 'lock',
-  labMass: 'mass', labSqW: 'sqW', labSqD: 'sqD', labDropH: 'dropH', labBounceH: 'bounceH', labMuW: 'muW', labMuH: 'muH', labCd: 'Cd', labCl: 'Cl', labAir: 'air', labHiveE: 'hiveE' };
+  labMass: 'mass', labSqW: 'sqW', labSqD: 'sqD', labDropH: 'dropH', labBounceH: 'bounceH', labMuW: 'muW', labMuH: 'muH', labCd: 'Cd', labCl: 'Cl', labAir: 'air', labHiveE: 'hiveE', labRealV: 'realV', labRealA: 'realA', labRealLand: 'realLand' };
 /* Settings that change the running simulation without starting it again. */
-const LIVE = new Set(['rpm', 'V', 'tested', 'count', 'interval', 'feedV', 'wait', 'Cd', 'Cl', 'air', 'rollerRpm', 'lock']);
+const LIVE = new Set(['rpm', 'V', 'tested', 'count', 'interval', 'feedV', 'wait', 'Cd', 'Cl', 'air', 'rollerRpm', 'lock', 'realV', 'realA', 'realLand']);
 
 function writeUI() {
   for (const id in FIELDS) {
@@ -170,6 +170,7 @@ function calibration() {
   const out = { text: [] };
   if (S.mass > 0) { out.mass = S.mass / 1000; out.text.push('ball mass ' + S.mass + ' g'); }
   if (S.sqW > 0 && S.sqD > 0) { out.k = (S.sqW / 1000 * L.G) / (S.sqD / 1000); out.text.push('ball stiffness ' + Math.round(out.k) + ' N/m'); }
+  if (S.kScale !== 1) { out.kScale = S.kScale; out.text.push('squeeze stiffness ×' + S.kScale.toFixed(2) + ' from your matched shot'); }
   if (S.dropH > 0 && S.bounceH > 0 && S.bounceH < S.dropH) { out.e = Math.sqrt(S.bounceH / S.dropH); out.text.push('bounce e = ' + out.e.toFixed(2) + ' on your hood material'); }
   return out;
 }
@@ -256,7 +257,7 @@ function build(light) {
   sim = new L.Sim();
   const cal = calibration();
   sim.cal = { muWheel: S.muW / 100, muScale: S.muH / 100 };
-  sim.ballCal = { mass: cal.mass, k: cal.k };
+  sim.ballCal = { mass: cal.mass, k: cal.k, kScale: cal.kScale };
   applyAir();
   const tgt = target();
   if (field) field.hive.mat = Object.assign({}, L.FIELD_MAT.hive, { e: Math.min(0.95, Math.max(0.05, +S.hiveE || 0.4)) });
@@ -530,6 +531,108 @@ async function autoPlaceRun() {
       '. No test shot came out cleanly, so drag the feed dot to where your balls come in.';
   }
   save(); writeUI(); rebuild();
+}
+
+
+/* ---------- matching a real shot ---------- */
+
+/* One shot through the current shooter, in the robot frame with the floor, every wheel already at speed.
+   `grip` scales the wheel's friction and `stiff` the ball's stiffness. */
+function testShot(grip, stiff) {
+  const spec = wheelSpec(), parts = shooterParts(spec), cal = calibration();
+  const t = new L.Sim();
+  t.cal = { muWheel: grip, muScale: S.muH / 100 };
+  t.env.air = S.air; t.env.Cd = +S.Cd; t.env.CLscale = S.Cl / 100;
+  const mat = Object.assign({}, parts.mat, cal.e ? { e: cal.e } : {});
+  if (parts.tris.length) t.addMesh(parts.tris, mat, 'shooter');
+  const axis = rotW([0, 1, 0]), mainDir = (parts.mainDir || 1) * S.dir, width = spec.w * S.wheelN + 10 * (S.wheelN - 1);
+  t.addWheel({ c: wheelAt(), a: axis, spec, width, count: S.wheelN, motor: motorOf(S.motor), G: +S.ratio || 1, V: +S.V, tested: S.tested, target: S.rpm, dir: mainDir, discs: +S.discs, spinUp: false });
+  if (parts.second) {
+    const p2 = parts.second, dbl = p2.role === 'double';
+    t.addWheel({ c: p2.c, a: axis, spec: Object.assign({}, p2.spec), width: dbl ? width : p2.spec.w, count: dbl ? S.wheelN : 1, motor: motorOf(p2.motor), G: dbl ? +S.ratio || 1 : 1,
+      V: +S.V, tested: S.tested, target: dbl ? S.rpm : S.rollerRpm, dir: dbl ? -mainDir : p2.dir, discs: dbl ? +S.discs : 0, role: p2.role, spinUp: false });
+  }
+  const b = t.addBall(S.ball === 'P' ? 'P' : 'R', parts.feed, V.mul(parts.dir, +S.feedV), [0, 0, 0], { mass: cal.mass, k: cal.k, kScale: stiff });
+  for (let u = 0; u < 0.8 && !b.exit && b.st === 'live'; u += 0.01) t.advance(0.01, 1e9);
+  return b.exit ? Object.assign({ type: b.type }, b.exit) : null;
+}
+
+/* Landing distance along the floor, from under the flywheel axle, for a given exit. */
+function landFrom(ex, Cd) {
+  const W = wheelAt();
+  return L.landing(ex.type, ex.p, ex.vel, ex.w, { air: S.air, Cd, CLscale: S.Cl / 100 }, [W[0], W[1], 0]);
+}
+
+/* Bisection on a factor between lo and hi (log scale) for a quantity that rises with it. */
+async function fit(fn, want, lo, hi, steps) {
+  let a = Math.log(lo), b = Math.log(hi), vA = await fn(lo), vB = await fn(hi);
+  if (vA == null || vB == null) return null;
+  if (want <= vA) return { f: lo, v: vA, edge: 'low' };
+  if (want >= vB) return { f: hi, v: vB, edge: 'high' };
+  let best = null;
+  for (let i = 0; i < steps; i++) {
+    const m = (a + b) / 2, v = await fn(Math.exp(m));
+    if (v == null) return null;
+    best = { f: Math.exp(m), v };
+    if (v < want) a = m; else b = m;
+  }
+  return best;
+}
+
+let matching = false;
+async function matchShot() {
+  if (matching) return;
+  const info = $('labMatchInfo');
+  if (!(S.realV > 0) && !(S.realLand > 0)) { info.textContent = 'Enter at least the real exit speed or where the ball landed.'; return; }
+  matching = true; $('labMatch').disabled = true;
+  try {
+    info.textContent = 'Firing test shots…';
+    await breathe();
+    const before = testShot(S.muW / 100, S.kScale);
+    if (!before) { info.textContent = 'The lab\'s own shot does not leave the shooter, so there is nothing to match yet. Check the feed point and spin first.'; return; }
+    /* the speed to aim for: measured, or worked out backwards from the landing spot at the measured (or simulated) angle */
+    let wantV = S.realV;
+    if (!(wantV > 0)) {
+      const ang = (S.realA > 0 ? S.realA : before.ang) * Math.PI / 180, h = Math.hypot(before.vel[0], before.vel[1]) || 1, dirH = [before.vel[0] / h, before.vel[1] / h];
+      const withV = (v) => landFrom(Object.assign({}, before, { vel: [dirH[0] * v * Math.cos(ang), dirH[1] * v * Math.cos(ang), v * Math.sin(ang)] }), +S.Cd);
+      const r = await fit(async (v) => withV(v), S.realLand * IN, 0.5, 30, 30);
+      if (!r || r.edge) { info.textContent = 'That landing spot cannot be reached at that angle from this height. Check the measurements.'; return; }
+      wantV = r.f;
+    }
+    /* tune grip if the ball's stiffness was measured with the squeeze test, otherwise tune the squeeze stiffness */
+    const squeezeKnown = S.sqW > 0 && S.sqD > 0;
+    const speedAt = async (f) => { await breathe(); const e = squeezeKnown ? testShot(f, S.kScale) : testShot(S.muW / 100, f); return e ? e.v : null; };
+    info.textContent = 'Tuning the ' + (squeezeKnown ? 'grip' : 'squeeze stiffness') + ' to ' + wantV.toFixed(2) + ' m/s…';
+    /* speed does not always rise with grip or stiffness, so try a spread of values and keep the closest */
+    let r = null;
+    const tries = squeezeKnown ? [0.3, 0.5, 0.7, 0.85, 1, 1.2, 1.5, 2, 2.5] : [0.1, 0.2, 0.35, 0.5, 0.7, 1, 1.4, 2, 3, 5, 8];
+    let lo = Infinity, hi = -Infinity;
+    for (const f of tries) { const v = await speedAt(f); if (v == null) continue; lo = Math.min(lo, v); hi = Math.max(hi, v); if (!r || Math.abs(v - wantV) < Math.abs(r.v - wantV)) r = { f, v }; }
+    if (r && Math.abs(r.v - wantV) > 0.04 * wantV) r.edge = wantV > hi ? 'high' : 'low';
+    if (!r) { info.textContent = 'A test shot did not leave the shooter while tuning. Check the feed point and spin.'; return; }
+    const ideal = (secondMode() === 'double' ? 1 : 0.5) * S.rpm * Math.PI / 30 * wheelSpec().d / 2000;
+    const lines = [];
+    if (r.edge === 'high') lines.push('Your real ball is faster (' + wantV.toFixed(2) + ' m/s) than this setup can throw even with perfect grip (' + r.v.toFixed(2) + ' m/s, no-slip speed ≈ ' + ideal.toFixed(1) + ' m/s). Check the rpm, gear ratio and wheel size match your robot: a real wheel often spins faster than its target.');
+    else if (r.edge === 'low') lines.push('Your real ball is slower (' + wantV.toFixed(2) + ' m/s) than this setup throws even with the least grip. Check the rpm and that the flywheel recovers between shots on your robot.');
+    if (!r.edge) { if (squeezeKnown) S.muW = Math.round(Math.max(20, Math.min(300, r.f * 100)) / 5) * 5; else S.kScale = Math.round(r.f * 100) / 100; }
+    if (!r.edge) lines.push('Matched ' + wantV.toFixed(2) + ' m/s by setting the ' + (squeezeKnown ? 'wheel grip to ' + S.muW + '%' : 'squeeze stiffness to ×' + S.kScale.toFixed(2)) + ' (the lab threw ' + before.v.toFixed(2) + ' m/s before).');
+    const after = testShot(S.muW / 100, S.kScale);
+    if (after && S.realA > 0) {
+      const d = after.ang - S.realA;
+      lines.push(Math.abs(d) <= 3 ? 'Launch angle matches: ' + after.ang.toFixed(1) + '° against your ' + S.realA + '°.' :
+        'Launch angle: the lab gives ' + after.ang.toFixed(1) + '°, yours is ' + S.realA + '°. Angle comes from the shape, not the materials, so check the hood angle, the squeeze and where balls enter (a ' + (d > 0 ? 'lower' : 'higher') + ' hood exit or ' + (d > 0 ? 'less' : 'more') + ' squeeze moves it toward yours).');
+    }
+    /* with both speed and landing measured, the remaining difference is the air: tune the drag */
+    if (after && S.realV > 0 && S.realLand > 0) {
+      const ang = (S.realA > 0 ? S.realA : after.ang) * Math.PI / 180, h = Math.hypot(after.vel[0], after.vel[1]) || 1;
+      const ex = Object.assign({}, after, { vel: [after.vel[0] / h * S.realV * Math.cos(ang), after.vel[1] / h * S.realV * Math.cos(ang), S.realV * Math.sin(ang)] });
+      const dr = await fit(async (cd) => -landFrom(ex, cd), -S.realLand * IN, 0.05, 2, 20);
+      if (dr && !dr.edge) { S.Cd = Math.round(dr.f * 100) / 100; lines.push('Drag coefficient set to ' + S.Cd.toFixed(2) + ' so the ball lands where yours did.'); }
+      else lines.push('The landing spot needs more or less drag than a ball can have; re-check the landing measurement.');
+    }
+    info.textContent = lines.join(' ');
+    save(); writeUI(); rebuild();
+  } finally { matching = false; $('labMatch').disabled = false; }
 }
 
 /* ---------- reading CAD files ---------- */
@@ -958,6 +1061,8 @@ $('labAim').addEventListener('click', () => {
   save(); writeUI(); rebuild();
 });
 $('labAutoPlace').addEventListener('click', autoPlace);
+$('labMatch').addEventListener('click', matchShot);
+$('labMatchReset').addEventListener('click', () => { S.kScale = 1; S.muW = 100; S.Cd = 0.5; $('labMatchInfo').textContent = 'Back to the lab\'s own estimates.'; save(); writeUI(); rebuild(); });
 document.querySelectorAll('[data-orient]').forEach((b) => b.addEventListener('click', () => {
   const [yaw, tilt] = b.dataset.orient.split(',').map(Number);
   S.wheelYaw = yaw; S.wheelTilt = tilt; save(); writeUI(); rebuild();
@@ -1053,7 +1158,7 @@ BBZ.labStep = function (sec) {
     live: sim.balls.filter((b) => b.st === 'live').map((b) => b.p.map((x) => +x.toFixed(3)).concat([+V.len(b.v).toFixed(2)])),
     wheels: sim.wheels.map((w) => ({ c: w.c.map((x) => +x.toFixed(3)), r: w.r, rpm: Math.round(w.omega * 30 / Math.PI), role: w.role })), feed: world.feed.map((x) => +x.toFixed(3)) };
 };
-BBZ.labTest = { pick, dragTo, dragEnd, autoPlace, state: () => S, world: () => world, sim: () => sim, field: () => field, cad: () => cad, bestFeed, trisToWheel, shooterCad: () => shooterCad() };
+BBZ.labTest = { matchShot, testShot, pick, dragTo, dragEnd, autoPlace, state: () => S, world: () => world, sim: () => sim, field: () => field, cad: () => cad, bestFeed, trisToWheel, shooterCad: () => shooterCad() };
 
 writeUI();
 readColors();
