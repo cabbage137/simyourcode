@@ -53,11 +53,13 @@ const WHEELS = [
 const DISC_J = 8.4e-5;          // 82 mm steel inertia disc, 152 g, 840 g·cm²
 const ROTOR_J = 5e-6;           // motor rotor, estimate
 
-/* The two game pieces. NECTAR's mass and both stiffnesses are estimates; calibrate them with real balls. */
+/* The two game pieces. Stiffness: the closest measured ball is a pickleball (a thin-walled, holed polyethylene ball of the same
+   size and mass), about 39 N/mm in a slow squeeze test (Tennis Warehouse University). A thin shell's stiffness goes as 1/R, so the
+   larger NECTAR is about 30 N/mm. NECTAR's mass is an estimate. Calibrate both with real balls. */
 const BALLS = {
-  P: { name: 'POLLEN', d: 2.8 * IN, m: 0.025, k: 1500, color: [0.97, 0.78, 0.08] },
-  R: { name: 'NECTAR (red)', d: 3.6 * IN, m: 0.041, k: 1170, color: [0.82, 0.18, 0.15] },
-  B: { name: 'NECTAR (blue)', d: 3.6 * IN, m: 0.041, k: 1170, color: [0.18, 0.38, 0.85] }
+  P: { name: 'POLLEN', d: 2.8 * IN, m: 0.025, k: 39000, color: [0.97, 0.78, 0.08] },
+  R: { name: 'NECTAR (red)', d: 3.6 * IN, m: 0.041, k: 30000, color: [0.82, 0.18, 0.15] },
+  B: { name: 'NECTAR (blue)', d: 3.6 * IN, m: 0.041, k: 30000, color: [0.18, 0.38, 0.85] }
 };
 
 /* HIVE numbers from the 2026-27 Competition Manual (section 9.6), Field Acceptance Checklist and Team Update 10.
@@ -88,11 +90,12 @@ function shoreToE(s) {
   return 1e6 * 0.0981 * (56 + 7.62336 * s) / (0.137505 * (254 - 2.54 * s));
 }
 
-/* How much a spinning elastomer tyre grows in radius: Δr = ρ ω² r³ (3 + ν) / (8 E), on the outer half of the wheel. */
+/* How much a spinning elastomer tyre grows in radius: Δr = ρ ω² r³ (3 + ν) / (8 E), on the outer half of the wheel,
+   never more than 3% of the radius (hubs and spokes hold the tread in). */
 function wheelGrowth(spec, omega) {
   if (!spec.shore) return 0;
-  const r = spec.d / 2000, E = shoreToE(spec.shore) * (spec.compliant ? 0.25 : 1);
-  return Math.min(0.15 * r, 0.5 * 1150 * omega * omega * r * r * r * 3.5 / (8 * E));
+  const r = spec.d / 2000, E = shoreToE(spec.shore);
+  return Math.min(0.03 * r, 0.5 * 1150 * omega * omega * r * r * r * 3.5 / (8 * E));
 }
 
 /* Motor torque at the motor shaft: τ = τstall (u V/12 − ω/ωfree). */
@@ -121,6 +124,17 @@ function closestOnTri(p, a, b, c) {
   if (!(Math.abs(sum) > 1e-30)) return a;
   const den = 1 / sum;
   return add(a, add(mul(ab, vb * den), mul(ac, vc * den)));
+}
+
+let meshIds = 0;
+/* Each ball keeps the triangles within this distance of where it was last looked up, and only looks again once it has
+   moved most of that distance; contacts are checked many thousands of times a second, so this saves most of the work. */
+const CACHE_PAD = 0.008;
+function cachedTris(b, m) {
+  b.cache = b.cache || {};
+  let e = b.cache[m.id];
+  if (!e || len(sub(b.p, e.c)) > CACHE_PAD * 0.75) { e = b.cache[m.id] = { c: b.p.slice(), list: nearTris(m, b.p, b.R + CACHE_PAD, []).slice() }; }
+  return e.list;
 }
 
 /* A triangle soup with a uniform grid so a ball only tests nearby triangles. `tris` is a Float32Array of 9 numbers per triangle. */
@@ -153,7 +167,7 @@ function makeMesh(tris, mat, cell) {
     const nn = norm(cross([tris[o + 3] - a[0], tris[o + 4] - a[1], tris[o + 5] - a[2]], [tris[o + 6] - a[0], tris[o + 7] - a[1], tris[o + 8] - a[2]]));
     planes[t * 4] = nn[0]; planes[t * 4 + 1] = nn[1]; planes[t * 4 + 2] = nn[2]; planes[t * 4 + 3] = dot(nn, a);
   }
-  return { tris, n, mat, lo, hi, cell, dims, grid, planes, stamp: new Uint32Array(n), mark: 0 };
+  return { id: ++meshIds, tris, n, mat, lo, hi, cell, dims, grid, planes, stamp: new Uint32Array(n), mark: 0 };
 }
 
 /* Triangles whose grid cells overlap a sphere. */
@@ -385,7 +399,7 @@ Sim.prototype.addMesh = function (tris, mat, tag) { const m = makeMesh(tris, mat
 
 Sim.prototype.addBall = function (type, p, v, w, cal) {
   const spec = BALLS[type], R = spec.d / 2, m = cal && cal.mass ? cal.mass : spec.m;
-  const b = { id: this.nextId++, type, R, m, I: 2 / 3 * m * R * R, k: cal && cal.k ? cal.k : spec.k, p: p.slice(), v: v.slice(), w: (w || [0, 0, 0]).slice(),
+  const b = { id: this.nextId++, type, R, m, I: 2 / 3 * m * R * R, k: (cal && cal.k ? cal.k : spec.k) * (cal && cal.kScale ? cal.kScale : 1), p: p.slice(), v: v.slice(), w: (w || [0, 0, 0]).slice(),
     st: 'live', born: this.t, touched: false, lastShooter: -1, exit: null, entered: false, frameHit: false, still: 0, maxX: p[0], path: [p.slice()], rpmAtFeed: 0, rpmMin: Infinity };
   const main = this.wheels[0];
   if (main) b.rpmAtFeed = Math.abs(main.omega) * 30 / Math.PI;
@@ -424,16 +438,33 @@ Sim.prototype.contact = function (b, q, n, depth, vs, mat, F, T) {
 };
 
 /* Is a ball close to anything it could touch within the next big step? */
+/* How close a ball is to something it could touch within the next big step:
+   0 nothing, 1 the field, floor or another ball, 2 a wheel or the shooter (where grip and squeeze are decided). */
 Sim.prototype.near = function (b, pad) {
   const r = b.R + pad;
-  if (b.p[2] < r) return true;
-  for (const w of this.wheels) if (len(sub(b.p, w.c)) < w.r + w.hw + r + 0.01) return true;
-  for (const m of this.meshes) if (nearTris(m, b.p, r, this.tmp).length) return true;
-  if (this.hive) for (const m of [this.hive.cell, this.hive.frame]) if (nearTris(m, b.p, r, this.tmp).length) return true;
-  if (this.field) for (const m of [this.field.hive, this.field.wall]) if (nearTris(m, b.p, r, this.tmp).length) return true;
-  for (const o of this.balls) if (o !== b && o.st !== 'gone' && len(sub(o.p, b.p)) < o.R + r) return true;
-  return false;
+  for (const w of this.wheels) if (len(sub(b.p, w.c)) < w.r + w.hw + r + 0.01) return 2;
+  const check = (m) => {
+    /* a cached list still covers this ball if it has not moved further than the cache's spare margin */
+    const e = b.cache && b.cache[m.id];
+    if (e && len(sub(b.p, e.c)) + pad <= CACHE_PAD) return e.list.length > 0;
+    return nearTris(m, b.p, r, this.tmp).length > 0;
+  };
+  for (const m of this.meshes) if (check(m)) return m.tag === 'robot' ? 1 : 2;
+  if (b.p[2] < r) return 1;
+  for (const m of [].concat(this.hive ? [this.hive.cell, this.hive.frame] : [], this.field ? [this.field.hive, this.field.wall] : [])) if (check(m)) return 1;
+  for (const o of this.balls) if (o !== b && o.st !== 'gone' && len(sub(o.p, b.p)) < o.R + r) return 1;
+  return 0;
 };
+
+/* Flight only, from a launch point: where a ball first touches the floor (its centre one radius up). Same air model as the shots.
+   Returns the distance along the floor from `from` (a point under the flywheel axle). */
+function landing(type, p0, v0, w0, env, from) {
+  const t = new Sim(); Object.assign(t.env, env);
+  const b = t.addBall(type, p0, v0, w0);
+  for (let i = 0; i < 4000 && b.p[2] > b.R; i++) t.stepFree(0.001);
+  const h = [v0[0], v0[1], 0], hl = len(h) || 1;
+  return dot(sub(b.p, from), mul(h, 1 / hl));
+}
 
 Sim.prototype.airForce = function (b, v, F) {
   if (!this.env.air) return;
@@ -510,7 +541,7 @@ Sim.prototype.forces = function () {
 };
 
 Sim.prototype.meshContacts = function (b, m, F, T) {
-  const list = nearTris(m, b.p, b.R, this.tmp), hits = [];
+  const list = cachedTris(b, m), hits = [];
   const pl = m.planes;
   for (const t of list) {
     if (Math.abs(pl[t * 4] * b.p[0] + pl[t * 4 + 1] * b.p[1] + pl[t * 4 + 2] * b.p[2] - pl[t * 4 + 3]) >= b.R) continue;
@@ -547,19 +578,19 @@ Sim.prototype.stepWheel = function (w, dt) {
   w.growth = wheelGrowth(w.spec, w.omega);
 };
 
-/* Move the simulation forward by `span` seconds. Small steps whenever anything touches, RK4 in free flight. */
-/* Small steps whenever anything touches. Their size comes from the stiffest ball: about 1/200 of its bounce period, so the
-   spring–damper contact stays accurate (springs in series are never stiffer than the ball itself). RK4 in free flight. */
+/* Step sizes come from the stiffest ball's bounce period: about 1/200 of it while a ball is on a wheel or in the shooter
+   (grip and squeeze), about 1/50 for bounces off the field and floor (still about 25 steps per bounce), RK4 in free flight. */
 Sim.prototype.advance = function (span, budget) {
   let used = 0, done = 0, hard = 0;
   for (const b of this.balls) if (b.st === 'live') hard = Math.max(hard, Math.sqrt(b.k / b.m));
   const fine = Math.max(1e-5, Math.min(6e-5, hard ? 0.03 / hard : 6e-5));
+  const bounce = Math.max(fine, Math.min(1.5e-4, hard ? 0.12 / hard : 1.5e-4));
   while (done < span - 1e-9 && used < budget) {
-    let small = false;
-    for (const b of this.balls) if (b.st === 'live' && this.near(b, Math.max(0.004, len(b.v) * 0.0012))) { small = true; break; }
-    const dt = Math.min(small ? fine : 1e-3, span - done);
-    if (small) this.stepContact(dt); else this.stepFree(dt);
-    done += dt; used += small ? 1 : 10;
+    let level = 0;
+    for (const b of this.balls) if (b.st === 'live') { level = Math.max(level, this.near(b, Math.max(0.004, len(b.v) * 0.0012))); if (level === 2) break; }
+    const dt = Math.min(level === 2 ? fine : level === 1 ? bounce : 1e-3, span - done);
+    if (level) this.stepContact(dt); else this.stepFree(dt);
+    done += dt; used += level === 2 ? 1 : level === 1 ? Math.max(1, dt / fine) : 10;
   }
   return done;
 };
@@ -607,7 +638,7 @@ Sim.prototype.after = function (dt) {
     if (b.launched && !b.exit && this.t - b.lastShooter > 0.02) {
       const sp = len(b.v);
       b.exit = { t: this.t, v: sp, ang: Math.atan2(b.v[2], Math.hypot(b.v[0], b.v[1])) * 180 / Math.PI, spin: len(b.w) * 30 / Math.PI,
-        rpmBefore: b.rpmAtFeed, rpmAfter: main ? Math.abs(main.omega) * 30 / Math.PI : 0, comp: b.comp || 0 };
+        rpmBefore: b.rpmAtFeed, rpmAfter: main ? Math.abs(main.omega) * 30 / Math.PI : 0, comp: b.comp || 0, p: b.p.slice(), vel: b.v.slice(), w: b.w.slice() };
     }
     b.maxX = Math.max(b.maxX, b.p[0]);
     if (this.aim) {
@@ -621,7 +652,9 @@ Sim.prototype.after = function (dt) {
     if (this.t - (b.lastPath || 0) > 0.01) { b.path.push(b.p.slice()); b.lastPath = this.t; if (b.path.length > 600) b.path.shift(); }
     const slow = len(b.v) < 0.04;
     b.still = slow ? b.still + dt : 0;
-    if (b.still > 0.25 && this.inTarget(b.p)) this.finish(b, 'scored');
+    /* a ball resting inside the CELL (or barely moving in it) has scored */
+    b.calm = this.inTarget(b.p) && len(b.v) < 0.25 ? (b.calm || 0) + dt : 0;
+    if ((b.still > 0.25 || b.calm > 0.15) && this.inTarget(b.p)) this.finish(b, 'scored');
     else if (b.still > 0.25 && b.p[2] < b.R + 0.01) this.finish(b, b.exit ? 'floor' : 'stuck');
     else if (b.still > 0.6) this.finish(b, b.exit ? 'stuck' : 'stuck');
     else if (b.p[2] < b.R + 0.005 && b.exit && this.t - b.exit.t > 0.05) this.finish(b, 'floor');
@@ -702,6 +735,6 @@ function writeSTL(tris) {
   return buf;
 }
 
-BBZ.Lab = { IN, G, MOTORS, SURFACES, FIELD_MAT, WHEELS, BALLS, HIVE, DISC_J, Sim, hoodTris, hiveTris, inCell, inHull, parseField, makeMesh, rimGap, parseSTL, writeSTL,
+BBZ.Lab = { landing, IN, G, MOTORS, SURFACES, FIELD_MAT, WHEELS, BALLS, HIVE, DISC_J, Sim, hoodTris, hiveTris, inCell, inHull, parseField, makeMesh, rimGap, parseSTL, writeSTL,
   wheelGrowth, shoreToE, vec: { add, sub, mul, dot, cross, len, norm, clamp } };
 })();
