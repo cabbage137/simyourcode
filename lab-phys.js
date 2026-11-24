@@ -34,7 +34,9 @@ const SURFACES = {
 };
 const FIELD_MAT = {
   tile: { name: 'Foam field tile', mu: 0.70, e: 0.30, k: 5e3, crr: 0.05 },
-  hive: { name: 'HIVE panel', mu: 0.30, e: 0.50, k: 2e5, crr: 0.004 }
+  /* the HIVE skins are thin plastic sheets on ribs; a flexing sheet soaks up more of a hit than a solid panel (estimate, measurable with a drop test) */
+  hive: { name: 'HIVE skin', mu: 0.30, e: 0.40, k: 1e5, crr: 0.006 },
+  wall: { name: 'Field wall', mu: 0.30, e: 0.50, k: 2e5, crr: 0.004 }
 };
 
 /* Flywheels used on FTC robots. Masses are typical; edit them to match yours. shore is the durometer (Shore A, or 0 for rigid). */
@@ -115,7 +117,9 @@ function closestOnTri(p, a, b, c) {
   if (vb <= 0 && d2 >= 0 && d6 <= 0) return add(a, mul(ac, d2 / (d2 - d6)));
   const va = d3 * d6 - d5 * d4;
   if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) return add(b, mul(sub(c, b), (d4 - d3) / ((d4 - d3) + (d5 - d6))));
-  const den = 1 / (va + vb + vc);
+  const sum = va + vb + vc;
+  if (!(Math.abs(sum) > 1e-30)) return a;
+  const den = 1 / sum;
   return add(a, add(mul(ab, vb * den), mul(ac, vc * den)));
 }
 
@@ -128,6 +132,9 @@ function makeMesh(tris, mat, cell) {
   const grid = new Map();
   for (let t = 0; t < n; t++) {
     const o = t * 9, a = [], b = [];
+    /* triangles with no area cannot be touched and would break the closest-point maths, so they stay out of the grid */
+    const e1 = [tris[o + 3] - tris[o], tris[o + 4] - tris[o + 1], tris[o + 5] - tris[o + 2]], e2 = [tris[o + 6] - tris[o], tris[o + 7] - tris[o + 1], tris[o + 8] - tris[o + 2]];
+    if (len(cross(e1, e2)) < 1e-12) continue;
     for (let k = 0; k < 3; k++) {
       const v = [tris[o + k], tris[o + 3 + k], tris[o + 6 + k]];
       a[k] = Math.floor((Math.min(v[0], v[1], v[2]) - lo[k]) / cell);
@@ -261,6 +268,73 @@ function hoodTris(o) {
   return { tris: new Float32Array(out), entryDir: t, feedPoint: start };
 }
 
+/* ---------- the official field ---------- */
+
+/* Convex hull of 2D points (monotone chain), counter-clockwise. */
+function hull2(pts) {
+  pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], hi = [];
+  for (const p of pts) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (hi.length > 1 && cr(hi[hi.length - 2], hi[hi.length - 1], p) <= 0) hi.pop(); hi.push(p); }
+  return lo.slice(0, -1).concat(hi.slice(0, -1));
+}
+
+/* Is a point inside a CELL: between its side ribs, and inside the outline its skins make in the y–z plane? */
+function inHull(p, cell) {
+  if (p[0] < cell.x0 || p[0] > cell.x1) return false;
+  const h = cell.hull;
+  for (let i = 0; i < h.length; i++) {
+    const a = h[i], b = h[(i + 1) % h.length];
+    if ((b[0] - a[0]) * (p[2] - a[1]) - (b[1] - a[1]) * (p[1] - a[0]) < 0) return false;
+  }
+  return true;
+}
+
+/* Reads biobuzz-field.bin, made from the official field CAD: every part with its colour, the meshes balls can hit,
+   and the four CELLS found from the HIVE skins. Stored in millimetres, returned in metres. */
+function parseField(buf) {
+  const dv = new DataView(buf), n = dv.getUint32(0, true);
+  const head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, n)));
+  const pad = (x) => (4 - (x % 4)) % 4;
+  let o = 4 + n + pad(n);
+  const nv = head.parts.reduce((a, p) => Math.max(a, p.vo + p.v), 0);
+  const pos = new Int16Array(buf.slice(o, o + nv * 6)); o += nv * 6 + pad(nv * 6);
+  const ni = head.parts.reduce((a, p) => Math.max(a, p.io + p.t * 3), 0);
+  const idx = head.wide ? new Uint32Array(buf.slice(o, o + ni * 4)) : new Uint16Array(buf.slice(o, o + ni * 2));
+  const parts = head.parts.map((p) => {
+    const tris = new Float32Array(p.t * 9);
+    for (let t = 0; t < p.t * 3; t++) {
+      const v = p.vo + idx[p.io + t];
+      tris[t * 3] = pos[v * 3] / 1000; tris[t * 3 + 1] = pos[v * 3 + 1] / 1000; tris[t * 3 + 2] = pos[v * 3 + 2] / 1000;
+    }
+    return { name: p.name, cat: p.cat, col: p.col, color: p.color, tris };
+  });
+  const join = (list) => { const out = new Float32Array(list.reduce((a, p) => a + p.tris.length, 0)); let k = 0; for (const p of list) { out.set(p.tris, k); k += p.tris.length; } return out; };
+  const hiveParts = parts.filter((p) => p.col && p.cat === 'hive'), wallParts = parts.filter((p) => p.col && p.cat !== 'hive');
+  /* CELLS: the top, back and bottom skins of each basket, grouped by which HIVE (x) and which end (y) they belong to */
+  const groups = {};
+  for (const p of parts) {
+    if (!/Skin/.test(p.name) || !/Hive Goal/.test(p.name)) continue;
+    let sx = 0, sy = 0; for (let i = 0; i < p.tris.length; i += 3) { sx += p.tris[i]; sy += p.tris[i + 1]; }
+    const key = (sx > 0 ? 'blue' : 'red') + (sy > 0 ? '+' : '-');
+    (groups[key] = groups[key] || []).push(p);
+  }
+  const cells = Object.keys(groups).map((key) => {
+    const pts = [], xs = [];
+    let zs = 0, nz = 0;
+    for (const p of groups[key]) for (let i = 0; i < p.tris.length; i += 3) { pts.push([p.tris[i + 1], p.tris[i + 2]]); xs.push(p.tris[i]); zs += p.tris[i + 2]; nz++; }
+    const h = hull2(pts);
+    const cy = h.reduce((a, q) => a + q[0], 0) / h.length, cz = h.reduce((a, q) => a + q[1], 0) / h.length;
+    return { key, color: key.slice(0, -1), x0: Math.min(...xs), x1: Math.max(...xs), hull: h, center: [(Math.min(...xs) + Math.max(...xs)) / 2, cy, cz], zMean: zs / nz };
+  });
+  for (const c of cells) { const twin = cells.find((d) => d !== c && d.color === c.color); c.up = !twin || c.zMean > twin.zMean; }
+  return {
+    parts, cells, half: (head.field && head.field.half || 1793) / 1000, wallTop: (head.field && head.field.wallTop || 296) / 1000,
+    hive: makeMesh(join(hiveParts), FIELD_MAT.hive, 0.04), wall: makeMesh(join(wallParts), FIELD_MAT.wall, 0.05)
+  };
+}
+
 /* ---------- the simulation ---------- */
 
 function Sim() {
@@ -274,6 +348,24 @@ Sim.prototype.setHive = function (dist, tilt) {
   this.env.dist = dist; this.env.tilt = tilt == null ? 20 : tilt;
   const h = hiveTris(dist, this.env.tilt);
   this.hive = { cell: makeMesh(h.cell, FIELD_MAT.hive, 0.05), frame: makeMesh(h.frame, FIELD_MAT.hive, 0.05), raw: h };
+};
+
+/* Uses the official field: its HIVE and walls for bounces, and one CELL as the target.
+   `aim` is { o: where shots start, h: unit horizontal direction to the CELL, d: distance along h to the CELL's middle }. */
+Sim.prototype.setField = function (field, target, aim) {
+  this.field = field; this.target = target; this.aim = aim; this.hive = null;
+  /* the CELL's lip height, and how far along the aim line its opening starts and ends */
+  if (target && aim) {
+    aim.lip = Math.min(...target.hull.map((q) => q[1]));
+    const along = [];
+    for (const q of target.hull) for (const x of [target.x0, target.x1]) along.push(dot(sub([x, q[0], q[1]], aim.o), aim.h));
+    aim.near = Math.min(...along); aim.far = Math.max(...along);
+  }
+};
+
+Sim.prototype.inTarget = function (p) {
+  if (this.target) return inHull(p, this.target);
+  return this.hive ? inCell(p, this.hive.raw.cf) : false;
 };
 
 /* A wheel: { c (world centre), a (axle unit vector), spec, motor, G (motor turns per wheel turn), V, tested, target (rpm), dir (±1), discs, count } */
@@ -338,6 +430,7 @@ Sim.prototype.near = function (b, pad) {
   for (const w of this.wheels) if (len(sub(b.p, w.c)) < w.r + w.hw + r + 0.01) return true;
   for (const m of this.meshes) if (nearTris(m, b.p, r, this.tmp).length) return true;
   if (this.hive) for (const m of [this.hive.cell, this.hive.frame]) if (nearTris(m, b.p, r, this.tmp).length) return true;
+  if (this.field) for (const m of [this.field.hive, this.field.wall]) if (nearTris(m, b.p, r, this.tmp).length) return true;
   for (const o of this.balls) if (o !== b && o.st !== 'gone' && len(sub(o.p, b.p)) < o.R + r) return true;
   return false;
 };
@@ -363,7 +456,7 @@ Sim.prototype.forces = function () {
     const F = [0, 0, -b.m * G], T = [0, 0, 0];
     if (b.st !== 'live') { out.push(null); continue; }
     this.airForce(b, b.v, F);
-    let shooter = false;
+    let shooter = false, wheelDepth = 0, otherDepth = 0;
     /* floor */
     if (b.p[2] < b.R) this.contact(b, [b.p[0], b.p[1], 0], [0, 0, 1], b.R - b.p[2], [0, 0, 0], FIELD_MAT.tile, F, T) && (b.floor = true);
     /* wheels */
@@ -379,11 +472,23 @@ Sim.prototype.forces = function () {
       if (!this.contact(b, q, n, depth, vs, mat, F, T)) continue;
       shooter = true;
       if (w.role !== 'roller') b.launched = true;
+      if (w.role === 'main') wheelDepth = Math.max(wheelDepth, depth); else if (w.role === 'double') otherDepth = Math.max(otherDepth, depth);
       /* the wheel feels the opposite force at the contact point, and the opposite rolling torque */
       w.load += dot(cross(sub(q, w.c), mul(this.lastF, -1)), w.a) - dot(this.lastRR, w.a);
     }
-    /* shooter meshes */
-    for (const m of this.meshes) shooter = this.meshContacts(b, m, F, T) || shooter;
+    /* shooter, transfer and robot meshes */
+    for (const m of this.meshes) {
+      const d = this.meshContacts(b, m, F, T);
+      if (!d || m.tag === 'robot') continue;
+      shooter = true; otherDepth = Math.max(otherDepth, d);
+    }
+    /* how hard the ball is squeezed: its overlap with the flywheel plus its overlap with the hood (or the other wheel) at the same moment */
+    if (wheelDepth > 0 && otherDepth > 0) b.comp = Math.max(b.comp || 0, wheelDepth + otherDepth);
+    /* the official field */
+    if (this.field) {
+      if (this.meshContacts(b, this.field.hive, F, T) && !b.entered) b.hiveHit = true;
+      this.meshContacts(b, this.field.wall, F, T);
+    }
     /* HIVE */
     if (this.hive) {
       if (this.meshContacts(b, this.hive.cell, F, T) && !b.entered) b.cellHit = true;
@@ -419,8 +524,9 @@ Sim.prototype.meshContacts = function (b, m, F, T) {
     if (same) { if (dist < same.dist) { same.dist = dist; same.q = q; same.n = n; } continue; }
     hits.push({ q, n, dist });
   }
-  for (const h of hits) this.contact(b, h.q, h.n, b.R - h.dist, [0, 0, 0], m.mat, F, T);
-  return hits.length > 0;
+  let deepest = 0;
+  for (const h of hits) { this.contact(b, h.q, h.n, b.R - h.dist, [0, 0, 0], m.mat, F, T); deepest = Math.max(deepest, b.R - h.dist); }
+  return deepest;
 };
 
 /* Motor, controller and friction for one wheel over dt. */
@@ -442,12 +548,16 @@ Sim.prototype.stepWheel = function (w, dt) {
 };
 
 /* Move the simulation forward by `span` seconds. Small steps whenever anything touches, RK4 in free flight. */
+/* Small steps whenever anything touches. Their size comes from the stiffest ball: about 1/200 of its bounce period, so the
+   spring–damper contact stays accurate (springs in series are never stiffer than the ball itself). RK4 in free flight. */
 Sim.prototype.advance = function (span, budget) {
-  let used = 0, done = 0;
+  let used = 0, done = 0, hard = 0;
+  for (const b of this.balls) if (b.st === 'live') hard = Math.max(hard, Math.sqrt(b.k / b.m));
+  const fine = Math.max(1e-5, Math.min(6e-5, hard ? 0.03 / hard : 6e-5));
   while (done < span - 1e-9 && used < budget) {
     let small = false;
     for (const b of this.balls) if (b.st === 'live' && this.near(b, Math.max(0.004, len(b.v) * 0.0012))) { small = true; break; }
-    const dt = Math.min(small ? 2e-5 : 1e-3, span - done);
+    const dt = Math.min(small ? fine : 1e-3, span - done);
     if (small) this.stepContact(dt); else this.stepFree(dt);
     done += dt; used += small ? 1 : 10;
   }
@@ -488,27 +598,34 @@ Sim.prototype.stepFree = function (dt) {
 /* Bookkeeping after every step: spin decay, exit capture, scoring, settling and the rpm trace. */
 Sim.prototype.after = function (dt) {
   this.t += dt;
-  const main = this.wheels[0], cf = this.hive && this.hive.raw.cf;
+  const main = this.wheels[0];
   for (const b of this.balls) {
     if (b.st !== 'live') continue;
+    if (!isFinite(b.p[0] + b.p[1] + b.p[2] + b.v[0] + b.v[1] + b.v[2])) { b.p = b.path[b.path.length - 1] || [0, 0, 0]; b.v = [0, 0, 0]; this.finish(b, 'floor'); continue; }
     b.w = mul(b.w, Math.exp(-dt / this.env.spinTau));
     if (main) b.rpmMin = Math.min(b.rpmMin, Math.abs(main.omega) * 30 / Math.PI);
     if (b.launched && !b.exit && this.t - b.lastShooter > 0.02) {
       const sp = len(b.v);
       b.exit = { t: this.t, v: sp, ang: Math.atan2(b.v[2], Math.hypot(b.v[0], b.v[1])) * 180 / Math.PI, spin: len(b.w) * 30 / Math.PI,
-        rpmBefore: b.rpmAtFeed, rpmAfter: main ? Math.abs(main.omega) * 30 / Math.PI : 0 };
+        rpmBefore: b.rpmAtFeed, rpmAfter: main ? Math.abs(main.omega) * 30 / Math.PI : 0, comp: b.comp || 0 };
     }
     b.maxX = Math.max(b.maxX, b.p[0]);
-    if (cf && inCell(b.p, cf)) b.entered = true;
+    if (this.aim) {
+      b.maxAlong = Math.max(b.maxAlong == null ? -Infinity : b.maxAlong, dot(sub(b.p, this.aim.o), this.aim.h));
+      /* where the ball comes back down through the height of the CELL's lip */
+      if (b.exit && b.lipAlong == null && b.prevZ >= this.aim.lip && b.p[2] < this.aim.lip && b.v[2] < 0) b.lipAlong = dot(sub(b.p, this.aim.o), this.aim.h);
+      b.prevZ = b.p[2];
+    }
+    if (this.inTarget(b.p)) b.entered = true;
     else if (b.entered) b.out = true;
     if (this.t - (b.lastPath || 0) > 0.01) { b.path.push(b.p.slice()); b.lastPath = this.t; if (b.path.length > 600) b.path.shift(); }
     const slow = len(b.v) < 0.04;
     b.still = slow ? b.still + dt : 0;
-    if (b.still > 0.25 && cf && inCell(b.p, cf)) this.finish(b, 'scored');
+    if (b.still > 0.25 && this.inTarget(b.p)) this.finish(b, 'scored');
     else if (b.still > 0.25 && b.p[2] < b.R + 0.01) this.finish(b, b.exit ? 'floor' : 'stuck');
     else if (b.still > 0.6) this.finish(b, b.exit ? 'stuck' : 'stuck');
     else if (b.p[2] < b.R + 0.005 && b.exit && this.t - b.exit.t > 0.05) this.finish(b, 'floor');
-    else if (this.t - b.born > 8 || b.p[2] < -1 || Math.abs(b.p[1]) > 5) this.finish(b, 'floor');
+    else if (this.t - b.born > 8 || b.p[2] < -1 || Math.abs(b.p[0]) > 6 || Math.abs(b.p[1]) > 6) this.finish(b, 'floor');
   }
   if (main && (!this.trace.length || this.t - this.trace[this.trace.length - 1][0] > 0.005)) {
     this.trace.push([this.t, Math.abs(main.omega) * 30 / Math.PI]);
@@ -525,13 +642,14 @@ Sim.prototype.finish = function (b, how) {
   else if (!b.exit) result = b.launched ? 'Jammed in the shooter' : 'Never reached the flywheel';
   else if (b.out) result = 'Bounced out';
   else if (b.cellHit) result = 'Hit the CELL rim';
-  else if (b.frameHit) result = 'Hit the HIVE frame';
+  else if (b.frameHit || b.hiveHit) result = 'Hit the HIVE';
+  else if (this.aim) result = b.lipAlong == null || b.lipAlong < this.aim.near ? 'Short' : b.lipAlong > this.aim.far ? 'Long' : 'Missed the opening';
   else if (b.maxX < dist) result = 'Short';
   else result = 'Long';
   b.st = how === 'scored' ? 'scored' : 'floor';
   b.v = [0, 0, 0]; b.w = [0, 0, 0];
   b.result = result; b.ended = this.t;
-  this.shots.push({ id: b.id, type: b.type, result, exit: b.exit, rpmBefore: b.rpmAtFeed, rpmMin: b.rpmMin === Infinity ? 0 : b.rpmMin });
+  this.shots.push({ id: b.id, type: b.type, result, exit: b.exit, comp: b.comp || 0, rpmBefore: b.rpmAtFeed, rpmMin: b.rpmMin === Infinity ? 0 : b.rpmMin });
 };
 
 /* Narrowest gap between a wheel's rim and the shooter meshes, found by casting rays out from the rim in the wheel's mid-plane. */
@@ -584,6 +702,6 @@ function writeSTL(tris) {
   return buf;
 }
 
-BBZ.Lab = { IN, G, MOTORS, SURFACES, FIELD_MAT, WHEELS, BALLS, HIVE, DISC_J, Sim, hoodTris, hiveTris, inCell, rimGap, parseSTL, writeSTL,
+BBZ.Lab = { IN, G, MOTORS, SURFACES, FIELD_MAT, WHEELS, BALLS, HIVE, DISC_J, Sim, hoodTris, hiveTris, inCell, inHull, parseField, makeMesh, rimGap, parseSTL, writeSTL,
   wheelGrowth, shoreToE, vec: { add, sub, mul, dot, cross, len, norm, clamp } };
 })();
