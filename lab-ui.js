@@ -17,7 +17,7 @@ const EXAMPLES = [
 const DEF = {
   src: 'ex', example: 'hood90', launch: 45, wrap: 90, comp: 10, exMat: 'pla',
   stlUnits: '0.001', stlMat: 'pla', stlRot: '0', stlX: 0, stlY: 0, stlZ: 0, feedX: -90, feedZ: 265, feedA: 45,
-  wheel: 'tpe96', wheelD: 96, wheelW: 38, wheelM: 75, wheelN: 1, discs: 1, dir: 1, wheelX: 0, wheelZ: 305,
+  wheel: 'tpe96', wheelD: 96, wheelW: 38, wheelM: 75, wheelN: 1, discs: 1, dir: 1, wheelX: 0, wheelY: 0, wheelZ: 305, wheelYaw: 0, wheelTilt: 0, feedY: 0,
   second: 'none', roller: 'roller48', rollerRpm: 1200, rollerMotor: 'gb1620', secX: 0, secZ: 155,
   motor: 'gb6000', ratio: 1, custFree: 6000, custStall: 0.144, rpm: 2650, V: 12.5, tested: true,
   ball: 'P', count: 6, interval: 0.6, feedV: 1, wait: true,
@@ -48,7 +48,7 @@ opt($('labRollerMotor'), L.MOTORS.filter((m) => m.id !== 'custom').map((m) => [m
 
 const FIELDS = { labExample: 'example', labLaunch: 'launch', labWrap: 'wrap', labComp: 'comp', labComp2: 'comp', labExMat: 'exMat', labStlUnits: 'stlUnits', labStlMat: 'stlMat',
   labStlRot: 'stlRot', labStlX: 'stlX', labStlY: 'stlY', labStlZ: 'stlZ', labFeedX: 'feedX', labFeedZ: 'feedZ', labFeedA: 'feedA', labWheel: 'wheel', labWheelD: 'wheelD',
-  labWheelW: 'wheelW', labWheelM: 'wheelM', labWheelN: 'wheelN', labDiscs: 'discs', labDir: 'dir', labWheelX: 'wheelX', labWheelZ: 'wheelZ', labSecond: 'second', labRoller: 'roller',
+  labWheelW: 'wheelW', labWheelM: 'wheelM', labWheelN: 'wheelN', labDiscs: 'discs', labDir: 'dir', labWheelX: 'wheelX', labWheelY: 'wheelY', labWheelZ: 'wheelZ', labWheelYaw: 'wheelYaw', labWheelTilt: 'wheelTilt', labFeedY: 'feedY', labSecond: 'second', labRoller: 'roller',
   labRollerRpm: 'rollerRpm', labRollerMotor: 'rollerMotor', labSecX: 'secX', labSecZ: 'secZ', labMotor: 'motor', labRatio: 'ratio', labCustFree: 'custFree', labCustStall: 'custStall',
   labRpm: 'rpm', labV: 'V', labTested: 'tested', labCount: 'count', labInterval: 'interval', labFeedV: 'feedV', labWait: 'wait',
   labRobX: 'robotX', labRobY: 'robotY', labHead: 'heading', labRobUnits: 'robUnits', labRobRot: 'robRot', labRobMX: 'robMX', labRobMY: 'robMY', labRobMZ: 'robMZ',
@@ -83,6 +83,7 @@ function labels() {
   $('labCompOut').textContent = compText; $('labComp2Out').textContent = compText;
   $('labRpmOut').textContent = S.rpm + ' rpm';
   $('labVOut').textContent = (+S.V).toFixed(1) + ' V';
+  $('labWheelYawOut').textContent = S.wheelYaw + '°'; $('labWheelTiltOut').textContent = S.wheelTilt + '°';
   $('labMuWOut').textContent = S.muW + '%'; $('labMuHOut').textContent = S.muH + '%'; $('labClOut').textContent = S.Cl + '%';
   $('labCustomBox').hidden = S.motor !== 'custom';
   const second = secondMode();
@@ -120,7 +121,31 @@ function trisToField(t, P) {
   for (let i = 0; i < t.length; i += 3) { out[i] = P.x + c * t[i] - s * t[i + 1]; out[i + 1] = P.y + s * t[i] + c * t[i + 1]; out[i + 2] = t[i + 2]; }
   return out;
 }
-const wheelAt = () => [S.wheelX / 1000, 0, S.wheelZ / 1000];
+const wheelAt = () => [S.wheelX / 1000, S.wheelY / 1000, S.wheelZ / 1000];
+
+/* The flywheel's own frame: its axle is +y. It is tilted about the robot's forward axis, then turned about the vertical,
+   so tilt 0 / turn 0 is an axle running left to right and tilt 90° is a flat wheel with an upright axle. */
+function rotW(v) {
+  const t = S.wheelTilt * Math.PI / 180, y = S.wheelYaw * Math.PI / 180;
+  const a = [v[0], v[1] * Math.cos(t) - v[2] * Math.sin(t), v[1] * Math.sin(t) + v[2] * Math.cos(t)];
+  return [a[0] * Math.cos(y) - a[1] * Math.sin(y), a[0] * Math.sin(y) + a[1] * Math.cos(y), a[2]];
+}
+function unrotW(v) {
+  const t = S.wheelTilt * Math.PI / 180, y = S.wheelYaw * Math.PI / 180;
+  const a = [v[0] * Math.cos(y) + v[1] * Math.sin(y), -v[0] * Math.sin(y) + v[1] * Math.cos(y), v[2]];
+  return [a[0], a[1] * Math.cos(t) + a[2] * Math.sin(t), -a[1] * Math.sin(t) + a[2] * Math.cos(t)];
+}
+const fromWheel = (p) => V.add(wheelAt(), rotW(p));
+function trisFromWheel(t) {
+  const out = new Float32Array(t.length);
+  for (let i = 0; i < t.length; i += 3) { const q = fromWheel([t[i], t[i + 1], t[i + 2]]); out[i] = q[0]; out[i + 1] = q[1]; out[i + 2] = q[2]; }
+  return out;
+}
+function trisToWheel(t, c) {
+  const out = new Float32Array(t.length);
+  for (let i = 0; i < t.length; i += 3) { const q = unrotW([t[i] - c[0], t[i + 1] - c[1], t[i + 2] - c[2]]); out[i] = q[0]; out[i + 1] = q[1]; out[i + 2] = q[2]; }
+  return out;
+}
 
 /* Scales, spins and moves CAD points (file units) into the robot frame. */
 function cadToRobot(tris, units, rot, ox, oy, oz) {
@@ -164,36 +189,36 @@ function chuteTris(p0, p1, down, guide, ballR) {
 function shooterParts(spec) {
   const ball = L.BALLS[S.ball], R = ball.d / 2, rw = spec.d / 2000, comp = S.comp / 1000, gap = ball.d - comp;
   const hwTotal = (spec.w * S.wheelN + 10 * (S.wheelN - 1)) / 2000;
-  const guide = Math.max(R + 0.006, hwTotal + 0.004), width = 2 * guide, W = wheelAt();
+  const guide = Math.max(R + 0.006, hwTotal + 0.004), width = 2 * guide;
   if (S.src === 'stl') {
     const a = S.feedA * Math.PI / 180;
+    /* the feed direction is measured in the flywheel's own plane, so it turns and tilts with the wheel */
     const parts = { tris: cad ? shooterCad() : new Float32Array(0), mat: Object.assign({}, L.SURFACES[S.stlMat]),
-      feed: [S.feedX / 1000, 0, S.feedZ / 1000], dir: [Math.cos(a), 0, Math.sin(a)], second: null };
-    if (S.second === 'double') parts.second = { c: [S.secX / 1000, 0, S.secZ / 1000], spec, dir: -1, rpm: S.rpm, motor: S.motor, role: 'double' };
-    if (S.second === 'transfer') parts.second = { c: [S.secX / 1000, 0, S.secZ / 1000], spec: L.WHEELS.find((w) => w.id === S.roller), dir: 1, rpm: S.rollerRpm, motor: S.rollerMotor, role: 'roller' };
+      feed: [S.feedX / 1000, S.feedY / 1000, S.feedZ / 1000], dir: rotW([Math.cos(a), 0, Math.sin(a)]), second: null };
+    if (S.second === 'double') parts.second = { c: [S.secX / 1000, S.wheelY / 1000, S.secZ / 1000], spec, dir: -1, rpm: S.rpm, motor: S.motor, role: 'double' };
+    if (S.second === 'transfer') parts.second = { c: [S.secX / 1000, S.wheelY / 1000, S.secZ / 1000], spec: L.WHEELS.find((w) => w.id === S.roller), dir: 1, rpm: S.rollerRpm, motor: S.rollerMotor, role: 'roller' };
     return parts;
   }
   const ex = EXAMPLES.find((e) => e.id === S.example) || EXAMPLES[0];
   const mat = Object.assign({}, L.SURFACES[S.exMat]);
-  const shift = (t) => { const o = new Float32Array(t.length); for (let i = 0; i < t.length; i++) o[i] = t[i] + W[i % 3]; return o; };
   if (ex.id === 'double') {
     const A = S.launch * Math.PI / 180, d = [Math.cos(A), 0, Math.sin(A)], n = [-Math.sin(A), 0, Math.cos(A)];
     const P = (s) => V.add(V.mul(n, -(rw + gap / 2)), V.mul(d, s));
-    const tris = chuteTris(P(-0.24), P(-(rw + 0.012)), V.mul(n, -1), guide, R);
-    return { tris: shift(new Float32Array(tris)), mat, feed: V.add(W, P(-(rw + R + 0.012))), dir: d, mainDir: -1,
-      second: { c: V.add(W, V.mul(n, -(2 * rw + gap))), spec, dir: 1, rpm: S.rpm, motor: S.motor, role: 'double' } };
+    const tris = new Float32Array(chuteTris(P(-0.24), P(-(rw + 0.012)), V.mul(n, -1), guide, R));
+    return { tris: trisFromWheel(tris), local: tris, mat, feed: fromWheel(P(-(rw + R + 0.012))), dir: rotW(d), mainDir: -1,
+      second: { c: fromWheel(V.mul(n, -(2 * rw + gap))), spec, dir: 1, rpm: S.rpm, motor: S.motor, role: 'double' } };
   }
   const chute = ex.id === 'transfer' ? 0.26 : 0.08;
   const hood = L.hoodTris({ rw, gap, squeeze: comp, wrap: S.wrap, launch: S.launch, width, thick: 0.004, guide, chute, ballR: R });
-  const parts = { tris: shift(hood.tris), mat, feed: V.add(W, hood.feedPoint), dir: hood.entryDir, second: null };
+  const parts = { tris: trisFromWheel(hood.tris), local: hood.tris, mat, feed: fromWheel(hood.feedPoint), dir: rotW(hood.entryDir), second: null };
   if (ex.id === 'transfer') {
     const a0 = (90 + S.launch + S.wrap) * Math.PI / 180, nrm = [Math.cos(a0), 0, Math.sin(a0)], t = [Math.sin(a0), 0, -Math.cos(a0)];
     const h0 = V.mul(nrm, rw + gap + comp), roller = L.WHEELS.find((w) => w.id === 'roller48'), rr = roller.d / 2000;
     /* the roller sits far enough down the ramp to clear the flywheel, and presses 5 mm into the ball */
     const clear = Math.sqrt(Math.max(0, (rw + rr + 0.006) ** 2 - (rw - rr) ** 2)) + 0.01;
     const ballAt = V.add(V.add(h0, V.mul(t, -clear)), V.mul(nrm, -(R + 0.002)));
-    parts.second = { c: V.add(W, V.add(ballAt, V.mul(nrm, -(R + rr - 0.005)))), spec: roller, dir: 1, rpm: S.rollerRpm, motor: S.rollerMotor, role: 'roller' };
-    parts.feed = V.add(W, V.add(V.add(h0, V.mul(t, -(clear + 0.035))), V.mul(nrm, -(R + 0.003))));
+    parts.second = { c: fromWheel(V.add(ballAt, V.mul(nrm, -(R + rr - 0.005)))), spec: roller, dir: 1, rpm: S.rollerRpm, motor: S.rollerMotor, role: 'roller' };
+    parts.feed = fromWheel(V.add(V.add(h0, V.mul(t, -(clear + 0.035))), V.mul(nrm, -(R + 0.003))));
   }
   return parts;
 }
@@ -211,7 +236,7 @@ function place(spec) {
   const tris = trisToField(parts.tris, P);
   const rtris = robot ? trisToField(robotCad(), P) : null;
   world = { P, parts, spec, tris, rtris, shooterBox: boxOf(tris), robotBox: boxOf(rtris),
-    wheelC: toField(wheelAt(), P), axis: dirToField([0, 1, 0], P),
+    wheelC: toField(wheelAt(), P), axis: dirToField(rotW([0, 1, 0]), P),
     secondC: parts.second ? toField(parts.second.c, P) : null,
     feed: toField(parts.feed, P), dir: dirToField(parts.dir, P) };
   return world;
@@ -298,7 +323,12 @@ function wheelInfo() {
     (S.rpm > mx * 0.97 ? ' The target is at or past the limit, so the wheel will never quite reach it.' : '') + (spinUp != null ? ' Spin-up to 98%: ' + spinUp.toFixed(2) + ' s.' : '');
 }
 
+function xyzInfo() {
+  const el = $('labXYZ'); if (!el) return;
+  el.textContent = 'Flywheel  X ' + S.wheelX + '  Y ' + S.wheelY + '  Z ' + S.wheelZ + ' mm  ·  turn ' + S.wheelYaw + '°  tilt ' + S.wheelTilt + '°';
+}
 function aimInfo() {
+  xyzInfo();
   const t = target(), el = $('labAimInfo');
   if (!t) { el.textContent = field ? '' : ''; return; }
   const o = world.wheelC, d = Math.hypot(t.center[0] - o[0], t.center[1] - o[1]);
@@ -347,7 +377,8 @@ function arcAt(cx, cz, segs, reach, inside) {
 
 /* Given the wheel centre and the covered arc, pick the spin that throws the ball forwards and upwards,
    and put the feed point just before the hood's entry. */
-function finishPlace(cx, cz, arc, rw, gap) {
+function finishPlace(cx, cz, arc, rw, gap, base) {
+  const b0 = base || [0, 0, 0];
   const R = L.BALLS[S.ball].d / 2, ang = (b) => (b + 0.5) / BINS * 2 * Math.PI;
   const thB = ang(arc.end), thA = ang((arc.end - arc.run + 1 + BINS) % BINS);
   const cw = { exit: [Math.sin(thA), -Math.cos(thA)], enter: thB, dir: 1 };          // spinning +y moves the rim clockwise in this view
@@ -363,9 +394,9 @@ function finishPlace(cx, cz, arc, rw, gap) {
   }
   const th = ang(fb), travel = pick.dir === 1 ? [Math.sin(th), -Math.cos(th)] : [-Math.sin(th), Math.cos(th)];
   const hood = isFinite(room) ? room : rw + gap, r0 = Math.max(rw + 0.002 + Math.min(R, (hood - rw) / 2), (rw + hood) / 2);
-  S.wheelX = Math.round(cx * 1000); S.wheelZ = Math.round(cz * 1000); S.dir = pick.dir;
-  S.feedX = Math.round((cx + r0 * Math.cos(th)) * 1000);
-  S.feedZ = Math.round((cz + r0 * Math.sin(th)) * 1000);
+  S.wheelX = Math.round((b0[0] + cx) * 1000); S.wheelY = Math.round(b0[1] * 1000); S.wheelZ = Math.round((b0[2] + cz) * 1000); S.dir = pick.dir;
+  const f = V.add([b0[0] + cx, b0[1], b0[2] + cz], rotW([r0 * Math.cos(th), 0, r0 * Math.sin(th)]));
+  S.feedX = Math.round(f[0] * 1000); S.feedY = Math.round(f[1] * 1000); S.feedZ = Math.round(f[2] * 1000);
   S.feedA = Math.round(Math.atan2(travel[1], travel[0]) * 180 / Math.PI);
   return { exitDeg: Math.round(Math.atan2(pick.exit[1], pick.exit[0]) * 180 / Math.PI), wrap: Math.round(arc.run * 360 / BINS), dir: pick.dir };
 }
@@ -376,7 +407,10 @@ function finishPlace(cx, cz, arc, rw, gap) {
 const breathe = () => new Promise((r) => { const ch = new MessageChannel(); ch.port1.onmessage = () => r(); ch.port2.postMessage(0); });
 async function bestFeed(cx, cz, rw, raw, spec, progress) {
   const ball = L.BALLS[S.ball], R = ball.d / 2, cal = calibration();
-  const mesh = L.makeMesh(raw, Object.assign({}, L.SURFACES[S.stlMat], cal.e ? { e: cal.e } : {}));
+  /* test shots happen 5 m up in the air, so the field floor never gets in the way of the shooter's own parts */
+  const UP = 5, lifted = new Float32Array(raw.length);
+  for (let i = 0; i < raw.length; i++) lifted[i] = raw[i] + (i % 3 === 2 ? UP : 0);
+  const mesh = L.makeMesh(lifted, Object.assign({}, L.SURFACES[S.stlMat], cal.e ? { e: cal.e } : {}));
   mesh.tag = 'shooter';
   const segs = slice(raw, 0), width = spec.w * S.wheelN + 10 * (S.wheelN - 1);
   const clearOf = (x, z) => { let d = Infinity; for (const [a, b] of segs) { const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz, t = l2 ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / l2)) : 0; d = Math.min(d, Math.hypot(a[0] + dx * t - x, a[1] + dz * t - z)); } return d; };
@@ -394,14 +428,14 @@ async function bestFeed(cx, cz, rw, raw, spec, progress) {
       const t = new L.Sim();
       t.cal = { muWheel: S.muW / 100, muScale: S.muH / 100 }; t.env.air = false;
       t.meshes.push(mesh);
-      t.addWheel({ c: [cx, 0, cz], a: [0, 1, 0], spec, width, count: S.wheelN, motor: motorOf(S.motor), G: +S.ratio || 1, V: +S.V, tested: S.tested,
+      t.addWheel({ c: [cx, 0, cz + UP], a: [0, 1, 0], spec, width, count: S.wheelN, motor: motorOf(S.motor), G: +S.ratio || 1, V: +S.V, tested: S.tested,
         target: S.rpm, dir, discs: +S.discs, spinUp: false });
-      const b = t.addBall(S.ball === 'P' ? 'P' : 'R', [x, 0, z], V.mul(travel, +S.feedV || 1), [0, 0, 0], { mass: cal.mass, k: cal.k });
+      const b = t.addBall(S.ball === 'P' ? 'P' : 'R', [x, 0, z + UP], V.mul(travel, +S.feedV || 1), [0, 0, 0], { mass: cal.mass, k: cal.k });
       /* stop as soon as the ball has left (or clearly will not): exit recorded, gone 25 cm, or sitting still */
       let still = 0;
       for (let u = 0; u < 0.35 && !b.exit && b.st === 'live'; u += 0.01) {
         t.advance(0.01, 1e9);
-        if (V.len(V.sub(b.p, [x, 0, z])) > 0.25) break;
+        if (V.len(V.sub(b.p, [x, 0, z + UP])) > 0.25) break;
         still = V.len(b.v) < 0.05 ? still + 0.01 : 0;
         if (still >= 0.05) break;
       }
@@ -418,9 +452,12 @@ async function bestFeed(cx, cz, rw, raw, spec, progress) {
   return { best, tried };
 }
 
-function placeFeed(cx, cz, b) {
-  S.wheelX = Math.round(cx * 1000); S.wheelZ = Math.round(cz * 1000); S.dir = b.dir;
-  S.feedX = Math.round(b.x * 1000); S.feedZ = Math.round(b.z * 1000); S.feedA = Math.round(Math.atan2(b.travel[2], b.travel[0]) * 180 / Math.PI);
+/* b is in the flywheel's frame (centre at the origin); c is the wheel centre in the robot frame. */
+function placeFeed(c, b) {
+  S.wheelX = Math.round(c[0] * 1000); S.wheelY = Math.round(c[1] * 1000); S.wheelZ = Math.round(c[2] * 1000); S.dir = b.dir;
+  const f = V.add(c, rotW([b.x, 0, b.z]));
+  S.feedX = Math.round(f[0] * 1000); S.feedY = Math.round(f[1] * 1000); S.feedZ = Math.round(f[2] * 1000);
+  S.feedA = Math.round(Math.atan2(b.travel[2], b.travel[0]) * 180 / Math.PI);
 }
 
 let placing = false;
@@ -433,39 +470,41 @@ async function autoPlaceRun() {
   const info = $('labAutoInfo');
   if (!cad) { info.textContent = 'Load your shooter file first.'; return; }
   const D = L.BALLS[S.ball].d, R = D / 2;
-  const raw = shooterCad(S.stlX, 0, S.stlZ);
-  /* a flywheel modelled in the CAD tells us exactly where the wheel goes and how big it is */
+  const raw = shooterCad();
+  /* a flywheel modelled in the CAD tells us exactly where the wheel goes, which way its axle points and how big it is */
   if (cad.wheel && cad.wheel.length) {
-    const wb = boxOf(cadToRobot(cad.wheel, cad.step ? '0.001' : S.stlUnits, S.stlRot, S.stlX, 0, S.stlZ));
+    const wb = boxOf(cadToRobot(cad.wheel, cad.step ? '0.001' : S.stlUnits, S.stlRot, S.stlX, S.stlY, S.stlZ));
     const size = [0, 1, 2].map((k) => wb.hi[k] - wb.lo[k]), c = [0, 1, 2].map((k) => (wb.lo[k] + wb.hi[k]) / 2);
     /* the axle runs along the side whose two other sides are equal (the round face) */
     const roundness = (k) => { const o = [0, 1, 2].filter((i) => i !== k).map((i) => size[i]); return Math.abs(o[0] - o[1]) / Math.max(o[0], o[1]); };
     const axle = [0, 1, 2].reduce((a, k) => (roundness(k) < roundness(a) ? k : a), 0);
-    if (axle !== 1 || roundness(1) > 0.12) { info.textContent = 'The flywheel in your CAD does not have its axle running left to right. Use "Spin the part" so the axle points sideways, then press Auto-place again.'; return; }
-    const dia = (size[0] + size[2]) / 2, rw = dia / 2;
-    S.wheelD = Math.round(dia * 1000); S.wheelW = Math.max(8, Math.round(size[1] * 1000));
-    S.stlY = Math.round(-c[1] * 1000);
-    const segs = slice(raw, c[1]);
-    const near = segs.length ? arcAt(c[0], c[2], segs, rw + D + 0.004, rw + 0.001) : { dmin: Infinity, run: 0 };
+    if (roundness(axle) > 0.12) { info.textContent = 'The flywheel in your CAD is not lined up with the robot\'s X, Y or Z, so the lab cannot tell which way its axle points. Set Turn and Tilt in Step 2 by hand.'; return; }
+    S.wheelYaw = axle === 0 ? 90 : 0; S.wheelTilt = axle === 2 ? 90 : 0;
+    const others = [0, 1, 2].filter((k) => k !== axle), dia = (size[others[0]] + size[others[1]]) / 2, rw = dia / 2;
+    S.wheelD = Math.round(dia * 1000); S.wheelW = Math.max(8, Math.round(size[axle] * 1000));
+    S.wheelX = Math.round(c[0] * 1000); S.wheelY = Math.round(c[1] * 1000); S.wheelZ = Math.round(c[2] * 1000);
+    const local = trisToWheel(raw, c);                 // the shooter seen from the flywheel: axle along y, centre at the origin
+    const segs = slice(local, 0);
+    const near = segs.length ? arcAt(0, 0, segs, rw + D + 0.004, rw + 0.001) : { dmin: Infinity, run: 0 };
     const gap = near.pathMin - rw;
     if (!segs.length || near.run < 4 || !isFinite(gap)) {
-      S.wheelX = Math.round(c[0] * 1000); S.wheelZ = Math.round(c[2] * 1000);
       info.textContent = 'Placed the flywheel where your CAD has it (' + S.wheelD + ' mm), but no hood surface curves round it, so set the spin direction and feed point by hand.';
     } else {
-      const f = await bestFeed(c[0], c[2], rw, shooterCad(), wheelSpec(), (q) => { info.textContent = 'Test-firing balls from spots round the wheel… ' + Math.round(q * 100) + '%'; });
+      const f = await bestFeed(0, 0, rw, local, wheelSpec(), (q) => { info.textContent = 'Test-firing balls from spots round the wheel… ' + Math.round(q * 100) + '%'; });
       if (f.best) {
-        placeFeed(c[0], c[2], f.best);
+        placeFeed(c, f.best);
         info.textContent = 'Used the flywheel from your CAD (' + cad.wheelNames.join(', ') + ', ' + S.wheelD + ' mm) and test-fired ' + f.tried + ' balls from spots round it. Best: feed at the honey dot, wheel spinning ' +
           (f.best.dir === 1 ? 'forward' : 'in reverse') + ', ' + f.best.v.toFixed(1) + ' m/s at ' + Math.round(f.best.ang) + '° with ' + (f.best.comp * 1000).toFixed(1) + ' mm of squeeze. If your balls really come in somewhere else, drag the dot there. Check the wheel type in Step 2 matches yours.';
       } else {
-        const r = finishPlace(c[0], c[2], arcAt(c[0], c[2], segs, near.pathMin + 0.006, rw + 0.001), rw, gap);
+        const r = finishPlace(0, 0, arcAt(0, 0, segs, near.pathMin + 0.006, rw + 0.001), rw, gap, c);
         info.textContent = 'Used the flywheel from your CAD (' + cad.wheelNames.join(', ') + '), but no test shot came out cleanly. Spin set to ' + (r.dir === 1 ? 'forward' : 'reverse') + '; drag the feed dot to where your balls come in.';
       }
     }
     save(); writeUI(); rebuild();
     return;
   }
-  /* otherwise search for the spot where a wheel of the chosen size sits under the hood with the target squeeze */
+  /* otherwise search for the spot where a wheel of the chosen size sits under the hood with the target squeeze (axle left to right) */
+  S.wheelYaw = 0; S.wheelTilt = 0;
   const spec = wheelSpec(), rw = spec.d / 2000, gap = D - S.comp / 1000, want = rw + gap;
   const box = boxOf(raw), y0 = (box.lo[1] + box.hi[1]) / 2, segs = slice(raw, y0);
   if (segs.length < 3) { info.textContent = 'The middle of your shooter has no surfaces for a ball to roll on. Drag the flywheel into place instead.'; return; }
@@ -479,14 +518,14 @@ async function autoPlaceRun() {
     if (!best || score > best.score) best = Object.assign({ score, cx, cz }, a);
   }
   if (!best || best.run < 6) { info.textContent = 'No part of your shooter curves round a ' + spec.d + ' mm wheel with that squeeze. Try another wheel size or squeeze, or drag the flywheel into place.'; return; }
-  S.stlY = Math.round(-y0 * 1000);
-  const f = await bestFeed(best.cx, best.cz, rw, shooterCad(), spec, (q) => { info.textContent = 'Test-firing balls from spots round the wheel… ' + Math.round(q * 100) + '%'; });
+  const c = [best.cx, y0, best.cz];
+  const f = await bestFeed(0, 0, rw, trisToWheel(raw, c), spec, (q) => { info.textContent = 'Test-firing balls from spots round the wheel… ' + Math.round(q * 100) + '%'; });
   if (f.best) {
-    placeFeed(best.cx, best.cz, f.best);
+    placeFeed(c, f.best);
     info.textContent = 'Placed the flywheel where your hood wraps ' + Math.round(best.run * 360 / BINS) + '° round it with ' + S.comp + ' mm of squeeze, then test-fired ' + f.tried + ' balls. Best: wheel spinning ' +
       (f.best.dir === 1 ? 'forward' : 'in reverse') + ', ' + f.best.v.toFixed(1) + ' m/s at ' + Math.round(f.best.ang) + '°. Drag the feed dot if your balls come in somewhere else.';
   } else {
-    const r = finishPlace(best.cx, best.cz, best, rw, gap);
+    const r = finishPlace(best.cx, best.cz, best, rw, gap, [0, y0, 0]);
     info.textContent = 'Placed: your hood wraps ' + r.wrap + '° round the wheel with ' + S.comp + ' mm of squeeze, the wheel spins ' + (r.dir === 1 ? 'forward' : 'in reverse') +
       '. No test shot came out cleanly, so drag the feed dot to where your balls come in.';
   }
@@ -584,7 +623,8 @@ function uploadMoving() {
 }
 
 const CAMS = {
-  shooter: () => ({ target: world.wheelC.slice(), dist: 0.6, yaw: world.P.h - Math.PI / 2, pitch: 0.12 }),
+  shooter: () => { const a = world.axis, flat = Math.abs(a[2]) > 0.9;
+    return { target: world.wheelC.slice(), dist: 0.6, yaw: flat ? world.P.h - Math.PI / 2 : Math.atan2(-a[1], -a[0]), pitch: flat ? 0.9 : 0.12 }; },
   side: () => { const t = target(), c = t ? t.center : V.add(world.wheelC, dirToField([1.5, 0, 0.8], world.P)), m = V.mul(V.add(world.wheelC, c), 0.5);
     return { target: [m[0], m[1], 0.85], dist: Math.max(2.6, V.len(V.sub(c, world.wheelC)) * 1.6), yaw: world.P.h - Math.PI / 2, pitch: 0.15 }; },
   behind: () => { const t = target(), c = t ? t.center : V.add(world.wheelC, dirToField([1.5, 0, 0.8], world.P)), m = V.add(V.mul(world.wheelC, 0.4), V.mul(c, 0.6));
@@ -601,8 +641,20 @@ function scene() {
   items.push({ geo: 'shooter', tint: [0.55, 0.62, 0.72, 0.85] });
   if (world.rtris) items.push({ geo: 'robot', tint: [0.62, 0.64, 0.6, 1] });
   items.push({ geo: 'footprint', tint: [...colors.honey, 0.9] });
-  for (const w of sim.wheels) items.push({ geo: 'wheel', m: M.trs(w.c, w.a, w.angle, [w.r + w.growth, w.hw, w.r + w.growth]) });
+  for (const w of sim.wheels) {
+    /* the wheel model's axle is +y: line it up with the real axle, then spin it about that axle */
+    const cr = V.cross([0, 1, 0], w.a), sn = V.len(cr), al = Math.atan2(sn, w.a[1]);
+    const alignAxis = sn > 1e-6 ? V.mul(cr, 1 / sn) : [1, 0, 0];
+    items.push({ geo: 'wheel', m: M.mul(M.trs(w.c, w.a, w.angle, 1), M.trs([0, 0, 0], alignAxis, al, [w.r + w.growth, w.hw, w.r + w.growth])) });
+  }
   if (S.src === 'stl' && !S.lock) items.push({ geo: 'ball', m: M.trs(world.feed, [0, 0, 1], 0, 0.012), tint: [...colors.honey, 1], lit: false });
+  if (!S.lock) for (const g of gizmo()) {
+    /* a thin bar from the wheel centre along each of the robot's axes, with a knob on the end */
+    const mid = V.add(g.from, V.mul(g.dir, g.len / 2)), rx = V.cross([1, 0, 0], g.dir), s = V.len(rx);
+    const ang = Math.atan2(s, g.dir[0]), ax = s > 1e-6 ? V.mul(rx, 1 / s) : [0, 0, 1];
+    items.push({ geo: 'box', m: M.trs(mid, ax, ang, [g.len / 2, 0.0025, 0.0025]), tint: [...g.color, 1], lit: false });
+    items.push({ geo: 'ball', m: M.trs(V.add(g.from, V.mul(g.dir, g.len)), [0, 0, 1], 0, 0.009), tint: [...g.color, 1], lit: false });
+  }
   for (const b of sim.balls) {
     if (b.st === 'gone') continue;
     const wl = V.len(b.w), ax = wl > 1e-6 ? V.mul(b.w, 1 / wl) : [0, 0, 1];
@@ -646,9 +698,29 @@ function rayPlane(ray, p0, n) {
   return t > 0 ? V.add(ray.o, V.mul(ray.d, t)) : null;
 }
 
-/* What is under the pointer: the feed dot, a wheel, the shooter, the robot model or the robot's outline on the floor. */
+/* The X (red, forward), Y (green, left) and Z (blue, up) handles on the flywheel, along the robot's own axes. */
+const AXIS_COLORS = [[0.9, 0.2, 0.15], [0.15, 0.7, 0.25], [0.2, 0.45, 0.95]];
+function gizmo() {
+  if (!world || !sim) return [];
+  const len = sim.wheels[0].r + 0.07;
+  return [[1, 0, 0], [0, 1, 0], [0, 0, 1]].map((d, k) => ({ k, from: world.wheelC, dir: dirToField(d, world.P), len, color: AXIS_COLORS[k] }));
+}
+/* Closest approach between the pointer's ray and a line: the distance between them and how far along the line. */
+function rayLine(ray, p, u) {
+  const w0 = V.sub(p, ray.o), b = V.dot(u, ray.d), d1 = V.dot(u, w0), e = V.dot(ray.d, w0), den = 1 - b * b;
+  if (den < 1e-9) return null;
+  const s = (b * e - d1) / den, t = (e - b * d1) / den;
+  return { s, t, dist: V.len(V.sub(V.add(p, V.mul(u, s)), V.add(ray.o, V.mul(ray.d, t)))) };
+}
+
+/* What is under the pointer: an X/Y/Z handle, the feed dot, a wheel, the shooter, the robot model or the robot's outline on the floor. */
 function pick(ray, hover) {
   if (S.lock || !world || !sim) return null;
+  const tol = Math.max(0.006, (glv ? glv.cam.dist : 1) * 0.012);
+  for (const g of gizmo()) {
+    const r = rayLine(ray, g.from, g.dir);
+    if (r && r.t > 0 && r.s > 0.01 && r.s < g.len + 0.012 && r.dist < tol) return hover ? { kind: 'axis' } : { kind: 'axis', k: g.k, from: g.from, u: g.dir, s0: r.s, S0: Object.assign({}, S) };
+  }
   const hits = [];
   const add = (kind, t, at) => { if (t != null) hits.push({ kind, t, at }); };
   if (S.src === 'stl') add('feed', raySphere(ray, world.feed, 0.03), world.feed);
@@ -664,13 +736,24 @@ function pick(ray, hover) {
   const h = hits.find((x) => x.kind === 'feed' || x.kind === 'wheel' || x.kind === 'second') || hits[0];
   if (hover) return h;
   const at = V.add(ray.o, V.mul(ray.d, h.t));
-  const plane = h.kind === 'robot' ? { p0: [0, 0, 0], n: [0, 0, 1] } : { p0: at, n: world.axis };
+  /* the robot slides on the floor; parts slide in the robot's side-on (x–z) plane */
+  const plane = h.kind === 'robot' ? { p0: [0, 0, 0], n: [0, 0, 1] } : { p0: at, n: dirToField([0, 1, 0], world.P) };
   const start = rayPlane(ray, plane.p0, plane.n) || at;
   return { kind: h.kind, plane, start, S0: Object.assign({}, S) };
 }
 
 let dragFrame = 0;
 function dragTo(h, ray) {
+  if (h.kind === 'axis') {
+    const r = rayLine(ray, h.from, h.u);
+    if (!r) return;
+    dragging = h;
+    const mm = Math.round((r.s - h.s0) * 1000), key = ['wheelX', 'wheelY', 'wheelZ'][h.k];
+    S[key] = h.S0[key] + mm;
+    if (key === 'wheelZ') S.wheelZ = Math.max(30, S.wheelZ);
+    if (!dragFrame) dragFrame = requestAnimationFrame(() => { dragFrame = 0; writeUI(); build(true); if (!running && glv) glv.draw(scene()); });
+    return;
+  }
   const p = rayPlane(ray, h.plane.p0, h.plane.n);
   if (!p) return;
   const d = V.sub(p, h.start), O = h.S0;
@@ -875,6 +958,10 @@ $('labAim').addEventListener('click', () => {
   save(); writeUI(); rebuild();
 });
 $('labAutoPlace').addEventListener('click', autoPlace);
+document.querySelectorAll('[data-orient]').forEach((b) => b.addEventListener('click', () => {
+  const [yaw, tilt] = b.dataset.orient.split(',').map(Number);
+  S.wheelYaw = yaw; S.wheelTilt = tilt; save(); writeUI(); rebuild();
+}));
 $('labStart').addEventListener('click', () => {
   if (fed >= S.count && !sim.balls.some((b) => b.st === 'live')) { fed = 0; }
   if (startT == null) startT = sim.t;
@@ -920,9 +1007,8 @@ $('labRobotFile').addEventListener('change', async () => {
 $('labRobotRemove').addEventListener('click', () => { robot = null; $('labRobotFile').value = ''; $('labRobotInfo').textContent = 'Without a robot file the lab shows just the flywheel and shooter.'; writeUI(); rebuild(); });
 
 $('labExDownload').addEventListener('click', () => {
-  const spec = wheelSpec(), parts = shooterParts(spec), W = wheelAt(), t = new Float32Array(parts.tris.length);
-  for (let i = 0; i < t.length; i++) t[i] = parts.tris[i] - W[i % 3];          // saved round the flywheel axle
-  const blob = new Blob([L.writeSTL(t)], { type: 'model/stl' });
+  const parts = shooterParts(wheelSpec());
+  const blob = new Blob([L.writeSTL(parts.local || parts.tris)], { type: 'model/stl' });          // saved round the flywheel axle
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = 'simyourcode-' + S.example + '.stl';
   document.body.appendChild(a); a.click(); a.remove();
@@ -967,7 +1053,7 @@ BBZ.labStep = function (sec) {
     live: sim.balls.filter((b) => b.st === 'live').map((b) => b.p.map((x) => +x.toFixed(3)).concat([+V.len(b.v).toFixed(2)])),
     wheels: sim.wheels.map((w) => ({ c: w.c.map((x) => +x.toFixed(3)), r: w.r, rpm: Math.round(w.omega * 30 / Math.PI), role: w.role })), feed: world.feed.map((x) => +x.toFixed(3)) };
 };
-BBZ.labTest = { pick, dragTo, dragEnd, autoPlace, state: () => S, world: () => world, sim: () => sim, field: () => field, cad: () => cad };
+BBZ.labTest = { pick, dragTo, dragEnd, autoPlace, state: () => S, world: () => world, sim: () => sim, field: () => field, cad: () => cad, bestFeed, trisToWheel, shooterCad: () => shooterCad() };
 
 writeUI();
 readColors();
