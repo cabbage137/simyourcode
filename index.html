@@ -589,6 +589,47 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .verlist .ver { font: 800 12px/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 10px; padding: 5px 8px; text-align: center; white-space: nowrap; }
 .verlist .is-now .ver { background: #ffc91f; color: #201800; border-color: #ffc91f; }
 .verlist .gap .ver { border-style: dashed; }
+/* ---------- Shooter Lab ---------- */
+.lab { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: 14px; align-items: start; }
+.lab-tight { gap: 8px; }
+.sliders.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.field-label input[type="number"] { font-size: 14px; color: var(--ink); text-transform: none; letter-spacing: 0; width: 100%; min-width: 0; }
+.lab-readout { font-weight: 700; font-variant-numeric: tabular-nums; }
+.lab-readout .warn { color: var(--warn); }
+.lab-stage { position: sticky; top: 8px; }
+.lab-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lab-canvas-wrap { position: relative; width: 100%; aspect-ratio: 4 / 3; max-height: 62vh; border-radius: 8px; overflow: hidden; background: var(--sunk); }
+#labCanvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#labCanvas:active { cursor: grabbing; }
+.lab-views { position: absolute; top: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.lab-views .btn { background: color-mix(in srgb, var(--surface) 85%, transparent); }
+.lab-nogl { position: absolute; inset: auto 12px 12px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.lab-live { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; }
+.lab-live > div { display: flex; flex-direction: column; min-width: 0; }
+.lab-live b { font-family: var(--font-display); font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lab-chart { width: 100%; height: 120px; display: block; }
+.lab-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.lab-stats > div { background: var(--sunk); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lab-stats b { font-family: var(--font-display); font-size: 20px; font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; }
+.lab-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.lab-table th, .lab-table td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.lab-table th { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.lab-table .res-good { color: var(--good); font-weight: 700; }
+.lab-table .res-bad { color: var(--bad); font-weight: 700; }
+.lab-table .res-warn { color: var(--warn); font-weight: 700; }
+details.card > summary { cursor: pointer; list-style-position: inside; }
+details.card > summary h3 { display: inline; }
+.lab-how { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 980px) {
+  .lab { grid-template-columns: minmax(0, 1fr); }
+  .lab-stage { position: static; order: -1; }
+}
+@media (max-width: 560px) {
+  .sliders.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lab-live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+#view-lab [hidden] { display: none !important; }
 </style>
 
 <canvas id="bgHive" aria-hidden="true"></canvas>
@@ -602,6 +643,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
       <button class="tab" type="button" data-view="home" aria-selected="true">Home</button>
       <button class="tab" type="button" data-view="drive" aria-selected="false">Drive &amp; Code</button>
       <button class="tab" type="button" data-view="build" aria-selected="false">Build Bot</button>
+      <button class="tab" type="button" data-view="lab" aria-selected="false">Shooter Lab</button>
       <button class="tab" type="button" data-view="learn" aria-selected="false">Step by Step</button>
       <button class="tab" type="button" data-view="tutorial" aria-selected="false">Tutorial</button>
       <button class="tab" type="button" data-view="manual" aria-selected="false">Game Manual</button>
@@ -737,6 +779,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
     <div class="menu">
       <button type="button" class="menu-card" data-go="drive"><span class="menu-hex" aria-hidden="true">&#127918;</span><span><b>Drive &amp; Code</b><span class="hint">The field, the gamepad and the code editor. Run one program or play a whole match.</span></span></button>
       <button type="button" class="menu-card" data-go="build"><span class="menu-hex" aria-hidden="true">&#128295;</span><span><b>Build Bot</b><span class="hint">Pick a drivetrain and tools, drag parts where you want them, name every device, or load a ready-made robot.</span></span></button>
+      <button type="button" class="menu-card" data-go="lab"><span class="menu-hex" aria-hidden="true">&#127919;</span><span><b>Shooter Lab</b><span class="hint">Load your shooter STL, pick the flywheel, material and motor, and watch balls fly into a real-size HIVE CELL.</span></span></button>
       <button type="button" class="menu-card" data-go="learn"><span class="menu-hex" aria-hidden="true">&#128203;</span><span><b>Step by Step</b><span class="hint">Ten short steps from your first look at the field to a full match.</span></span></button>
       <button type="button" class="menu-card" data-go="tutorial"><span class="menu-hex" aria-hidden="true">&#127891;</span><span><b>Tutorial</b><span class="hint">New to coding? Eight categories of lessons with pictures, from driving to AprilTags.</span></span></button>
       <button type="button" class="menu-card" data-go="manual"><span class="menu-hex" aria-hidden="true">&#128214;</span><span><b>Game Manual</b><span class="hint">The official manual links, a scoring quick reference and the rules that catch new teams.</span></span></button>
@@ -999,6 +1042,201 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
       <div class="card-head"><h3>Robots already made</h3><span class="cat-chip">Gallery</span></div>
       <p class="hint">Drag any picture to turn that robot around. Pick one to start from, then change anything. These are SimYourCode's own practice designs, drawn in the style of the starter robots that kit makers such as REV Robotics and goBILDA publish each season. They are not the official designs, and SimYourCode is not connected to those companies.</p>
       <div class="presets" id="presetList"></div>
+    </div>
+  </section>
+
+  <!-- ===================== SHOOTER LAB ===================== -->
+  <section id="view-lab" class="col" hidden>
+    <h2>Shooter Lab</h2>
+    <p class="hint">Test a flywheel shooter or transfer system before you build it. Load your shooter's STL (or start from an example), pick the flywheel, its material and motor, and watch POLLEN or NECTAR fly into a real-size HIVE CELL. Ball squeeze, friction, spin, air drag and bounces are all worked out with real physics.</p>
+    <div class="lab">
+      <div class="col lab-controls">
+
+        <div class="card">
+          <div class="card-head"><h3>Shooter CAD</h3><span class="cat-chip">Step 1</span></div>
+          <div class="seg" role="group" aria-label="Shooter source">
+            <button type="button" id="labSrcEx" aria-pressed="true">Example shooter</button>
+            <button type="button" id="labSrcStl" aria-pressed="false">My STL file</button>
+          </div>
+          <div id="labExBox" class="col lab-tight">
+            <label class="field-label">Example<select id="labExample"></select></label>
+            <p class="hint" id="labExBlurb"></p>
+            <div class="sliders">
+              <label class="field-label">Launch angle: <span id="labLaunchOut"></span><input type="range" id="labLaunch" min="25" max="70" step="1"></label>
+              <label class="field-label">Hood wrap: <span id="labWrapOut"></span><input type="range" id="labWrap" min="60" max="160" step="5"></label>
+              <label class="field-label">Compression: <span id="labCompOut"></span><input type="range" id="labComp" min="0" max="25" step="0.5"></label>
+              <label class="field-label">Hood material<select id="labExMat"></select></label>
+            </div>
+            <button type="button" class="btn btn-small" id="labExDownload">Save this example as an STL</button>
+          </div>
+          <div id="labStlBox" class="col lab-tight" hidden>
+            <label class="field-label">STL file (shooter, hood or transfer)<input type="file" id="labStlFile" accept=".stl,model/stl,application/sla,application/octet-stream"></label>
+            <p class="hint" id="labStlInfo">The file is read in your browser and never uploaded. Put the flywheel axle at the origin with the axle along Y, shots going toward +X and up as +Z, or line it up with the boxes below.</p>
+            <div class="sliders three">
+              <label class="field-label">Units<select id="labStlUnits"><option value="0.001">Millimetres</option><option value="0.0254">Inches</option><option value="1">Metres</option></select></label>
+              <label class="field-label">Material<select id="labStlMat"></select></label>
+              <label class="field-label">Spin the part<select id="labStlRot"><option value="0">As saved</option><option value="x90">90° about X</option><option value="x-90">−90° about X</option><option value="y90">90° about Y</option><option value="y-90">−90° about Y</option><option value="z90">90° about Z</option><option value="z180">180° about Z</option></select></label>
+              <label class="field-label">Move X (mm)<input type="number" id="labStlX" step="1" value="0"></label>
+              <label class="field-label">Move Y (mm)<input type="number" id="labStlY" step="1" value="0"></label>
+              <label class="field-label">Move Z (mm)<input type="number" id="labStlZ" step="1" value="0"></label>
+            </div>
+            <div class="sliders three">
+              <label class="field-label">Feed point X (mm)<input type="number" id="labFeedX" step="1" value="-90"></label>
+              <label class="field-label">Feed point Z (mm)<input type="number" id="labFeedZ" step="1" value="-40"></label>
+              <label class="field-label">Feed direction (°)<input type="number" id="labFeedA" step="5" value="45"></label>
+            </div>
+            <p class="hint">The feed point is where each ball appears (the small cube in the 3D view). The direction is measured up from +X.</p>
+          </div>
+          <p class="lab-readout" id="labGap"></p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Flywheel</h3><span class="cat-chip">Step 2</span></div>
+          <label class="field-label">Wheel and material<select id="labWheel"></select></label>
+          <div class="sliders three">
+            <label class="field-label">Diameter (mm)<input type="number" id="labWheelD" min="30" max="160" step="1"></label>
+            <label class="field-label">Width (mm)<input type="number" id="labWheelW" min="8" max="80" step="1"></label>
+            <label class="field-label">Mass each (g)<input type="number" id="labWheelM" min="5" max="600" step="1"></label>
+            <label class="field-label">Wheels on the shaft<select id="labWheelN"><option>1</option><option>2</option><option>3</option></select></label>
+            <label class="field-label">Steel inertia discs<select id="labDiscs"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
+            <label class="field-label">Spin direction<select id="labDir"><option value="1">Forward</option><option value="-1">Reverse</option></select></label>
+          </div>
+          <p class="hint" id="labWheelInfo"></p>
+          <label class="field-label">Second wheel<select id="labSecond"><option value="none">None</option><option value="double">Double flywheel (opposite spin)</option><option value="transfer">Transfer roller</option></select></label>
+          <div class="sliders three" id="labSecondBox" hidden>
+            <label class="field-label">Roller<select id="labRoller"></select></label>
+            <label class="field-label">Roller rpm<input type="number" id="labRollerRpm" min="0" max="6000" step="50" value="1200"></label>
+            <label class="field-label">Roller motor<select id="labRollerMotor"></select></label>
+            <label class="field-label" id="labSecPosX">Centre X (mm)<input type="number" id="labSecX" step="1" value="0"></label>
+            <label class="field-label" id="labSecPosZ">Centre Z (mm)<input type="number" id="labSecZ" step="1" value="-150"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Motor</h3><span class="cat-chip">Step 3</span></div>
+          <div class="sliders">
+            <label class="field-label">Motor<select id="labMotor"></select></label>
+            <label class="field-label">Motor turns per wheel turn<input type="number" id="labRatio" min="0.25" max="10" step="0.05" value="1"></label>
+          </div>
+          <div class="sliders" id="labCustomBox" hidden>
+            <label class="field-label">Free speed (rpm)<input type="number" id="labCustFree" min="10" max="30000" step="10" value="6000"></label>
+            <label class="field-label">Stall torque (N·m)<input type="number" id="labCustStall" min="0.01" max="20" step="0.005" value="0.144"></label>
+          </div>
+          <label class="field-label">Target flywheel speed: <span id="labRpmOut"></span><input type="range" id="labRpm" min="0" max="6000" step="25"></label>
+          <div class="sliders">
+            <label class="field-label">Battery: <span id="labVOut"></span><input type="range" id="labV" min="11" max="14" step="0.1" value="12.5"></label>
+            <div class="tool"><input type="checkbox" id="labTested" checked><label for="labTested"><b>Use tested speed</b><span class="hint">Real motors reach about 90% of the catalogue speed.</span></label></div>
+          </div>
+          <p class="hint" id="labMotorInfo"></p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Game piece and feeder</h3><span class="cat-chip">Step 4</span></div>
+          <div class="seg" role="group" aria-label="Game piece">
+            <button type="button" id="labBallP" aria-pressed="true">POLLEN (2.8 in)</button>
+            <button type="button" id="labBallR" aria-pressed="false">NECTAR (3.6 in)</button>
+          </div>
+          <div class="sliders three">
+            <label class="field-label">Balls to feed<input type="number" id="labCount" min="1" max="40" step="1" value="6"></label>
+            <label class="field-label">Time between balls (s)<input type="number" id="labInterval" min="0.05" max="5" step="0.05" value="0.6"></label>
+            <label class="field-label">Feed speed (m/s)<input type="number" id="labFeedV" min="0" max="5" step="0.1" value="1"></label>
+          </div>
+          <div class="tool"><input type="checkbox" id="labWait" checked><label for="labWait"><b>Wait for the flywheel</b><span class="hint">Only feed when the wheel is back within 2% of its target, like a well-written TeleOp.</span></label></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>HIVE</h3><span class="cat-chip">Step 5</span></div>
+          <div class="sliders three">
+            <label class="field-label">Distance: <span id="labDistOut"></span><input type="range" id="labDist" min="20" max="140" step="1" value="59"></label>
+            <label class="field-label">Flywheel height: <span id="labHOut"></span><input type="range" id="labH" min="4" max="20" step="0.5" value="12"></label>
+            <label class="field-label">CELL tilt: <span id="labTiltOut"></span><input type="range" id="labTilt" min="0" max="45" step="1" value="20"></label>
+          </div>
+          <p class="hint">Distance runs along the floor from the flywheel axle to the near rim of the upward CELL. The opening is 20 × 14 in, 12 in deep, with its low edge 53.5 in above the tiles (Competition Manual and Field Acceptance Checklist). The manual gives no tilt angle, so measure your field and set it here.</p>
+        </div>
+
+        <details class="card lab-cal">
+          <summary><h3>Calibrate with real measurements</h3></summary>
+          <p class="hint">Material numbers are estimates until you measure your own balls and parts. These tests take five minutes and make the lab match your robot.</p>
+          <div class="sliders three">
+            <label class="field-label">Ball mass (g)<input type="number" id="labMass" min="5" max="120" step="0.5"></label>
+            <label class="field-label">Squeeze test weight (g)<input type="number" id="labSqW" min="0" max="10000" step="10" value="0"></label>
+            <label class="field-label">Ball squashed by (mm)<input type="number" id="labSqD" min="0" max="40" step="0.5" value="0"></label>
+            <label class="field-label">Drop height (cm)<input type="number" id="labDropH" min="0" max="300" step="1" value="0"></label>
+            <label class="field-label">Bounce height (cm)<input type="number" id="labBounceH" min="0" max="300" step="1" value="0"></label>
+            <label class="field-label">Wheel grip: <span id="labMuWOut"></span><input type="range" id="labMuW" min="40" max="160" step="5" value="100"></label>
+            <label class="field-label">Hood grip: <span id="labMuHOut"></span><input type="range" id="labMuH" min="40" max="160" step="5" value="100"></label>
+            <label class="field-label">Drag coefficient<input type="number" id="labCd" min="0" max="1.5" step="0.05" value="0.5"></label>
+            <label class="field-label">Spin lift: <span id="labClOut"></span><input type="range" id="labCl" min="0" max="200" step="10" value="100"></label>
+          </div>
+          <div class="tool"><input type="checkbox" id="labAir" checked><label for="labAir"><b>Air drag and spin lift</b><span class="hint">Turn off to see how much the air changes the shot.</span></label></div>
+          <p class="hint" id="labCalInfo"></p>
+        </details>
+      </div>
+
+      <div class="col lab-stage">
+        <div class="card lab-viewcard">
+          <div class="lab-toolbar">
+            <button type="button" class="btn btn-go" id="labStart">&#9654; Start feeding</button>
+            <button type="button" class="btn" id="labPause">Pause</button>
+            <button type="button" class="btn" id="labReset">Reset</button>
+            <div class="seg" role="group" aria-label="Playback speed">
+              <button type="button" data-ts="1" aria-pressed="true">1×</button>
+              <button type="button" data-ts="0.25" aria-pressed="false">¼×</button>
+              <button type="button" data-ts="0.05" aria-pressed="false">1/20×</button>
+            </div>
+          </div>
+          <div class="lab-canvas-wrap">
+            <canvas id="labCanvas" aria-label="3D view of the shooter, the flying balls and the HIVE"></canvas>
+            <div class="lab-views" role="group" aria-label="Camera">
+              <button type="button" class="btn btn-small" data-cam="shooter">Shooter</button>
+              <button type="button" class="btn btn-small" data-cam="side">Side</button>
+              <button type="button" class="btn btn-small" data-cam="behind">Behind</button>
+              <button type="button" class="btn btn-small" data-cam="hive">HIVE</button>
+            </div>
+            <p class="lab-nogl" id="labNoGl" hidden>Your browser could not start 3D graphics, so the 3D view is off. The physics and results still work.</p>
+          </div>
+          <p class="hint">Drag to turn, scroll or pinch to zoom, shift-drag to move. Yellow stripes on the wheel show it spinning.</p>
+        </div>
+
+        <div class="card">
+          <div class="lab-live">
+            <div><span class="hint">Flywheel</span><b id="labLiveRpm">0</b><span class="hint">rpm</span></div>
+            <div><span class="hint">Target</span><b id="labLiveTgt">0</b><span class="hint">rpm</span></div>
+            <div><span class="hint">Motor power</span><b id="labLivePow">0</b><span class="hint">%</span></div>
+            <div><span class="hint">Last exit speed</span><b id="labLiveExit">–</b><span class="hint">m/s</span></div>
+            <div><span class="hint">Launch angle</span><b id="labLiveAng">–</b><span class="hint">°</span></div>
+            <div><span class="hint">Ball spin</span><b id="labLiveSpin">–</b><span class="hint">rpm</span></div>
+          </div>
+          <canvas id="labChart" class="lab-chart" aria-label="Flywheel speed over the last few seconds"></canvas>
+          <p class="hint" id="labSlow" hidden>This setup needs more maths than your computer can do in real time, so it is running in slow motion.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Results</h3><button type="button" class="btn btn-small" id="labClear">Clear results</button></div>
+          <div class="lab-stats" id="labStats"></div>
+          <div class="table-wrap">
+            <table class="lab-table">
+              <thead><tr><th>#</th><th>Result</th><th>Exit speed</th><th>Angle</th><th>Spin</th><th>Wheel before → after</th></tr></thead>
+              <tbody id="labShots"></tbody>
+            </table>
+          </div>
+          <p class="hint" id="labAdvice"></p>
+        </div>
+
+        <details class="card">
+          <summary><h3>How the physics works</h3></summary>
+          <ul class="lab-how">
+            <li><b>Motor:</b> torque falls in a straight line from stall torque at 0 rpm to zero at free speed, scaled by battery voltage. A controller holds the target like <code>setVelocity</code>.</li>
+            <li><b>Flywheel:</b> Newton's second law for rotation, <i>J</i>·dω/dt = motor torque − friction − ball load. Heavier wheels and inertia discs slow down less per shot but take longer to spin up.</li>
+            <li><b>Squeeze:</b> the hollow ball is a spring in series with the wheel's rubber, with damping set by each material's bounce. Soft wheels grow at high rpm, which adds squeeze.</li>
+            <li><b>Grip:</b> Coulomb friction (force ≤ μ × squeeze force) at every contact, using the friction of the two materials touching. Too little grip and the ball slips: slower, less consistent shots.</li>
+            <li><b>Ball:</b> linear and spinning motion of a hollow shell, checked against every triangle of your STL many thousands of times a second while it touches.</li>
+            <li><b>Flight:</b> gravity, air drag and Magnus lift from backspin, solved with the Runge–Kutta (RK4) method.</li>
+            <li><b>HIVE:</b> real-size CELL. Balls bounce with each material's coefficient of restitution and count only when they come to rest inside.</li>
+          </ul>
+          <p class="hint">Not modelled: the HIVE tipping (empty it with Reset), wear on the balls and wheels, and the holes of each ball facing a different way on each shot, which makes real shots a little less consistent than these.</p>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -1630,7 +1868,7 @@ telemetry.update();</pre>
   <!-- ===================== POLICIES ===================== -->
   <section id="view-legal" class="read" hidden>
     <h2>Policies</h2>
-    <p>Written in plain words so students, mentors and parents can all read them. Last updated 12 October 2026.</p>
+    <p>Written in plain words so students, mentors and parents can all read them. Last updated 23 November 2026.</p>
     <div class="row" role="group" aria-label="Jump to a policy">
       <button type="button" class="btn btn-small" data-jump="pol-privacy">Privacy Policy</button>
       <button type="button" class="btn btn-small" data-jump="pol-terms">Terms of Service</button>
@@ -1646,6 +1884,7 @@ telemetry.update();</pre>
         <li><b>No tracking.</b> There are no analytics, no advertising and no social media trackers.</li>
         <li><b>Your work stays with you.</b> The programs you write and the robot you build are saved only inside your own browser, on your own device. The makers of this site cannot see them.</li>
         <li><b>No camera, no microphone, no location.</b> The &ldquo;Webcam (AprilTags)&rdquo; on the Build Bot tab is a pretend camera on the pretend robot. The site never asks for, switches on or looks through your device's real camera, and it never asks for your microphone or where you are.</li>
+        <li><b>Files you open stay on your device.</b> An STL file you open in the Shooter Lab is read by your own browser to build the 3D model. It is never uploaded, and it is forgotten when you close or reload the page.</li>
         <li><b>Pictures are drawn on your device.</b> The field, the 3D robot models and the tutorial pictures are drawn by your own browser. No image of your robot or your screen is uploaded.</li>
         <li><b>Game controllers.</b> If you plug in a controller, the site only reads its sticks and buttons while the page is open, to drive the pretend robot. Nothing about the controller is saved or sent.</li>
         <li><b>Nothing from other websites.</b> The site loads no outside code, fonts or images. Links on the Game Manual tab open other websites, which have their own policies.</li>
@@ -1723,19 +1962,22 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261012k"></script>
-<script src="interp.js?v=20261012k"></script>
-<script src="world.js?v=20261012k"></script>
-<script src="bot3d.js?v=20261012k"></script>
-<script src="blockly/blockly_compressed.js?v=20261012k"></script>
-<script src="blockly/blocks_compressed.js?v=20261012k"></script>
-<script src="blockly/en.js?v=20261012k"></script>
-<script src="blocks.js?v=20261012k"></script>
-<script src="ftcblocks.js?v=20261012k"></script>
-<script src="app.js?v=20261012k"></script>
-<script src="home.js?v=20261012k"></script>
-<script src="extras.js?v=20261012k"></script>
-<script src="tutorial.js?v=20261012k"></script>
-<script src="bg.js?v=20261012k"></script>
+<script src="sound.js?v=20261123a"></script>
+<script src="interp.js?v=20261123a"></script>
+<script src="world.js?v=20261123a"></script>
+<script src="bot3d.js?v=20261123a"></script>
+<script src="lab-phys.js?v=20261123a"></script>
+<script src="lab-gl.js?v=20261123a"></script>
+<script src="blockly/blockly_compressed.js?v=20261123a"></script>
+<script src="blockly/blocks_compressed.js?v=20261123a"></script>
+<script src="blockly/en.js?v=20261123a"></script>
+<script src="blocks.js?v=20261123a"></script>
+<script src="ftcblocks.js?v=20261123a"></script>
+<script src="app.js?v=20261123a"></script>
+<script src="home.js?v=20261123a"></script>
+<script src="extras.js?v=20261123a"></script>
+<script src="tutorial.js?v=20261123a"></script>
+<script src="lab-ui.js?v=20261123a"></script>
+<script src="bg.js?v=20261123a"></script>
 </body>
 </html>
