@@ -1,0 +1,4 @@
+occt-import-js 0.0.23 by Viktor Kovacs (https://github.com/kovacsv/occt-import-js), unmodified.
+It is built on Open CASCADE Technology (https://dev.opencascade.org).
+Both are licensed under the GNU Lesser General Public License version 2.1; see license.occt-import-js.txt and license.occt.txt.
+SimYourCode uses it only to read STEP files in the visitor's own browser.
