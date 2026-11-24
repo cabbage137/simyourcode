@@ -630,6 +630,8 @@ details.card > summary h3 { display: inline; }
   .lab-live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 #view-lab [hidden] { display: none !important; }
+.lab-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.lab-grow { flex: 1 1 180px; }
 </style>
 
 <canvas id="bgHive" aria-hidden="true"></canvas>
@@ -1048,7 +1050,7 @@ details.card > summary h3 { display: inline; }
   <!-- ===================== SHOOTER LAB ===================== -->
   <section id="view-lab" class="col" hidden>
     <h2>Shooter Lab</h2>
-    <p class="hint">Test a flywheel shooter or transfer system before you build it. Load your shooter's STL (or start from an example), pick the flywheel, its material and motor, and watch POLLEN or NECTAR fly into a real-size HIVE CELL. Ball squeeze, friction, spin, air drag and bounces are all worked out with real physics.</p>
+    <p class="hint">Test a flywheel shooter or transfer system before you build it. Load your shooter's STL or STEP file (or start from an example), pick the flywheel, its material and motor, put your robot anywhere on the official BIOBUZZ field, and watch POLLEN or NECTAR fly into the real HIVE. Ball squeeze, friction, spin, air drag and bounces are all worked out with real physics.</p>
     <div class="lab">
       <div class="col lab-controls">
 
@@ -1056,7 +1058,7 @@ details.card > summary h3 { display: inline; }
           <div class="card-head"><h3>Shooter CAD</h3><span class="cat-chip">Step 1</span></div>
           <div class="seg" role="group" aria-label="Shooter source">
             <button type="button" id="labSrcEx" aria-pressed="true">Example shooter</button>
-            <button type="button" id="labSrcStl" aria-pressed="false">My STL file</button>
+            <button type="button" id="labSrcStl" aria-pressed="false">My CAD file</button>
           </div>
           <div id="labExBox" class="col lab-tight">
             <label class="field-label">Example<select id="labExample"></select></label>
@@ -1070,10 +1072,15 @@ details.card > summary h3 { display: inline; }
             <button type="button" class="btn btn-small" id="labExDownload">Save this example as an STL</button>
           </div>
           <div id="labStlBox" class="col lab-tight" hidden>
-            <label class="field-label">STL file (shooter, hood or transfer)<input type="file" id="labStlFile" accept=".stl,model/stl,application/sla,application/octet-stream"></label>
-            <p class="hint" id="labStlInfo">The file is read in your browser and never uploaded. Put the flywheel axle at the origin with the axle along Y, shots going toward +X and up as +Z, or line it up with the boxes below.</p>
+            <label class="field-label">STL or STEP file (shooter, hood or transfer)<input type="file" id="labStlFile" accept=".stl,.step,.stp,model/stl,model/step,application/sla,application/octet-stream"></label>
+            <p class="hint" id="labStlInfo">The file is read in your browser and never uploaded. Shots go toward the robot's front (+X) and up is +Z. Drag the shooter, the flywheel and the feed point in the 3D view, or let Auto-place do it.</p>
+            <div class="lab-row">
+              <button type="button" class="btn btn-go btn-small" id="labAutoPlace">Auto-place flywheel</button>
+              <label class="field-label lab-grow">Target squeeze: <span id="labComp2Out"></span><input type="range" id="labComp2" min="0" max="25" step="0.5"></label>
+            </div>
+            <p class="hint" id="labAutoInfo">Auto-place finds where your hood curves round a wheel, puts the flywheel there with the target squeeze, sets the spin direction and puts the feed point at the hood's entry.</p>
             <div class="sliders three">
-              <label class="field-label">Units<select id="labStlUnits"><option value="0.001">Millimetres</option><option value="0.0254">Inches</option><option value="1">Metres</option></select></label>
+              <label class="field-label">Units (STL)<select id="labStlUnits"><option value="0.001">Millimetres</option><option value="0.0254">Inches</option><option value="1">Metres</option></select></label>
               <label class="field-label">Material<select id="labStlMat"></select></label>
               <label class="field-label">Spin the part<select id="labStlRot"><option value="0">As saved</option><option value="x90">90° about X</option><option value="x-90">−90° about X</option><option value="y90">90° about Y</option><option value="y-90">−90° about Y</option><option value="z90">90° about Z</option><option value="z180">180° about Z</option></select></label>
               <label class="field-label">Move X (mm)<input type="number" id="labStlX" step="1" value="0"></label>
@@ -1085,7 +1092,7 @@ details.card > summary h3 { display: inline; }
               <label class="field-label">Feed point Z (mm)<input type="number" id="labFeedZ" step="1" value="-40"></label>
               <label class="field-label">Feed direction (°)<input type="number" id="labFeedA" step="5" value="45"></label>
             </div>
-            <p class="hint">The feed point is where each ball appears (the small cube in the 3D view). The direction is measured up from +X.</p>
+            <p class="hint">Positions are in millimetres from the middle of the robot on the floor: X forward, Z up. The feed point is where each ball appears (the honey dot in the 3D view); its direction is measured up from forward.</p>
           </div>
           <p class="lab-readout" id="labGap"></p>
         </div>
@@ -1100,6 +1107,8 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Wheels on the shaft<select id="labWheelN"><option>1</option><option>2</option><option>3</option></select></label>
             <label class="field-label">Steel inertia discs<select id="labDiscs"><option>0</option><option>1</option><option>2</option><option>3</option></select></label>
             <label class="field-label">Spin direction<select id="labDir"><option value="1">Forward</option><option value="-1">Reverse</option></select></label>
+            <label class="field-label">Axle X from robot centre (mm)<input type="number" id="labWheelX" step="1"></label>
+            <label class="field-label">Axle height (mm)<input type="number" id="labWheelZ" step="1"></label>
           </div>
           <p class="hint" id="labWheelInfo"></p>
           <label class="field-label">Second wheel<select id="labSecond"><option value="none">None</option><option value="double">Double flywheel (opposite spin)</option><option value="transfer">Transfer roller</option></select></label>
@@ -1108,7 +1117,7 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Roller rpm<input type="number" id="labRollerRpm" min="0" max="6000" step="50" value="1200"></label>
             <label class="field-label">Roller motor<select id="labRollerMotor"></select></label>
             <label class="field-label" id="labSecPosX">Centre X (mm)<input type="number" id="labSecX" step="1" value="0"></label>
-            <label class="field-label" id="labSecPosZ">Centre Z (mm)<input type="number" id="labSecZ" step="1" value="-150"></label>
+            <label class="field-label" id="labSecPosZ">Centre height (mm)<input type="number" id="labSecZ" step="1" value="155"></label>
           </div>
         </div>
 
@@ -1145,18 +1154,39 @@ details.card > summary h3 { display: inline; }
         </div>
 
         <div class="card">
-          <div class="card-head"><h3>HIVE</h3><span class="cat-chip">Step 5</span></div>
-          <div class="sliders three">
-            <label class="field-label">Distance: <span id="labDistOut"></span><input type="range" id="labDist" min="20" max="140" step="1" value="59"></label>
-            <label class="field-label">Flywheel height: <span id="labHOut"></span><input type="range" id="labH" min="4" max="20" step="0.5" value="12"></label>
-            <label class="field-label">CELL tilt: <span id="labTiltOut"></span><input type="range" id="labTilt" min="0" max="45" step="1" value="20"></label>
+          <div class="card-head"><h3>Robot on the field</h3><span class="cat-chip">Step 5</span></div>
+          <p class="hint" id="labFieldInfo">Loading the official field…</p>
+          <div class="lab-row">
+            <div class="seg" role="group" aria-label="Alliance">
+              <button type="button" id="labAllRed" class="is-red" aria-pressed="false">Red</button>
+              <button type="button" id="labAllBlue" class="is-blue" aria-pressed="true">Blue</button>
+            </div>
+            <button type="button" class="btn btn-small" id="labAim">Aim at the HIVE</button>
           </div>
-          <p class="hint">Distance runs along the floor from the flywheel axle to the near rim of the upward CELL. The opening is 20 × 14 in, 12 in deep, with its low edge 53.5 in above the tiles (Competition Manual and Field Acceptance Checklist). The manual gives no tilt angle, so measure your field and set it here.</p>
+          <div class="sliders three">
+            <label class="field-label">Robot X (in)<input type="number" id="labRobX" step="0.5"></label>
+            <label class="field-label">Robot Y (in)<input type="number" id="labRobY" step="0.5"></label>
+            <label class="field-label">Facing (°)<input type="number" id="labHead" step="1"></label>
+          </div>
+          <p class="lab-readout" id="labAimInfo"></p>
+          <p class="hint">Drag the robot (or its outline on the floor) to move it round the field. Your alliance's upward CELL is the target and glows in the 3D view. Field X and Y are measured from the centre of the field.</p>
+          <label class="field-label">Your robot's CAD (optional, STL or STEP)<input type="file" id="labRobotFile" accept=".stl,.step,.stp,model/stl,model/step,application/sla,application/octet-stream"></label>
+          <p class="hint" id="labRobotInfo">Without a robot file the lab shows just the flywheel and shooter.</p>
+          <div class="sliders three" id="labRobotBox" hidden>
+            <label class="field-label">Units (STL)<select id="labRobUnits"><option value="0.001">Millimetres</option><option value="0.0254">Inches</option><option value="1">Metres</option></select></label>
+            <label class="field-label">Spin the robot<select id="labRobRot"><option value="0">As saved</option><option value="x90">90° about X</option><option value="x-90">−90° about X</option><option value="y90">90° about Y</option><option value="y-90">−90° about Y</option><option value="z90">90° about Z</option><option value="z180">180° about Z</option><option value="z-90">−90° about Z</option></select></label>
+            <label class="field-label">Move X (mm)<input type="number" id="labRobMX" step="1" value="0"></label>
+            <label class="field-label">Move Y (mm)<input type="number" id="labRobMY" step="1" value="0"></label>
+            <label class="field-label">Move Z (mm)<input type="number" id="labRobMZ" step="1" value="0"></label>
+            <button type="button" class="btn btn-small" id="labRobotRemove">Remove robot</button>
+          </div>
+          <div class="tool" id="labRobotHitBox" hidden><input type="checkbox" id="labRobHit" checked><label for="labRobHit"><b>Balls bounce off my robot</b><span class="hint">Turn off if parts of your robot sit where the balls fly and you only want to test the shooter.</span></label></div>
+          <div class="tool"><input type="checkbox" id="labLock"><label for="labLock"><b>Lock parts</b><span class="hint">Stops parts moving when you drag in the 3D view, so dragging only turns the camera.</span></label></div>
         </div>
 
         <details class="card lab-cal">
           <summary><h3>Calibrate with real measurements</h3></summary>
-          <p class="hint">Material numbers are estimates until you measure your own balls and parts. These tests take five minutes and make the lab match your robot.</p>
+          <p class="hint">Material numbers are estimates until you measure your own balls and parts. These tests take five minutes and make the lab match your robot. For the HIVE bounce, drop a ball onto a HIVE skin from 1 m: e = √(bounce height ÷ drop height).</p>
           <div class="sliders three">
             <label class="field-label">Ball mass (g)<input type="number" id="labMass" min="5" max="120" step="0.5"></label>
             <label class="field-label">Squeeze test weight (g)<input type="number" id="labSqW" min="0" max="10000" step="10" value="0"></label>
@@ -1166,6 +1196,7 @@ details.card > summary h3 { display: inline; }
             <label class="field-label">Wheel grip: <span id="labMuWOut"></span><input type="range" id="labMuW" min="40" max="160" step="5" value="100"></label>
             <label class="field-label">Hood grip: <span id="labMuHOut"></span><input type="range" id="labMuH" min="40" max="160" step="5" value="100"></label>
             <label class="field-label">Drag coefficient<input type="number" id="labCd" min="0" max="1.5" step="0.05" value="0.5"></label>
+            <label class="field-label">HIVE bounce (e)<input type="number" id="labHiveE" min="0.05" max="0.95" step="0.05" value="0.4"></label>
             <label class="field-label">Spin lift: <span id="labClOut"></span><input type="range" id="labCl" min="0" max="200" step="10" value="100"></label>
           </div>
           <div class="tool"><input type="checkbox" id="labAir" checked><label for="labAir"><b>Air drag and spin lift</b><span class="hint">Turn off to see how much the air changes the shot.</span></label></div>
@@ -1192,10 +1223,11 @@ details.card > summary h3 { display: inline; }
               <button type="button" class="btn btn-small" data-cam="side">Side</button>
               <button type="button" class="btn btn-small" data-cam="behind">Behind</button>
               <button type="button" class="btn btn-small" data-cam="hive">HIVE</button>
+              <button type="button" class="btn btn-small" data-cam="top">Top</button>
             </div>
             <p class="lab-nogl" id="labNoGl" hidden>Your browser could not start 3D graphics, so the 3D view is off. The physics and results still work.</p>
           </div>
-          <p class="hint">Drag to turn, scroll or pinch to zoom, shift-drag to move. Yellow stripes on the wheel show it spinning.</p>
+          <p class="hint">Drag a part to move it: the flywheel, the honey feed dot, your shooter or the robot. Drag empty space to turn the view, scroll or pinch to zoom, shift-drag to pan. Yellow stripes on the wheel show it spinning.</p>
         </div>
 
         <div class="card">
@@ -1206,6 +1238,7 @@ details.card > summary h3 { display: inline; }
             <div><span class="hint">Last exit speed</span><b id="labLiveExit">–</b><span class="hint">m/s</span></div>
             <div><span class="hint">Launch angle</span><b id="labLiveAng">–</b><span class="hint">°</span></div>
             <div><span class="hint">Ball spin</span><b id="labLiveSpin">–</b><span class="hint">rpm</span></div>
+            <div><span class="hint">Squeeze on last shot</span><b id="labLiveComp">–</b><span class="hint" id="labLiveCompPct">mm</span></div>
           </div>
           <canvas id="labChart" class="lab-chart" aria-label="Flywheel speed over the last few seconds"></canvas>
           <p class="hint" id="labSlow" hidden>This setup needs more maths than your computer can do in real time, so it is running in slow motion.</p>
@@ -1216,7 +1249,7 @@ details.card > summary h3 { display: inline; }
           <div class="lab-stats" id="labStats"></div>
           <div class="table-wrap">
             <table class="lab-table">
-              <thead><tr><th>#</th><th>Result</th><th>Exit speed</th><th>Angle</th><th>Spin</th><th>Wheel before → after</th></tr></thead>
+              <thead><tr><th>#</th><th>Result</th><th>Squeeze</th><th>Exit speed</th><th>Angle</th><th>Spin</th><th>Wheel before → after</th></tr></thead>
               <tbody id="labShots"></tbody>
             </table>
           </div>
@@ -1232,9 +1265,10 @@ details.card > summary h3 { display: inline; }
             <li><b>Grip:</b> Coulomb friction (force ≤ μ × squeeze force) at every contact, using the friction of the two materials touching. Too little grip and the ball slips: slower, less consistent shots.</li>
             <li><b>Ball:</b> linear and spinning motion of a hollow shell, checked against every triangle of your STL many thousands of times a second while it touches.</li>
             <li><b>Flight:</b> gravity, air drag and Magnus lift from backspin, solved with the Runge–Kutta (RK4) method.</li>
-            <li><b>HIVE:</b> real-size CELL. Balls bounce with each material's coefficient of restitution and count only when they come to rest inside.</li>
+            <li><b>Field:</b> the official BIOBUZZ field CAD (HIVES, walls and FLOWERS). Balls bounce off each part with its material's coefficient of restitution and count only when they come to rest inside your alliance's upward CELL.</li>
+            <li><b>Squeeze per shot:</b> the deepest the ball was pressed between the flywheel and the hood (or the second wheel) at the same moment, including any growth of the wheel at speed.</li>
           </ul>
-          <p class="hint">Not modelled: the HIVE tipping (empty it with Reset), wear on the balls and wheels, and the holes of each ball facing a different way on each shot, which makes real shots a little less consistent than these.</p>
+          <p class="hint">Not modelled: the HIVE tipping (empty it with Reset), wear on the balls and wheels, and the holes of each ball facing a different way on each shot, which makes real shots a little less consistent than these. The field is the am-5850 BIOBUZZ field CAD, simplified: screws, rivets and tile edges are left out.</p>
         </details>
       </div>
     </div>
@@ -1868,7 +1902,7 @@ telemetry.update();</pre>
   <!-- ===================== POLICIES ===================== -->
   <section id="view-legal" class="read" hidden>
     <h2>Policies</h2>
-    <p>Written in plain words so students, mentors and parents can all read them. Last updated 23 November 2026.</p>
+    <p>Written in plain words so students, mentors and parents can all read them. Last updated 24 November 2026.</p>
     <div class="row" role="group" aria-label="Jump to a policy">
       <button type="button" class="btn btn-small" data-jump="pol-privacy">Privacy Policy</button>
       <button type="button" class="btn btn-small" data-jump="pol-terms">Terms of Service</button>
@@ -1884,7 +1918,7 @@ telemetry.update();</pre>
         <li><b>No tracking.</b> There are no analytics, no advertising and no social media trackers.</li>
         <li><b>Your work stays with you.</b> The programs you write and the robot you build are saved only inside your own browser, on your own device. The makers of this site cannot see them.</li>
         <li><b>No camera, no microphone, no location.</b> The &ldquo;Webcam (AprilTags)&rdquo; on the Build Bot tab is a pretend camera on the pretend robot. The site never asks for, switches on or looks through your device's real camera, and it never asks for your microphone or where you are.</li>
-        <li><b>Files you open stay on your device.</b> An STL file you open in the Shooter Lab is read by your own browser to build the 3D model. It is never uploaded, and it is forgotten when you close or reload the page.</li>
+        <li><b>Files you open stay on your device.</b> An STL or STEP file you open in the Shooter Lab (a shooter or a whole robot) is read by your own browser to build the 3D model. It is never uploaded, and it is forgotten when you close or reload the page.</li>
         <li><b>Pictures are drawn on your device.</b> The field, the 3D robot models and the tutorial pictures are drawn by your own browser. No image of your robot or your screen is uploaded.</li>
         <li><b>Game controllers.</b> If you plug in a controller, the site only reads its sticks and buttons while the page is open, to drive the pretend robot. Nothing about the controller is saved or sent.</li>
         <li><b>Nothing from other websites.</b> The site loads no outside code, fonts or images. Links on the Game Manual tab open other websites, which have their own policies.</li>
@@ -1955,6 +1989,8 @@ telemetry.update();</pre>
       <li>Java is a registered trademark of Oracle and/or its affiliates. Qualcomm is a trademark of Qualcomm Incorporated; it appears only inside the standard FTC package names in the example code. No part of the FTC software kit is included in this site.</li>
       <li>The match-start call is the traditional &ldquo;charge&rdquo; bugle tune, which is in the public domain. Every sound on this site is generated in your browser; no recordings are used.</li>
       <li>The Blocks editor is built with Blockly, &copy; Google LLC, used under the Apache License 2.0. Its files are stored on this site and nothing is loaded from Google.</li>
+      <li>STEP files are read with occt-import-js by Viktor Kovacs, built on Open CASCADE Technology, both under the GNU Lesser General Public License 2.1. They are stored unchanged on this site (vendor/occt, with their licences) and run only in your browser.</li>
+      <li>The Shooter Lab field is a simplified copy of the am-5850 BIOBUZZ field CAD from AndyMark, Inc. AndyMark is a trademark of AndyMark, Inc.</li>
       <li>All other product and company names belong to their owners.</li>
     </ul>
   </footer>
@@ -1962,22 +1998,22 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261123a"></script>
-<script src="interp.js?v=20261123a"></script>
-<script src="world.js?v=20261123a"></script>
-<script src="bot3d.js?v=20261123a"></script>
-<script src="lab-phys.js?v=20261123a"></script>
-<script src="lab-gl.js?v=20261123a"></script>
-<script src="blockly/blockly_compressed.js?v=20261123a"></script>
-<script src="blockly/blocks_compressed.js?v=20261123a"></script>
-<script src="blockly/en.js?v=20261123a"></script>
-<script src="blocks.js?v=20261123a"></script>
-<script src="ftcblocks.js?v=20261123a"></script>
-<script src="app.js?v=20261123a"></script>
-<script src="home.js?v=20261123a"></script>
-<script src="extras.js?v=20261123a"></script>
-<script src="tutorial.js?v=20261123a"></script>
-<script src="lab-ui.js?v=20261123a"></script>
-<script src="bg.js?v=20261123a"></script>
+<script src="sound.js?v=20261124a"></script>
+<script src="interp.js?v=20261124a"></script>
+<script src="world.js?v=20261124a"></script>
+<script src="bot3d.js?v=20261124a"></script>
+<script src="lab-phys.js?v=20261124a"></script>
+<script src="lab-gl.js?v=20261124a"></script>
+<script src="blockly/blockly_compressed.js?v=20261124a"></script>
+<script src="blockly/blocks_compressed.js?v=20261124a"></script>
+<script src="blockly/en.js?v=20261124a"></script>
+<script src="blocks.js?v=20261124a"></script>
+<script src="ftcblocks.js?v=20261124a"></script>
+<script src="app.js?v=20261124a"></script>
+<script src="home.js?v=20261124a"></script>
+<script src="extras.js?v=20261124a"></script>
+<script src="tutorial.js?v=20261124a"></script>
+<script src="lab-ui.js?v=20261124a"></script>
+<script src="bg.js?v=20261124a"></script>
 </body>
 </html>
