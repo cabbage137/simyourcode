@@ -1,5 +1,4 @@
-/* Reads a STEP file in a background thread with occt-import-js and sends back one triangle list in millimetres,
-   with the name and range of every part so the lab can spot a modelled flywheel. */
+// reads STEP files with occt-import-js
 importScripts('vendor/occt/occt-import-js.js');
 let ready = null;
 onmessage = async function (ev) {
