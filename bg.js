@@ -1,13 +1,12 @@
-/* Moving honeycomb background. */
 (function () {
 'use strict';
 const cv = document.getElementById('bgHive');
 if (!cv || !cv.getContext) return;
 const ctx = cv.getContext('2d');
 const R = 30, W = Math.sqrt(3) * R, H = 1.5 * R, GAP = 4;
-const DRIFT_X = -9, DRIFT_Y = -6;                     // pixels per second, toward the top-left
+const DRIFT_X = -9, DRIFT_Y = -6;
 const SWAP_TIME = 1.25, SWAP_MIN = 0.16, SWAP_MAX = 0.46;
-const A_REF = 0.36;                                   // strength the resting-block image is painted at
+const A_REF = 0.36;
 let calm = false;
 try { calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { calm = false; }
 
@@ -15,7 +14,7 @@ let w = 0, h = 0, cols = 0, rows = 0, PX = 1, PY = 1;
 let tiles = [], taken = new Map();
 let offX = 0, offY = 0, last = 0, lastDraw = 0, nextSwap = 0.5;
 let grid = null, sprite = null;
-const SPR = 96, SPR_C = 44;                           // sprite size and where the block centre sits inside it
+const SPR = 96, SPR_C = 44;
 
 const key = (c, r) => c + ',' + r;
 const wrapC = (c) => ((c % cols) + cols) % cols, wrapR = (r) => ((r % rows) + rows) % rows;
@@ -30,7 +29,7 @@ function hexPath(g, x, y, rad) {
   g.closePath();
 }
 
-/* One raised block: shadow, side walls, lit top face and a bright rim on the top-left edges. */
+
 function block(g, x, y, rad, a, lift) {
   const s = rad * 0.866, depth = 6 + lift * 7, ty = y - lift * 7;
   const al = (m) => Math.min(1, a * m).toFixed(3);
@@ -52,14 +51,14 @@ function block(g, x, y, rad, a, lift) {
 function makeCanvas(cw, ch) { const c = document.createElement('canvas'); c.width = Math.ceil(cw); c.height = Math.ceil(ch); return c; }
 
 function build() {
-  /* one device pixel per CSS pixel, which is 4x less to paint */
+  
   w = window.innerWidth; h = window.innerHeight;
   cv.width = w; cv.height = h;
   cols = Math.ceil(w / W) + 3;
-  rows = Math.ceil(h / H) + 3; if (rows % 2) rows++;   // an even row count lets the comb wrap seamlessly
+  rows = Math.ceil(h / H) + 3; if (rows % 2) rows++;
   PX = cols * W; PY = rows * H;
 
-  /* the whole grid of pressed-in cells, painted once; it repeats every W across and 2H down */
+  
   grid = makeCanvas(w + W + 2, h + 2 * H + 2);
   const g = grid.getContext('2d');
   const gc = Math.ceil(grid.width / W) + 2, gr = Math.ceil(grid.height / H) + 2;
@@ -71,7 +70,7 @@ function build() {
   for (let r = -1; r < gr; r++) for (let c = -1; c < gc; c++) hexPath(g, cx(c, r), cy(r), R - 1.5);
   g.strokeStyle = 'rgba(224, 161, 0, 0.2)'; g.stroke();
 
-  /* one resting block, painted once and stamped for every block that is not moving */
+  
   sprite = makeCanvas(SPR, SPR);
   block(sprite.getContext('2d'), SPR_C, SPR_C, R - GAP, A_REF, 0);
 
@@ -86,7 +85,7 @@ function build() {
   }
 }
 
-function neighbours(c, r) {                            // [pixel dx, pixel dy, column, row] for the six sides
+function neighbours(c, r) {
   const odd = r & 1;
   return [[-W, 0, c - 1, r], [W, 0, c + 1, r],
     [-W / 2, -H, odd ? c : c - 1, r - 1], [W / 2, -H, odd ? c + 1 : c, r - 1],
@@ -101,7 +100,7 @@ function startSwap() {
     const other = taken.get(key(wrapC(d[2]), wrapR(d[3])));
     if (other && other.p >= 0) continue;
     startMove(t, d);
-    if (other) startMove(other, [-d[0], -d[1], t.c, t.r]);     // two blocks trade places
+    if (other) startMove(other, [-d[0], -d[1], t.c, t.r]);
     else { taken.delete(key(t.c, t.r)); taken.set(key(t.nc, t.nr), t); }
     return;
   }
@@ -109,7 +108,7 @@ function startSwap() {
 
 function draw() {
   ctx.clearRect(0, 0, w, h);
-  /* the grid image slides with the drift and wraps so it never runs out */
+  
   const gx = (((offX - 1.5 * W) % W) + W) % W - W, gy = (((offY - 1.5 * H) % (2 * H)) + 2 * H) % (2 * H) - 2 * H;
   ctx.drawImage(grid, gx, gy);
   for (let i = 0; i < tiles.length; i++) {
@@ -131,7 +130,7 @@ function draw() {
 
 function frame(now) {
   window.requestAnimationFrame(frame);
-  if (now - lastDraw < 32) return;                    // about 30 frames a second is plenty for a slow drift
+  if (now - lastDraw < 32) return;
   const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now; lastDraw = now;
   offX = (offX + DRIFT_X * dt) % PX; offY = (offY + DRIFT_Y * dt) % PY;
   nextSwap -= dt;
