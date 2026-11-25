@@ -1,4 +1,3 @@
-/* Sound effects. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -17,10 +16,10 @@ function audio() {
     const d = hiss.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   }
-  if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { /* ignore */ } }
+  if (ac.state === 'suspended') { try { ac.resume(); } catch (e) {  } }
   return ac;
 }
-/* One note. */
+
 function tone(o) {
   const a = audio(); if (!a) return;
   const t = a.currentTime + (o.at || 0), osc = a.createOscillator(), g = a.createGain();
@@ -35,7 +34,7 @@ function tone(o) {
   osc.connect(g); out.connect(master);
   osc.start(t); osc.stop(t + o.dur + 0.03);
 }
-/* A short burst of filtered noise: the "tick" of plastic or a click. */
+
 function burst(o) {
   const a = audio(); if (!a) return;
   const t = a.currentTime + (o.at || 0), src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
@@ -48,7 +47,7 @@ const NOTE = { G4: 392, C5: 523.25, E5: 659.25, G5: 783.99 };
 const S = {
   click() { tone({ f: 1500, f2: 950, dur: 0.035, type: 'triangle', vol: 0.11 }); },
   lift() { tone({ f: 420, f2: 640, dur: 0.07, type: 'triangle', vol: 0.09 }); },
-  /* two plastic bricks pressing together: a bright tick, then a lower, fuller clack */
+  
   snap() {
     burst({ f: 3600, q: 1.2, dur: 0.018, vol: 0.4 });
     tone({ f: 2300, f2: 1700, dur: 0.02, type: 'square', vol: 0.05 });
@@ -56,7 +55,7 @@ const S = {
     tone({ at: 0.05, f: 640, f2: 420, dur: 0.05, type: 'triangle', vol: 0.14 });
   },
   count() { tone({ f: 880, dur: 0.17, type: 'square', vol: 0.1, cut: 2600 }); },
-  /* the classic "charge" bugle call that starts a period */
+  
   charge() {
     [['G4', 0.11], ['C5', 0.11], ['E5', 0.11], ['G5', 0.2], ['E5', 0.11], ['G5', 0.5]].reduce((at, n) => {
       tone({ at, f: NOTE[n[0]], dur: n[1] + 0.03, type: 'sawtooth', vol: 0.13, cut: 2400 });
@@ -74,12 +73,12 @@ function showState() {
   document.querySelectorAll('[data-sound]').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.sound === 'on') === on)));
 }
 BBZ.Sound = {
-  play(name) { if (!on || !S[name]) return; try { S[name](); } catch (e) { /* never let a sound break the page */ } },
+  play(name) { if (!on || !S[name]) return; try { S[name](); } catch (e) {  } },
   isOn: () => on,
-  set(v) { on = !!v; try { window.localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) { /* ignore */ } showState(); }
+  set(v) { on = !!v; try { window.localStorage.setItem(KEY, on ? 'on' : 'off'); } catch (e) {  } showState(); }
 };
 
-/* Sounds for ordinary clicks: a short tick for tabs, buttons, lists and checkboxes. */
+
 document.addEventListener('click', (e) => {
   const t = e.target;
   if (!t || !t.closest) return;
