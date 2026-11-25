@@ -21,7 +21,7 @@
 </head>
 <body>
 <style>
-/* Layout: a scoreboard strip over a two-column bench. */
+
 :root {
   --bg: #eef0ea; --surface: #fbfcf8; --sunk: #e4e7de; --ink: #1b1f18; --muted: #59624f; --line: #cdd2c4;
   --honey: #e0a100; --honey-ink: #6b4a00; --on-honey: #201800;
@@ -71,7 +71,7 @@ code { background: var(--sunk); border-radius: 4px; padding: 1px 4px; }
 :focus-visible { outline: 2px solid var(--honey); outline-offset: 2px; }
 button, select, input, textarea { font: inherit; color: inherit; }
 
-/* header */
+
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-hex { width: 30px; height: 34px; background: var(--honey); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); flex: none; }
@@ -82,7 +82,7 @@ button, select, input, textarea { font: inherit; color: inherit; }
 .tab:hover { background: var(--sunk); }
 .tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
 
-/* shared pieces */
+
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .hint { color: var(--muted); font-size: 13px; }
@@ -103,7 +103,7 @@ select, input[type="text"], input[type="number"] { background: var(--surface); b
 .seg .is-red[aria-pressed="true"] { background: var(--red); color: #fff; }
 .seg .is-blue[aria-pressed="true"] { background: var(--blue); color: #fff; }
 
-/* scoreboard */
+
 .scorebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; background: var(--ink); color: var(--bg); border-radius: 10px; padding: 8px 16px; }
 .hex { background: var(--honey); color: var(--on-honey); font-family: var(--font-display); font-size: 15px; letter-spacing: 0.08em; padding: 9px 22px; clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0 50%); min-width: 116px; text-align: center; }
 .sb-item { display: flex; flex-direction: column; line-height: 1.1; }
@@ -114,7 +114,7 @@ select, input[type="text"], input[type="number"] { background: var(--surface); b
 .dot-P { background: var(--pollen); } .dot-R { background: var(--red); } .dot-B { background: var(--blue); }
 .dot-none { border: 1px dashed currentColor; opacity: 0.5; }
 
-/* bench */
+
 .bench { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: 14px; align-items: start; }
 .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -123,7 +123,7 @@ select, input[type="text"], input[type="number"] { background: var(--surface); b
 .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 5px; }
 
-/* gamepad */
+
 .padgrid { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
 .stick { width: 104px; height: 104px; border-radius: 50%; background: var(--sunk); border: 1px solid var(--line); position: relative; touch-action: none; flex: none; cursor: grab; }
 .stick .knob { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--ink); pointer-events: none; }
@@ -138,7 +138,7 @@ select, input[type="text"], input[type="number"] { background: var(--surface); b
 .cross .pb { border-radius: 50%; }
 .keys { font-size: 12.5px; color: var(--muted); line-height: 1.9; }
 
-/* editor */
+
 .progbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
 .progbar .grow { flex: 1 1 150px; }
 .progbar select, .progbar input { width: 100%; }
@@ -151,7 +151,7 @@ select, input[type="text"], input[type="number"] { background: var(--surface); b
 .console.is-good { border-color: var(--good); }
 #genJava { margin: 0; max-height: 360px; overflow: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 12.5px/19px var(--font-mono); }
 
-/* blocks */
+
 .pal { display: flex; flex-direction: column; gap: 6px; }
 .pal-group { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
 .pal-title { width: 76px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
@@ -184,7 +184,7 @@ select, input[type="text"], input[type="number"] { background: var(--surface); b
 .slot.is-on { height: 22px; background: var(--honey); padding: 0 10px; font-weight: 700; margin: 3px 0; }
 .slot.is-on::after { display: none; }
 
-/* instruments */
+
 .screen { margin: 0; min-height: 128px; max-height: 220px; overflow: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: 13px/1.55 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 .tablewrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
@@ -201,7 +201,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; padding-
 .log .k-good { border-color: var(--good); } .log .k-foul { border-color: var(--bad); color: var(--bad); } .log .k-info { border-color: var(--honey); }
 .log time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
 
-/* build */
+
 .build { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 14px; align-items: start; }
 .choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .choice button, .tool { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
@@ -223,7 +223,7 @@ input[type="range"] { width: 100%; accent-color: var(--honey); }
 .name-in { width: 100%; font-family: var(--font-mono); font-size: 13px; }
 .name-in.is-bad { border-color: var(--bad); }
 
-/* reading pages */
+
 .read { max-width: 900px; display: flex; flex-direction: column; gap: 16px; }
 .read p, .read li { max-width: 68ch; }
 .steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: flex; flex-direction: column; gap: 10px; }
@@ -237,7 +237,7 @@ input[type="range"] { width: 100%; accent-color: var(--honey); }
 .foot { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; max-width: 100ch; }
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: 14px; max-width: calc(100% - 32px); z-index: 10; }
 
-/* hive decoration */
+
 body { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23e0a100' stroke-opacity='.16' stroke-width='1.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23e0a100' stroke-opacity='.09' stroke-width='1.5'/%3E%3C/svg%3E"); }
 .top { border-bottom: 0; padding-bottom: 0; }
 .stripe { height: 8px; border-radius: 4px; background: repeating-linear-gradient(135deg, var(--honey) 0 16px, var(--ink) 16px 32px); }
@@ -246,7 +246,7 @@ body { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org
 h3::before { content: ""; display: inline-block; width: 10px; height: 11px; margin-right: 8px; background: var(--honey); clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
 .scorebar { background-image: repeating-linear-gradient(135deg, transparent 0 22px, rgba(224, 161, 0, 0.09) 22px 44px); }
 
-/* home */
+
 .home { gap: 22px; }
 .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: 24px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 28px; }
 .hero-text { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; min-width: 0; }
@@ -290,7 +290,7 @@ h3::before { content: ""; display: inline-block; width: 10px; height: 11px; marg
 }
 @media (prefers-reduced-motion: reduce) { .menu-card { transition: none; } .menu-card:hover { transform: none; } }
 
-/* ---- bubbly title band, appearance modes, code colours, build detail, tutorial ---- */
+
 :root {
   --font-bubble: "Fredoka", "Baloo 2", ui-rounded, "Arial Rounded MT Bold", "Varela Round", "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", sans-serif;
   --band: #1a1e14;
@@ -355,7 +355,7 @@ h2 { font-family: var(--font-bubble); font-weight: 700; }
 .c-honey, .c-blue, .c-green, .c-red { color: inherit; font-weight: 700; }
 .why-fun { font-weight: 700; }
 
-/* code colours */
+
 .codebox { flex: 1; min-width: 0; position: relative; }
 #hl { position: absolute; inset: 0; margin: 0; padding: 10px; font: 13px/20px var(--font-mono); tab-size: 4; white-space: pre; overflow: hidden; pointer-events: none; color: var(--ink); background: none; }
 #hl code { display: inline-block; min-width: 100%; padding: 0 40px 0 0; background: none; border-radius: 0; font: inherit; }
@@ -369,7 +369,7 @@ h2 { font-family: var(--font-bubble); font-weight: 700; }
 .hl-key { display: flex; flex-wrap: wrap; gap: 3px 14px; font: 12.5px/1.6 var(--font-mono); margin-top: 6px; }
 pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font: 13px/20px var(--font-mono); tab-size: 4; max-width: 100%; }
 
-/* blocks: stronger colour coding */
+
 .blk { background: color-mix(in srgb, var(--c) 13%, var(--surface)); border-top-color: color-mix(in srgb, var(--c) 42%, var(--line)); border-right-color: color-mix(in srgb, var(--c) 42%, var(--line)); border-bottom-color: color-mix(in srgb, var(--c) 42%, var(--line)); }
 .blk > .blk-row::before, .tag { font: 800 10px/1 var(--font-body); letter-spacing: 0.08em; background: var(--c); color: var(--on-cat); border-radius: 4px; padding: 3px 6px; }
 .blk.cat-control > .blk-row::before { content: "CONTROL"; } .blk.cat-drive > .blk-row::before { content: "DRIVE"; }
@@ -377,19 +377,19 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .blk .f-num, .blk .f-sel, .blk .f-text { border-color: color-mix(in srgb, var(--c) 55%, var(--line)); }
 .tag { display: inline-block; margin-right: 6px; vertical-align: 1px; }
 
-/* build detail */
+
 .cat-chip { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: var(--honey); color: var(--on-honey); border-radius: 10px; padding: 2px 10px; }
 .partkey { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; font-size: 13px; }
 .partkey i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 7px; border: 1px solid rgba(0, 0, 0, 0.45); vertical-align: -1px; }
 .pk-wheel { background: #12140d; } .pk-motor { background: #d2a52c; } .pk-rail { background: #9aa39a; } .pk-hub { background: #7f8892; } .pk-battery { background: #2d5da6; }
 .pk-intake { background: #2f9a5f; } .pk-launcher { background: #e8892b; } .pk-lift { background: #19a7b8; } .pk-servo { background: #8b63d9; } .pk-sensor { background: #e0559a; }
 
-/* moving honeycomb behind the page */
+
 #bgHive { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .page { position: relative; z-index: 1; }
 .bg-live body { background-image: none; }
 
-/* Robot Controller Console: op mode list, toolbar and editors */
+
 .rc { padding: 0 0 12px; border-radius: 6px; overflow: hidden; }
 .rc > * { margin-inline: 12px; }
 .rc > .rc-bar, .rc > .rc-tools { margin-inline: 0; }
@@ -428,7 +428,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .rc .codewrap, .rc .console, .rc #genJava { border-radius: 3px; }
 .rc .console { font-family: var(--font-mono); font-size: 12.5px; }
 
-/* blocks workspace with a category toolbox and flyout */
+
 .bk { display: grid; grid-template-columns: 118px auto minmax(0, 1fr); border: 1px solid var(--line); border-radius: 3px; overflow: hidden; min-height: 300px; }
 .toolbox { background: var(--sunk); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
 .tb-cat { display: flex; align-items: center; gap: 8px; border: 0; border-bottom: 1px solid var(--line); background: none; padding: 9px 10px; cursor: pointer; font-size: 13.5px; text-align: left; border-left: 4px solid transparent; }
@@ -446,14 +446,14 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
   .flyout { width: auto; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); }
 }
 
-/* match countdown over the field */
+
 .field-wrap { position: relative; }
 .count { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.45); pointer-events: none; }
 .count span { font-family: var(--font-bubble); font-weight: 800; font-size: clamp(90px, 22vw, 200px); line-height: 1; color: #ffc91f; text-shadow: 0 6px 0 rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 201, 31, 0.6); }
 .count span.pop { animation: countPop 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
 @keyframes countPop { 0% { transform: scale(2.2); opacity: 0; } 22% { transform: scale(1); opacity: 1; } 80% { transform: scale(0.94); opacity: 1; } 100% { transform: scale(0.8); opacity: 0.25; } }
 
-/* dragging blocks */
+
 .blk-row { cursor: grab; user-select: none; -webkit-user-select: none; }
 .blk-row input, .blk-row select { cursor: auto; }
 .blk-grip { color: var(--muted); font-size: 15px; line-height: 1; padding: 2px 1px; touch-action: none; cursor: grab; }
@@ -479,7 +479,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .foot-own { font-size: 13.5px; color: var(--ink); }
 .foot-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; max-width: 110ch; }
 
-/* beta label and feedback */
+
 .beta-pill { display: inline-block; font: 800 11px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; background: #ffc91f; color: #201800; border-radius: 10px; padding: 4px 9px; vertical-align: middle; text-shadow: none; }
 .beta-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: color-mix(in srgb, var(--honey) 16%, var(--surface)); border: 1px solid var(--honey); border-radius: 10px; padding: 9px 14px; }
 .beta-bar p { flex: 1 1 280px; min-width: 0; font-size: 14px; }
@@ -495,13 +495,13 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .fb-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; text-align: center; }
 @media (max-width: 760px) { .fb { grid-template-columns: minmax(0, 1fr); padding: 16px; } }
 
-/* Blockly workspace */
+
 .bly { width: 100%; height: 600px; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
 .blocklyToolboxDiv { font-family: var(--font-body); }
 .blocklyTreeLabel { font-family: var(--font-body); font-size: 14px; }
 @media (max-width: 620px) { .bly { height: 480px; } }
 
-/* tutorial */
+
 .tutnav { align-self: flex-start; flex-wrap: wrap; }
 .tutnav button { font-family: var(--font-bubble); font-size: 15px; }
 .tutnav button[aria-pressed="true"] { background: var(--honey); color: var(--on-honey); }
@@ -524,7 +524,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
 
-/* ---------- tabs glide in instead of popping ---------- */
+
 @keyframes viewIn { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
 @keyframes viewInLeft { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
@@ -533,7 +533,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .fade-in { animation: fadeUp 0.3s cubic-bezier(0.22, 0.8, 0.3, 1) backwards; }
 @media (prefers-reduced-motion: reduce) { .view-in, .fade-in { animation: none; } }
 
-/* ---------- Build Bot: types, colours, layout editor, gallery ---------- */
+
 .choice.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; padding: 0; }
@@ -556,7 +556,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .preset .cat-chip { letter-spacing: 0.04em; text-transform: none; }
 .preset .btn { margin-top: auto; }
 
-/* ---------- tutorial pictures ---------- */
+
 .tutnav { display: flex; }
 .fig { margin: 0; display: flex; flex-direction: column; gap: 6px; align-items: center; }
 .fig canvas { width: 100%; max-width: 580px; height: auto; border-radius: 10px; border: 1px solid var(--line); background: var(--tile); display: block; }
@@ -564,7 +564,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .blkfig { width: 100%; height: 290px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; pointer-events: none; }
 .blkfig.tall { height: 430px; }
 
-/* ---------- the four bees on the Home tab ---------- */
+
 #view-home { position: relative; }
 .bees { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
 .bee { position: absolute; left: 0; top: 0; width: 92px; height: 78px; pointer-events: auto; cursor: grab; touch-action: none; will-change: transform; -webkit-user-select: none; user-select: none; }
@@ -575,7 +575,7 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 @media (prefers-reduced-motion: reduce) { .bee .wing { animation: none; } }
 @media (max-width: 760px) { .choice.three { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- 3D pictures on the Build Bot tab ---------- */
+
 .viewmode { align-self: center; }
 .viewmode button[aria-pressed="true"] { background: var(--honey); color: var(--on-honey); }
 .thumb3d { width: 90px; height: 90px; flex: none; border-radius: 8px; border: 1px solid var(--line); background: var(--tile); display: block; }
@@ -583,13 +583,13 @@ pre.java { margin: 0; overflow-x: auto; background: var(--sunk); border: 1px sol
 .tool .thumb3d { order: 3; }
 .tool .kit { order: 4; }
 
-/* ---------- version history on the Home tab ---------- */
+
 .verlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .verlist li { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 12px; align-items: baseline; font-size: 15px; }
 .verlist .ver { font: 800 12px/1 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 10px; padding: 5px 8px; text-align: center; white-space: nowrap; }
 .verlist .is-now .ver { background: #ffc91f; color: #201800; border-color: #ffc91f; }
 .verlist .gap .ver { border-style: dashed; }
-/* ---------- Shooter Lab ---------- */
+
 .lab { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); gap: 14px; align-items: start; }
 .lab-tight { gap: 8px; }
 .sliders.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -697,7 +697,7 @@ details.card > summary h3 { display: inline; }
     </div>
   </div>
 
-  <!-- ===================== HOME ===================== -->
+
   <section id="view-home" class="col home">
     <div class="bees" id="bees" aria-hidden="true"></div>
     <div class="hero">
@@ -793,7 +793,7 @@ details.card > summary h3 { display: inline; }
     </div>
   </section>
 
-  <!-- ===================== DRIVE & CODE ===================== -->
+
   <section id="view-drive" class="col" hidden>
     <div class="scorebar" aria-live="off">
       <div class="hex" id="phase">READY</div>
@@ -958,7 +958,7 @@ details.card > summary h3 { display: inline; }
     </div>
   </section>
 
-  <!-- ===================== BUILD BOT ===================== -->
+
   <section id="view-build" class="col" hidden>
     <h2>Build your bot</h2>
     <p class="hint">Every choice changes how your robot drives and which names your code uses. Changing the bot resets the field, and examples you have not edited update to fit it.</p>
@@ -1051,7 +1051,7 @@ details.card > summary h3 { display: inline; }
     </div>
   </section>
 
-  <!-- ===================== SHOOTER LAB ===================== -->
+
   <section id="view-lab" class="col" hidden>
     <h2>Shooter Lab</h2>
     <p class="hint">Try out a shooter before you build it. Load your shooter's CAD (STL or STEP) or use an example, pick a flywheel and motor, put your robot on the real BIOBUZZ field, and watch the balls fly into the HIVE. Squeeze, grip, spin, air and bounces all follow real physics.</p>
@@ -1308,7 +1308,7 @@ details.card > summary h3 { display: inline; }
     </div>
   </section>
 
-  <!-- ===================== STEP BY STEP ===================== -->
+
   <section id="view-learn" class="read" hidden>
     <h2>Step by step: from zero to a full match</h2>
     <p>Do these in order the first time. Each one takes a few minutes.</p>
@@ -1370,7 +1370,7 @@ details.card > summary h3 { display: inline; }
     </div>
   </section>
 
-  <!-- ===================== TUTORIAL ===================== -->
+
   <section id="view-tutorial" class="read" hidden>
     <h2>Tutorial: everything the site and the robot can do</h2>
     <p>Pick a topic and go through the lessons. The pictures come straight from the simulator, so they match what you see on the other tabs. Keep <b>Drive &amp; Code</b> open so you can try each idea right away.</p>
@@ -1385,7 +1385,7 @@ details.card > summary h3 { display: inline; }
       <button type="button" data-tut="vision" aria-pressed="false">8 &middot; Sensors &amp; AprilTags</button>
     </div>
 
-    <!-- ---------- 1. tour ---------- -->
+
     <div id="tut-tour" class="col">
       <article class="lesson"><h3>Lesson 1: what each tab is for</h3>
         <div class="tablewrap"><table>
@@ -1449,7 +1449,7 @@ details.card > summary h3 { display: inline; }
         </ul></article>
     </div>
 
-    <!-- ---------- 2. driving ---------- -->
+
     <div id="tut-drive" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the controls</h3>
         <p><b>Two controllers:</b> plug in up to two controllers (PS5, PS4, Xbox and most others work) and press a button on each. The first is <code>gamepad1</code> and the second is <code>gamepad2</code>. On a PlayStation controller, Cross is <code>a</code>, Circle is <code>b</code>, Square is <code>x</code> and Triangle is <code>y</code>. You can also write <code>gamepad2.cross</code>. <b>Swap controllers</b> switches them. Only have one? Set the keyboard and screen pad to <b>Gamepad 2</b> to test that code.</p>
@@ -1493,7 +1493,7 @@ details.card > summary h3 { display: inline; }
         <p>On a real robot the left motors face the other way. Give all four the same power and the robot spins in place. Every example fixes this at the top with <code>setDirection(DcMotor.Direction.REVERSE)</code> on the left motors. While you learn, you can turn this off with <b>Real-life motor mounting</b> on the Build Bot tab.</p></article>
     </div>
 
-    <!-- ---------- 3. the game ---------- -->
+
     <div id="tut-game" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the match in three parts</h3>
 <figure class="fig"><canvas data-fig="timeline" width="760" height="190" role="img" aria-label="A bar showing 30 seconds of AUTO, an 8 second pause, and 2 minutes of TELEOP with the last 60 seconds as the endgame"></canvas>
@@ -1563,7 +1563,7 @@ setDrive(0, 0, 0);</pre>
         <p>If one happens, the Match log tells you and you hear a beep. In real matches, the referees decide.</p></article>
     </div>
 
-    <!-- ---------- 4. robot parts ---------- -->
+
     <div id="tut-parts" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: what is on the robot</h3>
         <figure class="fig"><canvas data-fig="robot" width="760" height="560" role="img" aria-label="A robot from above with each part numbered"></canvas>
@@ -1657,7 +1657,7 @@ gate.setPosition(0.0);</pre></article>
         <p>If your shooter points out of the back, your code has to turn the back toward the HIVE. The Java examples do this for you.</p></article>
     </div>
 
-    <!-- ---------- 5. build bot ---------- -->
+
     <div id="tut-build" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the seven categories</h3>
 <figure class="fig"><canvas data-fig="build3d" width="760" height="400" role="img" aria-label="The same robot in the 3D view and in the top view"></canvas>
@@ -1700,7 +1700,7 @@ frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");</pre></article>
         <p>At the bottom of Build Bot, <b>Robots already made</b> shows seven designs, from a two-motor Push Bot to an X-drive with a webcam. Press <b>Use this bot</b>, then change anything you like. We made these practice robots in the style of popular starter bots. They are not official designs.</p></article>
     </div>
 
-    <!-- ---------- 6. blocks ---------- -->
+
     <div id="tut-blocks" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the Blocks workspace</h3>
         <p>Blocks here work like FTC Blocks on a real Robot Controller, because they are built the same way. Blocks snap together like puzzle pieces and run from top to bottom.</p>
@@ -1739,7 +1739,7 @@ frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");</pre></article>
         <p>Press <b>Show the Java these blocks make</b>. Every block becomes one line of Java, coloured the same way as in the Java editor. When you are ready, <b>Copy into a new Java program</b> and keep going by hand.</p></article>
     </div>
 
-    <!-- ---------- 7. java ---------- -->
+
     <div id="tut-java" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the shape of an OpMode</h3>
         <p>Every program has the same three parts: set up, wait for START, then loop. This is the same layout OnBot Java gives you on a real Robot Controller.</p>
@@ -1815,7 +1815,7 @@ void setDrive(double forward, double strafe, double turn) {
         </table></div></article>
     </div>
 
-    <!-- ---------- 8. sensors and AprilTags ---------- -->
+
     <div id="tut-vision" class="col" hidden>
       <article class="lesson"><h3>Lesson 1: the IMU and the distance sensor</h3>
 <figure class="fig"><canvas data-fig="sensors" width="760" height="520" role="img" aria-label="A robot turned to the left with a dashed line from its distance sensor to the HIVE"></canvas>
@@ -1865,7 +1865,7 @@ telemetry.update();</pre>
     </div>
   </section>
 
-  <!-- ===================== GAME MANUAL ===================== -->
+
   <section id="view-manual" class="read" hidden>
     <h2>BIOBUZZ game manual</h2>
     <div class="notice">
@@ -1934,7 +1934,7 @@ telemetry.update();</pre>
     </ul>
   </section>
 
-  <!-- ===================== POLICIES ===================== -->
+
   <section id="view-legal" class="read" hidden>
     <h2>Policies</h2>
     <p>Written in plain words for students, mentors and parents. Last updated 24 November 2026.</p>
@@ -2034,22 +2034,22 @@ telemetry.update();</pre>
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="cursor-tool" id="cursorTool" aria-hidden="true" hidden>&#128736;&#65039;</div>
 
-<script src="sound.js?v=20261124d"></script>
-<script src="interp.js?v=20261124d"></script>
-<script src="world.js?v=20261124d"></script>
-<script src="bot3d.js?v=20261124d"></script>
-<script src="lab-phys.js?v=20261124d"></script>
-<script src="lab-gl.js?v=20261124d"></script>
-<script src="blockly/blockly_compressed.js?v=20261124d"></script>
-<script src="blockly/blocks_compressed.js?v=20261124d"></script>
-<script src="blockly/en.js?v=20261124d"></script>
-<script src="blocks.js?v=20261124d"></script>
-<script src="ftcblocks.js?v=20261124d"></script>
-<script src="app.js?v=20261124d"></script>
-<script src="home.js?v=20261124d"></script>
-<script src="extras.js?v=20261124d"></script>
-<script src="tutorial.js?v=20261124d"></script>
-<script src="lab-ui.js?v=20261124d"></script>
-<script src="bg.js?v=20261124d"></script>
+<script src="sound.js?v=20261124g"></script>
+<script src="interp.js?v=20261124g"></script>
+<script src="world.js?v=20261124g"></script>
+<script src="bot3d.js?v=20261124g"></script>
+<script src="lab-phys.js?v=20261124g"></script>
+<script src="lab-gl.js?v=20261124g"></script>
+<script src="blockly/blockly_compressed.js?v=20261124g"></script>
+<script src="blockly/blocks_compressed.js?v=20261124g"></script>
+<script src="blockly/en.js?v=20261124g"></script>
+<script src="blocks.js?v=20261124g"></script>
+<script src="ftcblocks.js?v=20261124g"></script>
+<script src="app.js?v=20261124g"></script>
+<script src="home.js?v=20261124g"></script>
+<script src="extras.js?v=20261124g"></script>
+<script src="tutorial.js?v=20261124g"></script>
+<script src="lab-ui.js?v=20261124g"></script>
+<script src="bg.js?v=20261124g"></script>
 </body>
 </html>
