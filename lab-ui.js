@@ -1,5 +1,3 @@
-/* Shooter Lab tab: settings, example shooters, CAD loading, the robot on the official field, dragging parts,
-   auto-placing the flywheel, the auto-feeder, the 3D view and the results. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -7,7 +5,7 @@ const L = BBZ.Lab, V = L.vec, IN = L.IN;
 const $ = (id) => document.getElementById(id);
 if (!L || !$('view-lab')) return;
 
-/* ---------- settings ---------- */
+
 const EXAMPLES = [
   { id: 'hood90', name: 'Single flywheel, 90° hood', blurb: 'The most common FTC shooter: one wheel under a curved hood. The ball rolls between the wheel and the hood, so it leaves at about half the wheel\'s speed, with backspin.', wrap: 90, second: 'none' },
   { id: 'hood150', name: 'Single flywheel, long 150° wrap', blurb: 'Balls go in low at the front and ride around the back of the wheel. A longer hood grips the ball for longer, so it needs less squeeze.', wrap: 150, second: 'none' },
@@ -26,17 +24,17 @@ const DEF = {
   mass: 0, sqW: 0, sqD: 0, dropH: 0, bounceH: 0, muW: 100, muH: 100, Cd: 0.5, Cl: 100, air: true, hiveE: 0.4, kScale: 1, realV: 0, realA: 0, realLand: 0
 };
 let S = Object.assign({}, DEF);
-try { const saved = JSON.parse(localStorage.getItem('bbz-lab2') || 'null'); if (saved && typeof saved === 'object') for (const k in DEF) if (typeof saved[k] === typeof DEF[k]) S[k] = saved[k]; } catch (e) { /* storage blocked */ }
-const save = () => { try { localStorage.setItem('bbz-lab2', JSON.stringify(S)); } catch (e) { /* storage blocked */ } };
+try { const saved = JSON.parse(localStorage.getItem('bbz-lab2') || 'null'); if (saved && typeof saved === 'object') for (const k in DEF) if (typeof saved[k] === typeof DEF[k]) S[k] = saved[k]; } catch (e) {  }
+const save = () => { try { localStorage.setItem('bbz-lab2', JSON.stringify(S)); } catch (e) {  } };
 S.comp = Math.max(0, Math.min(25, +S.comp || 0));
 
-let cad = null;            // the shooter file: { tris (file units, or mm for STEP), name, step }
-let robot = null;          // the robot file, same shape
+let cad = null;
+let robot = null;
 let field = null, fieldError = false;
 let sim = null, world = null, feeding = false, paused = false, timeScale = 1, fed = 0, lastFeed = -9, startT = null, spinUp = null;
 let log = [], seen = 0, glv = null, colors = null, slowFrames = 0, dragging = null;
 
-/* ---------- filling the controls ---------- */
+
 const opt = (sel, list, val) => { sel.textContent = ''; list.forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); }); if (val != null) sel.value = val; };
 opt($('labExample'), EXAMPLES.map((e) => [e.id, e.name]));
 const mats = Object.keys(L.SURFACES).map((k) => [k, L.SURFACES[k].name]);
@@ -54,7 +52,7 @@ const FIELDS = { labExample: 'example', labLaunch: 'launch', labWrap: 'wrap', la
   labRobX: 'robotX', labRobY: 'robotY', labHead: 'heading', labRobUnits: 'robUnits', labRobRot: 'robRot', labRobMX: 'robMX', labRobMY: 'robMY', labRobMZ: 'robMZ',
   labRobHit: 'robHit', labLock: 'lock',
   labMass: 'mass', labSqW: 'sqW', labSqD: 'sqD', labDropH: 'dropH', labBounceH: 'bounceH', labMuW: 'muW', labMuH: 'muH', labCd: 'Cd', labCl: 'Cl', labAir: 'air', labHiveE: 'hiveE', labRealV: 'realV', labRealA: 'realA', labRealLand: 'realLand' };
-/* Settings that change the running simulation without starting it again. */
+
 const LIVE = new Set(['rpm', 'V', 'tested', 'count', 'interval', 'feedV', 'wait', 'Cd', 'Cl', 'air', 'rollerRpm', 'lock', 'realV', 'realA', 'realLand']);
 
 function writeUI() {
@@ -109,9 +107,7 @@ function wheelSpec() {
   return Object.assign({}, base, { d: +S.wheelD || base.d, w: +S.wheelW || base.w, mass: +S.wheelM || base.mass });
 }
 
-/* ---------- robot frame and field frame ----------
-   Robot frame: metres from the middle of the robot on the floor, +x forward, +y left, +z up.
-   Field frame: metres from the middle of the field, tile tops at z = 0 (the same frame as the field CAD). */
+
 const pose = () => ({ x: S.robotX * IN, y: S.robotY * IN, h: S.heading * Math.PI / 180 });
 function toField(l, P) { const c = Math.cos(P.h), s = Math.sin(P.h); return [P.x + c * l[0] - s * l[1], P.y + s * l[0] + c * l[1], l[2]]; }
 function dirToField(d, P) { const c = Math.cos(P.h), s = Math.sin(P.h); return [c * d[0] - s * d[1], s * d[0] + c * d[1], d[2]]; }
@@ -123,8 +119,7 @@ function trisToField(t, P) {
 }
 const wheelAt = () => [S.wheelX / 1000, S.wheelY / 1000, S.wheelZ / 1000];
 
-/* The flywheel's own frame: its axle is +y. It is tilted about the robot's forward axis, then turned about the vertical,
-   so tilt 0 / turn 0 is an axle running left to right and tilt 90° is a flat wheel with an upright axle. */
+
 function rotW(v) {
   const t = S.wheelTilt * Math.PI / 180, y = S.wheelYaw * Math.PI / 180;
   const a = [v[0], v[1] * Math.cos(t) - v[2] * Math.sin(t), v[1] * Math.sin(t) + v[2] * Math.cos(t)];
@@ -147,7 +142,7 @@ function trisToWheel(t, c) {
   return out;
 }
 
-/* Scales, spins and moves CAD points (file units) into the robot frame. */
+
 function cadToRobot(tris, units, rot, ox, oy, oz) {
   const s = +units, out = new Float32Array(tris.length);
   const ax = rot[0], ang = rot === '0' ? 0 : (+rot.slice(1)) * Math.PI / 180, c = Math.cos(ang), sn = Math.sin(ang);
@@ -163,9 +158,9 @@ function cadToRobot(tris, units, rot, ox, oy, oz) {
 const shooterCad = (ox, oy, oz) => cadToRobot(cad.solid, cad.step ? '0.001' : S.stlUnits, S.stlRot, ox == null ? S.stlX : ox, oy == null ? S.stlY : oy, oz == null ? S.stlZ : oz);
 const robotCad = () => cadToRobot(robot.solid, robot.step ? '0.001' : S.robUnits, S.robRot, S.robMX, S.robMY, S.robMZ);
 
-/* ---------- building the world ---------- */
 
-/* Calibration turns real measurements into model numbers. */
+
+
 function calibration() {
   const out = { text: [] };
   if (S.mass > 0) { out.mass = S.mass / 1000; out.text.push('ball mass ' + S.mass + ' g'); }
@@ -175,7 +170,7 @@ function calibration() {
   return out;
 }
 
-/* Floor chute with side guides along a straight path, for the double-flywheel example. */
+
 function chuteTris(p0, p1, down, guide, ballR) {
   const out = [], quad = (a, b, c, d) => out.push(...a, ...b, ...c, ...a, ...c, ...d);
   const f0 = V.add(p0, V.mul(down, ballR + 0.002)), f1 = V.add(p1, V.mul(down, ballR + 0.002));
@@ -185,15 +180,14 @@ function chuteTris(p0, p1, down, guide, ballR) {
   return out;
 }
 
-/* The shooter in the robot frame: triangles, material, the feed point and direction, and any second wheel.
-   Examples are built round the flywheel, so they move with it; a CAD shooter stays where it was put. */
+
 function shooterParts(spec) {
   const ball = L.BALLS[S.ball], R = ball.d / 2, rw = spec.d / 2000, comp = S.comp / 1000, gap = ball.d - comp;
   const hwTotal = (spec.w * S.wheelN + 10 * (S.wheelN - 1)) / 2000;
   const guide = Math.max(R + 0.006, hwTotal + 0.004), width = 2 * guide;
   if (S.src === 'stl') {
     const a = S.feedA * Math.PI / 180;
-    /* the feed direction is measured in the flywheel's own plane, so it turns and tilts with the wheel */
+    
     const parts = { tris: cad ? shooterCad() : new Float32Array(0), mat: Object.assign({}, L.SURFACES[S.stlMat]),
       feed: [S.feedX / 1000, S.feedY / 1000, S.feedZ / 1000], dir: rotW([Math.cos(a), 0, Math.sin(a)]), second: null };
     if (S.second === 'double') parts.second = { c: [S.secX / 1000, S.wheelY / 1000, S.secZ / 1000], spec, dir: -1, rpm: S.rpm, motor: S.motor, role: 'double' };
@@ -215,7 +209,7 @@ function shooterParts(spec) {
   if (ex.id === 'transfer') {
     const a0 = (90 + S.launch + S.wrap) * Math.PI / 180, nrm = [Math.cos(a0), 0, Math.sin(a0)], t = [Math.sin(a0), 0, -Math.cos(a0)];
     const h0 = V.mul(nrm, rw + gap + comp), roller = L.WHEELS.find((w) => w.id === 'roller48'), rr = roller.d / 2000;
-    /* the roller sits far enough down the ramp to clear the flywheel, and presses 5 mm into the ball */
+    
     const clear = Math.sqrt(Math.max(0, (rw + rr + 0.006) ** 2 - (rw - rr) ** 2)) + 0.01;
     const ballAt = V.add(V.add(h0, V.mul(t, -clear)), V.mul(nrm, -(R + 0.002)));
     parts.second = { c: fromWheel(V.add(ballAt, V.mul(nrm, -(R + rr - 0.005)))), spec: roller, dir: 1, rpm: S.rollerRpm, motor: S.rollerMotor, role: 'roller' };
@@ -231,7 +225,7 @@ function boxOf(t) {
   return { lo, hi };
 }
 
-/* Places everything on the field. `light` only moves things for drawing (used while dragging); a full build also makes the simulation. */
+
 function place(spec) {
   const P = pose(), parts = shooterParts(spec);
   const tris = trisToField(parts.tris, P);
@@ -291,7 +285,7 @@ function applyAir() {
   sim.env.air = S.air; sim.env.Cd = +S.Cd; sim.env.CLscale = S.Cl / 100;
 }
 
-/* Motors only drive once Start is pressed, so the spin-up shows. */
+
 function setTargets() {
   if (!sim) return;
   sim.wheels.forEach((w) => {
@@ -339,9 +333,9 @@ function aimInfo() {
     (Math.abs(off) < 1 ? 'Aimed right at it.' : 'Aimed ' + Math.abs(off).toFixed(0) + '° to the ' + (off > 0 ? 'left' : 'right') + ' of it.');
 }
 
-/* ---------- auto-place: put the flywheel where the hood wraps round it ---------- */
 
-/* The shooter cut through the plane y = y0 into 2D segments [x, z] in the robot frame. */
+
+
 function slice(raw, y0) {
   const segs = [];
   for (let i = 0; i < raw.length; i += 9) {
@@ -355,7 +349,7 @@ function slice(raw, y0) {
   return segs;
 }
 
-/* Round a centre: the nearest surface, and the longest run of directions (in 5° steps) where a surface lies within `reach`. */
+
 const BINS = 72;
 function arcAt(cx, cz, segs, reach, inside) {
   let dmin = Infinity;
@@ -364,29 +358,28 @@ function arcAt(cx, cz, segs, reach, inside) {
     const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz;
     const t = l2 ? Math.max(0, Math.min(1, ((cx - a[0]) * dx + (cz - a[1]) * dz) / l2)) : 0;
     const qx = a[0] + dx * t, qz = a[1] + dz * t, d = Math.hypot(qx - cx, qz - cz);
-    if (inside && d < inside) continue;             // the axle, hub and anything else inside the wheel itself
+    if (inside && d < inside) continue;
     if (d < dmin) dmin = d;
     if (d < reach) { const bi = Math.floor(((Math.atan2(qz - cz, qx - cx) + 2 * Math.PI) % (2 * Math.PI)) / (2 * Math.PI) * BINS) % BINS; hit[bi] = 1; binMin[bi] = Math.min(binMin[bi], d); }
   }
   let run = 0, best = 0, end = -1;
   for (let k = 0; k < BINS * 2; k++) { if (hit[k % BINS]) { run++; if (run > best && run <= BINS) { best = run; end = k % BINS; } } else run = 0; }
-  /* the narrowest gap along that run: where the ball is squeezed on its way through */
+  
   let pathMin = Infinity;
   for (let k = 0; k < best; k++) pathMin = Math.min(pathMin, binMin[(end - k + BINS) % BINS]);
   return { dmin, run: best, end, pathMin, binMin };
 }
 
-/* Given the wheel centre and the covered arc, pick the spin that throws the ball forwards and upwards,
-   and put the feed point just before the hood's entry. */
+
 function finishPlace(cx, cz, arc, rw, gap, base) {
   const b0 = base || [0, 0, 0];
   const R = L.BALLS[S.ball].d / 2, ang = (b) => (b + 0.5) / BINS * 2 * Math.PI;
   const thB = ang(arc.end), thA = ang((arc.end - arc.run + 1 + BINS) % BINS);
-  const cw = { exit: [Math.sin(thA), -Math.cos(thA)], enter: thB, dir: 1 };          // spinning +y moves the rim clockwise in this view
+  const cw = { exit: [Math.sin(thA), -Math.cos(thA)], enter: thB, dir: 1 };
   const ccw = { exit: [-Math.sin(thB), Math.cos(thB)], enter: thA, dir: -1 };
   const good = (o) => o.exit[0] + 0.6 * o.exit[1];
   const pick = good(cw) >= good(ccw) ? cw : ccw;
-  /* the feed point: in the entry half of the hood, where it gives the ball the most room, halfway between rim and hood */
+  
   const startBin = pick.dir === 1 ? arc.end : (arc.end - arc.run + 1 + BINS) % BINS, stepBin = pick.dir === 1 ? -1 : 1;
   let fb = startBin, room = -Infinity;
   for (let k = 0; k < Math.max(1, Math.ceil(arc.run / 2)); k++) {
@@ -402,13 +395,13 @@ function finishPlace(cx, cz, arc, rw, gap, base) {
   return { exitDeg: Math.round(Math.atan2(pick.exit[1], pick.exit[0]) * 180 / Math.PI), wrap: Math.round(arc.run * 360 / BINS), dir: pick.dir };
 }
 
-/* Test-fires one ball from spots all round the wheel, both spin directions, with the real physics (no air, flywheel already at speed),
-   and keeps the setup that throws the ball forwards fastest at a useful angle. Positions are in the robot frame. */
-/* Lets the page breathe between test shots (a message is not slowed down like a timer in a background tab). */
+
+
 const breathe = () => new Promise((r) => { const ch = new MessageChannel(); ch.port1.onmessage = () => r(); ch.port2.postMessage(0); });
+// try alot of feed spots and keep the best one
 async function bestFeed(cx, cz, rw, raw, spec, progress) {
   const ball = L.BALLS[S.ball], R = ball.d / 2, cal = calibration();
-  /* test shots happen 5 m up in the air, so the field floor never gets in the way of the shooter's own parts */
+  
   const UP = 5, lifted = new Float32Array(raw.length);
   for (let i = 0; i < raw.length; i++) lifted[i] = raw[i] + (i % 3 === 2 ? UP : 0);
   const mesh = L.makeMesh(lifted, Object.assign({}, L.SURFACES[S.stlMat], cal.e ? { e: cal.e } : {}));
@@ -416,14 +409,15 @@ async function bestFeed(cx, cz, rw, raw, spec, progress) {
   const segs = slice(raw, 0), width = spec.w * S.wheelN + 10 * (S.wheelN - 1);
   const clearOf = (x, z) => { let d = Infinity; for (const [a, b] of segs) { const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz, t = l2 ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / l2)) : 0; d = Math.min(d, Math.hypot(a[0] + dx * t - x, a[1] + dz * t - z)); } return d; };
   let best = null, tried = 0;
+  // console.log(segs.length)
   const D = ball.d;
   for (let k = 0; k < 24; k++) for (const press of [0.003, 0.012, 0.022]) {
     if (press === 0.003) { if (progress) progress(k / 24); await breathe(); }
     const th = k / 24 * 2 * Math.PI, r0 = rw + R - press, x = cx + r0 * Math.cos(th), z = cz + r0 * Math.sin(th);
-    /* a ball can start here if the hood presses into it no more than a quarter of its size, and the squeeze in total stays under 40% */
+    
     const hoodPress = Math.max(0, R - clearOf(x, z));
     if (hoodPress > 0.25 * D || press + hoodPress > 0.4 * D) continue;
-    if (press > 0.003 && clearOf(x, z) > R + 0.003) continue;     // deeper starts only where the ball rests against the hood or floor
+    if (press > 0.003 && clearOf(x, z) > R + 0.003) continue;
     for (const dir of [1, -1]) {
       const travel = dir === 1 ? [Math.sin(th), 0, -Math.cos(th)] : [-Math.sin(th), 0, Math.cos(th)];
       const t = new L.Sim();
@@ -432,7 +426,7 @@ async function bestFeed(cx, cz, rw, raw, spec, progress) {
       t.addWheel({ c: [cx, 0, cz + UP], a: [0, 1, 0], spec, width, count: S.wheelN, motor: motorOf(S.motor), G: +S.ratio || 1, V: +S.V, tested: S.tested,
         target: S.rpm, dir, discs: +S.discs, spinUp: false });
       const b = t.addBall(S.ball === 'P' ? 'P' : 'R', [x, 0, z + UP], V.mul(travel, +S.feedV || 1), [0, 0, 0], { mass: cal.mass, k: cal.k });
-      /* stop as soon as the ball has left (or clearly will not): exit recorded, gone 25 cm, or sitting still */
+      
       let still = 0;
       for (let u = 0; u < 0.35 && !b.exit && b.st === 'live'; u += 0.01) {
         t.advance(0.01, 1e9);
@@ -453,7 +447,7 @@ async function bestFeed(cx, cz, rw, raw, spec, progress) {
   return { best, tried };
 }
 
-/* b is in the flywheel's frame (centre at the origin); c is the wheel centre in the robot frame. */
+
 function placeFeed(c, b) {
   S.wheelX = Math.round(c[0] * 1000); S.wheelY = Math.round(c[1] * 1000); S.wheelZ = Math.round(c[2] * 1000); S.dir = b.dir;
   const f = V.add(c, rotW([b.x, 0, b.z]));
@@ -462,6 +456,7 @@ function placeFeed(c, b) {
 }
 
 let placing = false;
+// put the flywheel were the CAD says it is
 async function autoPlace() {
   if (placing) return;
   placing = true; $('labAutoPlace').disabled = true;
@@ -471,12 +466,13 @@ async function autoPlaceRun() {
   const info = $('labAutoInfo');
   if (!cad) { info.textContent = 'Load your shooter file first.'; return; }
   const D = L.BALLS[S.ball].d, R = D / 2;
+  let tries = 0;
   const raw = shooterCad();
-  /* a flywheel modelled in the CAD tells us exactly where the wheel goes, which way its axle points and how big it is */
+  
   if (cad.wheel && cad.wheel.length) {
     const wb = boxOf(cadToRobot(cad.wheel, cad.step ? '0.001' : S.stlUnits, S.stlRot, S.stlX, S.stlY, S.stlZ));
     const size = [0, 1, 2].map((k) => wb.hi[k] - wb.lo[k]), c = [0, 1, 2].map((k) => (wb.lo[k] + wb.hi[k]) / 2);
-    /* the axle runs along the side whose two other sides are equal (the round face) */
+    
     const roundness = (k) => { const o = [0, 1, 2].filter((i) => i !== k).map((i) => size[i]); return Math.abs(o[0] - o[1]) / Math.max(o[0], o[1]); };
     const axle = [0, 1, 2].reduce((a, k) => (roundness(k) < roundness(a) ? k : a), 0);
     if (roundness(axle) > 0.12) { info.textContent = 'The flywheel in your CAD is at an odd angle, so the lab cannot tell which way it faces. Set Turn and Tilt in Step 2 yourself.'; return; }
@@ -484,7 +480,7 @@ async function autoPlaceRun() {
     const others = [0, 1, 2].filter((k) => k !== axle), dia = (size[others[0]] + size[others[1]]) / 2, rw = dia / 2;
     S.wheelD = Math.round(dia * 1000); S.wheelW = Math.max(8, Math.round(size[axle] * 1000));
     S.wheelX = Math.round(c[0] * 1000); S.wheelY = Math.round(c[1] * 1000); S.wheelZ = Math.round(c[2] * 1000);
-    const local = trisToWheel(raw, c);                 // the shooter seen from the flywheel: axle along y, centre at the origin
+    const local = trisToWheel(raw, c);
     const segs = slice(local, 0);
     const near = segs.length ? arcAt(0, 0, segs, rw + D + 0.004, rw + 0.001) : { dmin: Infinity, run: 0 };
     const gap = near.pathMin - rw;
@@ -504,7 +500,7 @@ async function autoPlaceRun() {
     save(); writeUI(); rebuild();
     return;
   }
-  /* otherwise search for the spot where a wheel of the chosen size sits under the hood with the target squeeze (axle left to right) */
+  
   S.wheelYaw = 0; S.wheelTilt = 0;
   const spec = wheelSpec(), rw = spec.d / 2000, gap = D - S.comp / 1000, want = rw + gap;
   const box = boxOf(raw), y0 = (box.lo[1] + box.hi[1]) / 2, segs = slice(raw, y0);
@@ -534,10 +530,9 @@ async function autoPlaceRun() {
 }
 
 
-/* ---------- matching a real shot ---------- */
 
-/* One shot through the current shooter, in the robot frame with the floor, every wheel already at speed.
-   `grip` scales the wheel's friction and `stiff` the ball's stiffness. */
+
+
 function testShot(grip, stiff) {
   const spec = wheelSpec(), parts = shooterParts(spec), cal = calibration();
   const t = new L.Sim();
@@ -557,13 +552,13 @@ function testShot(grip, stiff) {
   return b.exit ? Object.assign({ type: b.type }, b.exit) : null;
 }
 
-/* Landing distance along the floor, from under the flywheel axle, for a given exit. */
+
 function landFrom(ex, Cd) {
   const W = wheelAt();
   return L.landing(ex.type, ex.p, ex.vel, ex.w, { air: S.air, Cd, CLscale: S.Cl / 100 }, [W[0], W[1], 0]);
 }
 
-/* Bisection on a factor between lo and hi (log scale) for a quantity that rises with it. */
+
 async function fit(fn, want, lo, hi, steps) {
   let a = Math.log(lo), b = Math.log(hi), vA = await fn(lo), vB = await fn(hi);
   if (vA == null || vB == null) return null;
@@ -580,6 +575,7 @@ async function fit(fn, want, lo, hi, steps) {
 }
 
 let matching = false;
+// tune the sim untill it matches a real shot
 async function matchShot() {
   if (matching) return;
   const info = $('labMatchInfo');
@@ -590,7 +586,7 @@ async function matchShot() {
     await breathe();
     const before = testShot(S.muW / 100, S.kScale);
     if (!before) { info.textContent = 'The lab\'s own shot does not come out yet. Check the feed dot and spin first.'; return; }
-    /* the speed to aim for: measured, or worked out backwards from the landing spot at the measured (or simulated) angle */
+    
     let wantV = S.realV;
     if (!(wantV > 0)) {
       const ang = (S.realA > 0 ? S.realA : before.ang) * Math.PI / 180, h = Math.hypot(before.vel[0], before.vel[1]) || 1, dirH = [before.vel[0] / h, before.vel[1] / h];
@@ -599,11 +595,11 @@ async function matchShot() {
       if (!r || r.edge) { info.textContent = 'A ball cannot land there at that angle. Check your numbers.'; return; }
       wantV = r.f;
     }
-    /* tune grip if the ball's stiffness was measured with the squeeze test, otherwise tune the squeeze stiffness */
+    
     const squeezeKnown = S.sqW > 0 && S.sqD > 0;
     const speedAt = async (f) => { await breathe(); const e = squeezeKnown ? testShot(f, S.kScale) : testShot(S.muW / 100, f); return e ? e.v : null; };
     info.textContent = 'Matching ' + wantV.toFixed(2) + ' m/s…';
-    /* speed does not always rise with grip or stiffness, so try a spread of values and keep the closest */
+    
     let r = null;
     const tries = squeezeKnown ? [0.3, 0.5, 0.7, 0.85, 1, 1.2, 1.5, 2, 2.5] : [0.1, 0.2, 0.35, 0.5, 0.7, 1, 1.4, 2, 3, 5, 8];
     let lo = Infinity, hi = -Infinity;
@@ -622,7 +618,7 @@ async function matchShot() {
       lines.push(Math.abs(d) <= 3 ? 'Launch angle matches: ' + after.ang.toFixed(1) + '° against your ' + S.realA + '°.' :
         'Launch angle: the lab gives ' + after.ang.toFixed(1) + '°, yours is ' + S.realA + '°. Angle comes from the shape, not the materials, so check the hood angle, the squeeze and where balls enter (a ' + (d > 0 ? 'lower' : 'higher') + ' hood exit or ' + (d > 0 ? 'less' : 'more') + ' squeeze moves it toward yours).');
     }
-    /* with both speed and landing measured, the remaining difference is the air: tune the drag */
+    
     if (after && S.realV > 0 && S.realLand > 0) {
       const ang = (S.realA > 0 ? S.realA : after.ang) * Math.PI / 180, h = Math.hypot(after.vel[0], after.vel[1]) || 1;
       const ex = Object.assign({}, after, { vel: [after.vel[0] / h * S.realV * Math.cos(ang), after.vel[1] / h * S.realV * Math.cos(ang), S.realV * Math.sin(ang)] });
@@ -635,8 +631,9 @@ async function matchShot() {
   } finally { matching = false; $('labMatch').disabled = false; }
 }
 
-/* ---------- reading CAD files ---------- */
+
 let stepWorker = null;
+// STEP files load in a worker so the page doesnt freez
 function readCad(file) {
   return new Promise((resolve, reject) => {
     if (file.size > 80 * 1024 * 1024) { reject(new Error('That file is over 80 MB. Export only the parts you need.')); return; }
@@ -656,8 +653,7 @@ function readCad(file) {
     rd.readAsArrayBuffer(file);
   });
 }
-/* A flywheel or roller modelled in a STEP file would be a solid, still wheel that blocks every ball. The lab's own spinning
-   wheel replaces it, so it is left out of the collisions and kept aside for Auto-place. STL files have no part names. */
+
 const WHEEL_PART = /fly ?wheel|\bwheels?\b|roller|compliant/i, NOT_WHEEL = /axle|shaft|motor|cable|gear|pinion|plate|tape|mount|bracket|spacer|hub ?mount/i;
 function splitWheels(f) {
   f.solid = f.tris; f.wheel = null; f.wheelNames = [];
@@ -675,7 +671,7 @@ function describe(f, isRobot) {
     '. It stays in your browser and was not uploaded.' + (f.wheelNames.length ? ' Found a wheel in it (' + f.wheelNames.join(', ') + '): ' + (isRobot ? 'balls pass through it so it does not block them.' : 'the lab’s spinning flywheel takes its place, and Auto-place uses its exact spot.') : '');
 }
 
-/* ---------- 3D ---------- */
+
 function cssColor(name, fb) {
   const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const m = /^#([0-9a-f]{6})$/i.exec(v);
@@ -689,7 +685,7 @@ function readColors() {
   if (glv) glv.bg = colors.bg;
 }
 
-/* The field: the CAD parts once, and the tiles drawn as plain squares (their edge detail is left out of the field file). */
+
 function uploadField() {
   if (!glv) return;
   const h = field ? field.half : 1.793, fl = [], g = [];
@@ -702,7 +698,7 @@ function uploadField() {
   glv.setParts('glass', field.parts.filter((p) => /Glass/.test(p.name)).map((p) => ({ tris: p.tris, color: [0.85, 0.9, 0.95] })));
 }
 
-/* The target CELL as a glowing block, from its outline. */
+
 function uploadTarget() {
   if (!glv) return;
   const t = target();
@@ -713,14 +709,14 @@ function uploadTarget() {
   glv.setTris('target', new Float32Array(out), [1, 1, 1]);
 }
 
-/* Everything that moves when parts or the robot are dragged. */
+
 function uploadMoving() {
   if (!glv || !world) return;
   glv.setTris('shooter', world.tris.length ? world.tris : new Float32Array(9), [1, 1, 1]);
   glv.setTris('robot', world.rtris || new Float32Array(9), [1, 1, 1]);
   const P = world.P, s = 0.2286, c = [[-s, -s], [s, -s], [s, s], [-s, s]].map((q) => toField([q[0], q[1], 0.003], P)), pts = [];
   for (let i = 0; i < 4; i++) pts.push(...c[i], ...c[(i + 1) % 4]);
-  const nose = toField([s + 0.05, 0, 0.003], P);                  // a small arrow shows which way the robot faces
+  const nose = toField([s + 0.05, 0, 0.003], P);
   pts.push(...toField([s - 0.03, -0.04, 0.003], P), ...nose, ...nose, ...toField([s - 0.03, 0.04, 0.003], P));
   glv.setLines('footprint', pts, [1, 1, 1]);
 }
@@ -745,14 +741,14 @@ function scene() {
   if (world.rtris) items.push({ geo: 'robot', tint: [0.62, 0.64, 0.6, 1] });
   items.push({ geo: 'footprint', tint: [...colors.honey, 0.9] });
   for (const w of sim.wheels) {
-    /* the wheel model's axle is +y: line it up with the real axle, then spin it about that axle */
+    
     const cr = V.cross([0, 1, 0], w.a), sn = V.len(cr), al = Math.atan2(sn, w.a[1]);
     const alignAxis = sn > 1e-6 ? V.mul(cr, 1 / sn) : [1, 0, 0];
     items.push({ geo: 'wheel', m: M.mul(M.trs(w.c, w.a, w.angle, 1), M.trs([0, 0, 0], alignAxis, al, [w.r + w.growth, w.hw, w.r + w.growth])) });
   }
   if (S.src === 'stl' && !S.lock) items.push({ geo: 'ball', m: M.trs(world.feed, [0, 0, 1], 0, 0.012), tint: [...colors.honey, 1], lit: false });
   if (!S.lock) for (const g of gizmo()) {
-    /* a thin bar from the wheel centre along each of the robot's axes, with a knob on the end */
+    
     const mid = V.add(g.from, V.mul(g.dir, g.len / 2)), rx = V.cross([1, 0, 0], g.dir), s = V.len(rx);
     const ang = Math.atan2(s, g.dir[0]), ax = s > 1e-6 ? V.mul(rx, 1 / s) : [0, 0, 1];
     items.push({ geo: 'box', m: M.trs(mid, ax, ang, [g.len / 2, 0.0025, 0.0025]), tint: [...g.color, 1], lit: false });
@@ -763,7 +759,7 @@ function scene() {
     const wl = V.len(b.w), ax = wl > 1e-6 ? V.mul(b.w, 1 / wl) : [0, 0, 1];
     items.push({ geo: 'ball', m: M.trs(b.p, ax, b.rot || 0, b.R), tint: [...L.BALLS[b.type].color, 1] });
   }
-  /* shot paths: the last few, green when scored */
+  
   const paths = sim.balls.slice(-8), pts = { good: [], bad: [], live: [] };
   for (const b of paths) {
     const key = b.result === 'Scored' ? 'good' : b.result ? 'bad' : 'live';
@@ -775,7 +771,7 @@ function scene() {
   return items;
 }
 
-/* ---------- dragging parts in the 3D view ---------- */
+
 function raySphere(ray, c, r) {
   const oc = V.sub(ray.o, c), b = V.dot(oc, ray.d), q = V.dot(oc, oc) - r * r, disc = b * b - q;
   if (disc < 0) return null;
@@ -801,14 +797,14 @@ function rayPlane(ray, p0, n) {
   return t > 0 ? V.add(ray.o, V.mul(ray.d, t)) : null;
 }
 
-/* The X (red, forward), Y (green, left) and Z (blue, up) handles on the flywheel, along the robot's own axes. */
+
 const AXIS_COLORS = [[0.9, 0.2, 0.15], [0.15, 0.7, 0.25], [0.2, 0.45, 0.95]];
 function gizmo() {
   if (!world || !sim) return [];
   const len = sim.wheels[0].r + 0.07;
   return [[1, 0, 0], [0, 1, 0], [0, 0, 1]].map((d, k) => ({ k, from: world.wheelC, dir: dirToField(d, world.P), len, color: AXIS_COLORS[k] }));
 }
-/* Closest approach between the pointer's ray and a line: the distance between them and how far along the line. */
+
 function rayLine(ray, p, u) {
   const w0 = V.sub(p, ray.o), b = V.dot(u, ray.d), d1 = V.dot(u, w0), e = V.dot(ray.d, w0), den = 1 - b * b;
   if (den < 1e-9) return null;
@@ -816,7 +812,7 @@ function rayLine(ray, p, u) {
   return { s, t, dist: V.len(V.sub(V.add(p, V.mul(u, s)), V.add(ray.o, V.mul(ray.d, t)))) };
 }
 
-/* What is under the pointer: an X/Y/Z handle, the feed dot, a wheel, the shooter, the robot model or the robot's outline on the floor. */
+
 function pick(ray, hover) {
   if (S.lock || !world || !sim) return null;
   const tol = Math.max(0.006, (glv ? glv.cam.dist : 1) * 0.012);
@@ -835,11 +831,11 @@ function pick(ray, hover) {
   if (f) { const l = dirToRobot(V.sub(f, [world.P.x, world.P.y, 0]), world.P); if (Math.abs(l[0]) < 0.24 && Math.abs(l[1]) < 0.24) add('robot', V.len(V.sub(f, ray.o)) + 0.001); }
   if (!hits.length) return null;
   hits.sort((a, b) => a.t - b.t);
-  /* a small target in front of a big one wins: the feed dot and wheels before the shooter box */
+  
   const h = hits.find((x) => x.kind === 'feed' || x.kind === 'wheel' || x.kind === 'second') || hits[0];
   if (hover) return h;
   const at = V.add(ray.o, V.mul(ray.d, h.t));
-  /* the robot slides on the floor; parts slide in the robot's side-on (x–z) plane */
+  
   const plane = h.kind === 'robot' ? { p0: [0, 0, 0], n: [0, 0, 1] } : { p0: at, n: dirToField([0, 1, 0], world.P) };
   const start = rayPlane(ray, plane.p0, plane.n) || at;
   return { kind: h.kind, plane, start, S0: Object.assign({}, S) };
@@ -879,7 +875,7 @@ function dragEnd() {
   save(); writeUI(); log = []; build(); results();
 }
 
-/* ---------- the loop ---------- */
+
 let running = false, lastFrame = 0, frameCount = 0;
 function frame(now) {
   if (!running) return;
@@ -907,10 +903,10 @@ function step(span) {
   $('labSlow').hidden = slowFrames < 20;
   const w = sim.wheels[0];
   if (startT != null && spinUp == null && Math.abs(w.omega) * 30 / Math.PI >= 0.98 * S.rpm) { spinUp = sim.t - startT; wheelInfo(); }
-  /* tidy: balls that ended on the floor fade out after a second */
+  
   sim.balls = sim.balls.filter((b) => !(b.st === 'floor' && sim.t - b.ended > 1.2));
   if (sim.shots.length > seen) { for (const s of sim.shots.slice(seen)) log.push(Object.assign({ n: log.length + 1, recover: null, simRef: sim }, s)); seen = sim.shots.length; results(); }
-  /* recovery: time from a ball leaving the wheel until the wheel is back within 2%, read from the speed record */
+  
   let changed = false;
   for (const s of log) {
     if (s.recover != null || !s.exit || s.simRef !== sim) continue;
@@ -971,7 +967,7 @@ function chart() {
   g.stroke();
 }
 
-/* ---------- results ---------- */
+
 const RES_CLASS = { Scored: 'res-good', 'Hit the CELL rim': 'res-warn', 'Hit the HIVE': 'res-bad', Short: 'res-bad', Long: 'res-bad', 'Bounced out': 'res-warn', 'Missed the opening': 'res-warn', 'Jammed in the shooter': 'res-bad', 'Never reached the flywheel': 'res-bad' };
 function results() {
   const shots = log, n = shots.length, ex = shots.filter((s) => s.exit).map((s) => s.exit);
@@ -1018,7 +1014,7 @@ function advice(shots, speeds) {
   return tips.join(' ');
 }
 
-/* ---------- events ---------- */
+
 function onChange(e) {
   const id = e.target.id, key = FIELDS[id];
   if (!key) return;
@@ -1032,7 +1028,7 @@ function onChange(e) {
   if (key === 'comp') writeUI();
   save(); labels();
   if (LIVE.has(key)) { applyAir(); setTargets(); wheelInfo(); return; }
-  if (e.type === 'input' && (el.type === 'range' || el.type === 'number')) return;      // rebuild when the slider is let go or the box is left
+  if (e.type === 'input' && (el.type === 'range' || el.type === 'number')) return;
   rebuild();
 }
 let rebuildTimer = 0;
@@ -1046,7 +1042,7 @@ $('labBallP').addEventListener('click', () => { S.ball = 'P'; save(); writeUI();
 $('labBallR').addEventListener('click', () => { S.ball = 'R'; save(); writeUI(); rebuild(); });
 $('labAllRed').addEventListener('click', () => { if (S.alliance !== 'red') { S.alliance = 'red'; mirrorToAlliance(); } });
 $('labAllBlue').addEventListener('click', () => { if (S.alliance !== 'blue') { S.alliance = 'blue'; mirrorToAlliance(); } });
-/* The two alliances' upward CELLS mirror each other through the middle of the field, so switching alliance moves the robot to the mirrored spot. */
+
 function mirrorToAlliance() {
   S.robotX = -S.robotX; S.robotY = -S.robotY; S.heading = ((S.heading + 360) % 360) - 180;
   save(); writeUI(); rebuild();
@@ -1055,7 +1051,7 @@ $('labAim').addEventListener('click', () => {
   const t = target(); if (!t) return;
   const o = world.wheelC;
   S.heading = Math.round(Math.atan2(t.center[1] - o[1], t.center[0] - o[0]) * 180 / Math.PI);
-  /* turning moves the flywheel if it is off the robot's centre, so aim twice */
+  
   place(wheelSpec());
   const o2 = world.wheelC; S.heading = Math.round(Math.atan2(t.center[1] - o2[1], t.center[0] - o2[0]) * 180 / Math.PI);
   save(); writeUI(); rebuild();
@@ -1102,7 +1098,7 @@ $('labRobotFile').addEventListener('change', async () => {
     const got = await readCad(f);
     if (got.tris.length / 9 > 600000) throw new Error('This robot has ' + Math.round(got.tris.length / 9).toLocaleString() + ' triangles. Export it with a coarser mesh (under 600,000).');
     robot = got;
-    /* stand the robot on the floor, centred on the robot's middle, unless it was moved before */
+    
     const b = boxOf(cadToRobot(got.solid, got.step ? '0.001' : S.robUnits, S.robRot, 0, 0, 0));
     S.robMX = Math.round(-(b.lo[0] + b.hi[0]) / 2 * 1000); S.robMY = Math.round(-(b.lo[1] + b.hi[1]) / 2 * 1000); S.robMZ = Math.round(-b.lo[2] * 1000);
     $('labRobotInfo').textContent = describe(got, true) + ' It now sits on the floor in the middle of the robot. Use the boxes below to line it up.';
@@ -1113,14 +1109,14 @@ $('labRobotRemove').addEventListener('click', () => { robot = null; $('labRobotF
 
 $('labExDownload').addEventListener('click', () => {
   const parts = shooterParts(wheelSpec());
-  const blob = new Blob([L.writeSTL(parts.local || parts.tris)], { type: 'model/stl' });          // saved round the flywheel axle
+  const blob = new Blob([L.writeSTL(parts.local || parts.tris)], { type: 'model/stl' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = 'simyourcode-' + S.example + '.stl';
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 });
 
-/* Start drawing when the tab opens and stop when it closes. */
+
 document.addEventListener('bbz:view', (e) => {
   const on = e.detail === 'lab';
   if (on && !glv) {
@@ -1135,7 +1131,7 @@ document.addEventListener('bbz:view', (e) => {
   if (!on) running = false;
 });
 
-/* The official field is a separate file, loaded once. */
+
 fetch('biobuzz-field.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }).then((doc) => {
   const bin = atob(doc.data), bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -1148,7 +1144,7 @@ fetch('biobuzz-field.json').then((r) => { if (!r.ok) throw new Error(r.status); 
   $('labFieldInfo').textContent = 'The field model could not be loaded, so there is no HIVE to aim at. Reload the page to try again.';
 });
 
-/* Test hook: runs the lab for `sec` simulated seconds without waiting for animation frames, then draws once. */
+
 BBZ.labStep = function (sec) {
   for (let t = 0; t < sec; t += 0.05) step(0.05);
   if (glv) glv.draw(scene());
