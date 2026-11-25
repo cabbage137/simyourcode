@@ -1,4 +1,3 @@
-/* Runs the Java code students write. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -14,7 +13,8 @@ const NUM_TYPES = new Set(['int', 'long', 'short', 'byte', 'double', 'float', 'I
 const OPS2 = ['==', '!=', '<=', '>=', '&&', '||', '++', '--', '+=', '-=', '*=', '/=', '%=', '<<', '>>'];
 const OPS1 = '{}()[];,.=+-*/%<>!?:&|^~';
 
-/* ---------- tokenizer ---------- */
+
+// java code -> tokins
 function tokenize(src) {
   const toks = [];
   const n = src.length;
@@ -67,7 +67,7 @@ function tokenize(src) {
       if (j >= n || src[j] !== c) throw new JavaError('This text is missing its closing quote ' + c, line);
       toks.push({ k: 'str', v: s, line }); i = j + 1; continue;
     }
-    if (c === '@') {                       // annotations are skipped
+    if (c === '@') {
       let j = i + 1; while (j < n && (idPart(src[j]) || src[j] === '.')) j++;
       let k = j; while (k < n && (src[k] === ' ' || src[k] === '\t')) k++;
       if (src[k] === '(') {
@@ -93,7 +93,8 @@ function tokenize(src) {
   return toks;
 }
 
-/* ---------- parser ---------- */
+
+// tokens -> tree that the interpeter runs
 function parse(src) {
   const t = tokenize(String(src));
   let p = 0;
@@ -368,7 +369,7 @@ function parse(src) {
     }
   }
 
-  /* file header */
+  
   while (isW('package') || isW('import')) {
     while (!isP(';')) { if (tk().k === 'eof') fail('Missing ";" after the import line.'); p++; }
     p++;
@@ -418,7 +419,7 @@ function parse(src) {
   return { name: cname, base, fields, methods };
 }
 
-/* ---------- formatting helpers ---------- */
+
 function fmtDouble(v) {
   if (!isFinite(v)) return isNaN(v) ? 'NaN' : (v > 0 ? 'Infinity' : '-Infinity');
   if (Number.isInteger(v) && Math.abs(v) < 1e7) return v.toFixed(1);
@@ -471,7 +472,7 @@ const BUDGET = 3000;
 const ARITH = new Set(['+', '-', '*', '/', '%', '&', '|', '^', '<<', '>>']);
 const INT_METHODS = new Set(['getCurrentPosition', 'getTargetPosition', 'length', 'round', 'size', 'getPortNumber', 'indexOf', 'parseInt']);
 
-/* ---------- interpreter ---------- */
+
 function start(src, host) {
   const cls = parse(src);
   const rt = { line: 0, steps: 0, depth: 0 };
@@ -585,7 +586,7 @@ function start(src, host) {
       if (o.name === 'Math') { if (n.name === 'PI') return Math.PI; if (n.name === 'E') return Math.E; }
       if (o.name === 'Integer') { if (n.name === 'MAX_VALUE') return 2147483647; if (n.name === 'MIN_VALUE') return -2147483648; }
       if (o.name === 'Double') { if (n.name === 'MAX_VALUE') return Number.MAX_VALUE; if (n.name === 'POSITIVE_INFINITY') return Infinity; if (n.name === 'NEGATIVE_INFINITY') return -Infinity; }
-      if (/^[A-Z][A-Z0-9_]*$/.test(n.name)) return n.name;          // enum constant
+      if (/^[A-Z][A-Z0-9_]*$/.test(n.name)) return n.name;
       return new StaticRef(o.name + '.' + n.name);
     }
     if (o.arr && !o.__m) { if (n.name === 'length') return o.arr.length; throw err('Arrays only have .length', n); }
@@ -959,7 +960,7 @@ function start(src, host) {
   let wakeAt = -1, done = false;
   return {
     className: cls.name,
-    /* Runs one slice of the program. */
+    
     step(now) {
       if (done) return true;
       if (now < wakeAt) return false;
