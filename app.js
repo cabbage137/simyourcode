@@ -1,4 +1,3 @@
-/* Page controls: editor, driver station, gamepads and Build Bot. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, h = BBZ.h, J = BBZ.Java;
@@ -10,12 +9,10 @@ const MAX_PROGRAMS = 30, MAX_CODE = 60000;
 const state = { robot: BBZ.defaultRobot(), programs: [], open: 0, auto: -1, tele: -1, speed: 1 };
 let world = null;
 let runner = null, runProg = null, started = false, startAt = 0, stopReq = false, matchOn = false;
-let errInfo = null;              // { line, progId }
+let errInfo = null;
 let pid = 1;
 
-/* ---------- storage ---------- */
 const cleanName = (s, def) => (typeof s === 'string' ? s.replace(/[\u0000-\u001f<>]/g, '').slice(0, 40).trim() : '') || def || 'My program';
-/* Converts Blocks programs from the old editor into Java op modes. */
 function convertLegacy(p) {
   const name = cleanName(p.name), mode = p.mode === 'auto' ? 'auto' : 'teleop', group = cleanGroup(p.group);
   let code;
@@ -34,7 +31,6 @@ function cleanProgram(p) {
     ex: (typeof p.ex === 'string' && /^[a-z-]{1,30}$/.test(p.ex)) ? p.ex : '', sig: (typeof p.sig === 'string' && /^[0-9a-z]{1,16}$/.test(p.sig)) ? p.sig : ''
   };
 }
-/* A short fingerprint of a program's contents. */
 function sigOf(p) {
   const s = p.lang === 'java' ? p.code : JSON.stringify(p.blocks);
   let a = 2166136261;
@@ -55,7 +51,7 @@ function load() {
   try { raw = JSON.parse(window.localStorage.getItem(KEY) || 'null'); } catch (e) { raw = null; }
   if (raw && typeof raw === 'object') {
     state.robot = BBZ.sanitizeRobot(raw.robot);
-    BBZ.Blocks.useRobot(state.robot);            /* block dropdowns must know this bot's device names before programs are read */
+    BBZ.Blocks.useRobot(state.robot);            
     if (Array.isArray(raw.programs)) state.programs = raw.programs.slice(0, MAX_PROGRAMS).map(cleanProgram).filter(Boolean); normalise();
     const idx = (v) => (typeof v === 'number' && Number.isInteger(v) && v >= -1 && v < state.programs.length) ? v : -1;
     state.open = Math.max(0, idx(raw.open)); state.auto = idx(raw.auto); state.tele = idx(raw.tele);
@@ -65,7 +61,6 @@ function load() {
   else renewOldExamples();
   fixMatchPicks();
 }
-/* Moves example op modes saved by an earlier version into an "Older versions" group. */
 function renewOldExamples() {
   let list = null;
   const fresh = [];
@@ -95,7 +90,7 @@ function save() {
         robot: state.robot, open: state.open, auto: state.auto, tele: state.tele, speed: state.speed,
         programs: state.programs.map((p) => ({ name: p.name, lang: p.lang, mode: p.mode, group: p.group, desc: p.desc, code: p.code, blocks: p.blocks, ex: p.ex || '', sig: p.sig || '' }))
       }));
-    } catch (e) { /* storage can be unavailable; the page still works */ }
+    } catch (e) {  }
   }, 350);
 }
 
@@ -105,10 +100,9 @@ function notify(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3600);
 }
 
-/* ---------- colours for the canvas, read from the theme tokens ---------- */
 let col = null;
 function readColors() {
-  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim() || '#888';
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim() || '#888' ;
   col = {
     bg: g('--sunk'), tile: g('--tile'), tileLine: g('--tile-line'), tileText: g('--tile-text'), wall: g('--wall'), muted: g('--muted'),
     red: g('--red'), blue: g('--blue'), pollen: g('--pollen'), ballEdge: g('--ball-edge'), hive: g('--hive'), accent: g('--honey'),
@@ -117,7 +111,6 @@ function readColors() {
   };
 }
 
-/* ---------- telemetry, gamepads and hardware map handed to student code ---------- */
 const tele = { pending: [], shown: null, dirty: true, update() { this.shown = this.pending.slice(0, 30); this.pending = []; this.dirty = true; } };
 const PAD_KEYS = ['left_stick_x', 'left_stick_y', 'right_stick_x', 'right_stick_y', 'left_trigger', 'right_trigger', 'a', 'b', 'x', 'y',
   'left_bumper', 'right_bumper', 'dpad_up', 'dpad_down', 'dpad_left', 'dpad_right', 'start', 'back', 'left_stick_button', 'right_stick_button', 'guide', 'touchpad'];
@@ -128,12 +121,11 @@ function padApi(src) {
   const F = Object.create(null);
   PAD_KEYS.forEach((k) => { F[k] = () => src[k]; });
   F.cross = F.a; F.circle = F.b; F.square = F.x; F.triangle = F.y;
-  F.options = F.start; F.share = F.back; F.ps = F.guide;                  /* the PlayStation names for the same buttons */
+  F.options = F.start; F.share = F.back; F.ps = F.guide;                  
   return { __t: 'Gamepad', __f: F, __m: Object.create(null) };
 }
 const KIND_OF = { DcMotor: 'motor', DcMotorEx: 'motor', DcMotorSimple: 'motor', Servo: 'servo', IMU: 'imu', DistanceSensor: 'distance', Rev2mDistanceSensor: 'distance', WebcamName: 'camera', CameraName: 'camera' };
 const KIND_LABEL = { motor: 'motor', servo: 'servo', imu: 'IMU', distance: 'distance sensor', camera: 'webcam' };
-/* The vision objects student code gets from AprilTagProcessor and VisionPortal, shaped like the FTC SDK ones. */
 function tagObject(d) {
   const P = Object.create(null), F = Object.create(null), MD = Object.create(null);
   P.range = () => d.range; P.bearing = () => d.bearing; P.yaw = () => d.yaw; P.x = () => d.x; P.y = () => d.y; P.z = () => 0;
@@ -168,7 +160,7 @@ function visionStatics(cls, name, a) {
 function getDevice(cls, name) {
   if (typeof name !== 'string') throw new Error('hardwareMap.get needs the device name in quotes, like hardwareMap.get(DcMotor.class, "fl").');
   let d = world.device(name);
-  if (!d && name === 'Webcam 1') d = world.device(state.robot.names.camera);          // the usual name on a real robot
+  if (!d && name === 'Webcam 1') d = world.device(state.robot.names.camera);
   if (!d && KIND_OF[cls] === 'camera' && !state.robot.tools.camera) throw new Error('Your bot has no webcam. Tick "Webcam (AprilTags)" under Sensors on the Build Bot tab, then run again.');
   if (!d) throw new Error('There is no device named "' + name + '" on your bot. It has: ' + BBZ.deviceList(state.robot).map((x) => x.name).join(', ') + '. Names must match the Build Bot tab exactly, capitals included.');
   if (cls) {
@@ -209,7 +201,6 @@ function makeHost() {
   };
 }
 
-/* ---------- running programs ---------- */
 const openProg = () => state.programs[state.open] || null;
 function setStatus(s) { $('dsStatus').textContent = s; }
 function clearError() {
@@ -256,7 +247,6 @@ function endOpMode() {
   runner = null; runProg = null; started = false;
   if (world) world.stopActuators();
 }
-/* Ends a practice run. */
 function endPractice() {
   if (world.mode !== 'practice' && world.mode !== 'autotest') return false;
   world.practiceDone();
@@ -265,22 +255,20 @@ function endPractice() {
 function runOpen() {
   const p = openProg();
   if (!p) return;
-  /* An autonomous run always begins from a fresh field. */
   const fresh = p.mode === 'auto';
   if (matchOn || world.mode === 'over' || fresh) { endOpMode(); world.reset(); clearLog(); rebuildHw(); }
   matchOn = false;
-  world.mode = fresh ? 'autotest' : 'practice';            /* an autonomous run on its own is scored as AUTO */
+  world.mode = fresh ? 'autotest' : 'practice';            
   if (startOpMode(p)) { setStatus('Running "' + p.name + '"' + (fresh ? ' from the start spot' : '') + '. Press Stop when you are done.'); addLog('info', 'Started ' + p.name + (fresh ? ' on a fresh field (practice, no clock).' : ' (practice, no clock).')); }
   else { world.mode = 'idle'; setStatus('That program has a problem. Check the box under the editor.'); }
 }
-const sfx = (name) => { try { if (BBZ.Sound) BBZ.Sound.play(name); } catch (e) { /* sound is optional */ } };
+const sfx = (name) => { try { if (BBZ.Sound) BBZ.Sound.play(name); } catch (e) {  } };
 let countTimer = 0;
 function cancelCountdown() {
   if (countTimer) { clearTimeout(countTimer); countTimer = 0; }
   const o = $('countOverlay');
   if (o) o.hidden = true;
 }
-/* Shows a big number over the field and replays its pop animation. */
 function showCount(text) {
   const o = $('countOverlay'), n = $('countNum');
   if (!o || !n) return;
@@ -288,12 +276,11 @@ function showCount(text) {
   o.hidden = false;
   n.classList.remove('pop'); void n.offsetWidth; n.classList.add('pop');
 }
-/* Competition-style start: the field resets, "3, 2, 1" counts down with beeps, then the charge call starts AUTO. */
+//full match: auto, 8 sec break, teleop
 function runMatch() {
   endOpMode();
   world.reset(); clearLog(); rebuildHw();
   matchOn = false; world.mode = 'idle';
-  /* The op mode open in the editor plays in the match: as the autonomous or as the TeleOp, whichever it is. */
   const openNow = openProg(), at = state.programs.indexOf(openNow);
   if (openNow && at >= 0) {
     if (openNow.mode === 'auto') state.auto = at; else state.tele = at;
@@ -321,7 +308,7 @@ function beginMatch() {
   const p = state.programs[state.auto];
   addLog('info', 'Match started. AUTO: 30 seconds, no driver control.');
   if (p) {
-    const keep = countTimer;                 /* starting an op mode clears timers; keep the one hiding "GO!" */
+    const keep = countTimer;                 
     countTimer = 0;
     const ok = startOpMode(p);
     countTimer = keep;
@@ -362,7 +349,9 @@ function resetField() {
   setStatus('Field reset. Pick a program and press Run.');
 }
 
+// one tick of the robot code and the feild
 function simStep() {
+  let lastTime = 0;
   if (runner) {
     if (!started && world.time >= startAt) started = true;
     try {
@@ -384,7 +373,6 @@ function simStep() {
   if (world.phaseChanged) { world.phaseChanged = false; onPhase(); }
 }
 
-/* ---------- log ---------- */
 const logItems = [];
 function addLog(kind, text) {
   logItems.unshift({ kind, text, t: world ? world.time : 0 });
@@ -398,7 +386,6 @@ function renderLog() {
   logItems.forEach((it) => ul.append(h('li', { class: 'k-' + it.kind }, h('time', { text: it.t.toFixed(1) + 's' }), it.text)));
 }
 
-/* ---------- instruments ---------- */
 let hwRows = [];
 function rebuildHw() {
   const tb = $('hwBody'); tb.textContent = ''; hwRows = [];
@@ -460,13 +447,11 @@ function updateHud() {
   heard.beep = beep;
 }
 
-/* ---------- gamepad input ---------- */
 const keys = Object.create(null), vbtn = Object.create(null), vstick = { lx: 0, ly: 0, rx: 0, ry: 0 };
 const KEYMAP = { KeyQ: 'left_bumper', KeyE: 'right_bumper', KeyZ: 'left_trigger', KeyC: 'right_trigger', KeyK: 'a', KeyL: 'b', KeyJ: 'x', KeyI: 'y',
   KeyT: 'dpad_up', KeyG: 'dpad_down', KeyF: 'dpad_left', KeyH: 'dpad_right' };
 const DRIVE_KEYS = { KeyW: 1, KeyA: 1, KeyS: 1, KeyD: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1 };
 const typing = (t) => t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
-/* Reads up to two controllers: the first is gamepad1 and the second is gamepad2. */
 const padPair = [pad, pad2];
 let screenTo = 0, swapPads = false, padSeen = '';
 const HW_BUTTONS = ['a', 'b', 'x', 'y', 'left_bumper', 'right_bumper', null, null, 'back', 'start', 'left_stick_button', 'right_stick_button', 'dpad_up', 'dpad_down', 'dpad_left', 'dpad_right', 'guide', 'touchpad'];
@@ -483,7 +468,7 @@ function readControllers() {
       HW_BUTTONS.forEach((n, j) => { if (n && g.buttons[j] && g.buttons[j].pressed) s.b[n] = true; });
       found.push(s);
     }
-  } catch (e) { /* the Gamepad API can be blocked; keyboard and on-screen controls still work */ }
+  } catch (e) {  }
   if (swapPads && found.length === 2) found.reverse();
   return found;
 }
@@ -534,7 +519,7 @@ function wireInput() {
   document.querySelectorAll('.pb').forEach((el) => {
     const n = el.dataset.pad;
     const up = () => { vbtn[n] = false; };
-    el.addEventListener('pointerdown', (e) => { vbtn[n] = true; try { el.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } e.preventDefault(); });
+    el.addEventListener('pointerdown', (e) => { vbtn[n] = true; try { el.setPointerCapture(e.pointerId); } catch (x) {  } e.preventDefault(); });
     el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
     el.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'Enter') { vbtn[n] = true; e.preventDefault(); } });
     el.addEventListener('keyup', up); el.addEventListener('blur', up);
@@ -550,26 +535,23 @@ function wireInput() {
       knob.style.transform = 'translate(' + (x * R * 0.55) + 'px,' + (y * R * 0.55) + 'px)';
     };
     const end = () => { active = false; vstick[ax] = 0; vstick[ay] = 0; knob.style.transform = ''; };
-    el.addEventListener('pointerdown', (e) => { active = true; try { el.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } set(e); e.preventDefault(); });
+    el.addEventListener('pointerdown', (e) => { active = true; try { el.setPointerCapture(e.pointerId); } catch (x) {  } set(e); e.preventDefault(); });
     el.addEventListener('pointermove', (e) => { if (active) set(e); });
     el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('lostpointercapture', end);
   };
   stick($('stickL'), 'lx', 'ly'); stick($('stickR'), 'rx', 'ry');
 }
 
-/* ---------- program editor (laid out like the FTC Robot Controller programming pages) ---------- */
 function fillSelect(sel, items, value) {
   sel.textContent = '';
   items.forEach((it) => sel.append(h('option', { value: String(it[0]) }, it[1])));
   sel.value = String(value);
 }
-/* Keeps every group's op modes next to each other, in the order the groups first appear. */
 function normalise() {
   const order = [];
   state.programs.forEach((p) => { if (order.indexOf(p.group) < 0) order.push(p.group); });
   state.programs = state.programs.map((p, i) => ({ p, i })).sort((a, b) => (order.indexOf(a.p.group) - order.indexOf(b.p.group)) || (a.i - b.i)).map((x) => x.p);
 }
-/* Runs a change to the op mode list, then points "open" and the match picks back at the same op modes. */
 function withPrograms(fn) {
   const ids = [openProg(), state.programs[state.auto], state.programs[state.tele]].map((p) => (p ? p.id : -1));
   fn();
@@ -606,7 +588,6 @@ function openById(id) {
   if (i < 0) return;
   state.open = i; renderProgramLists(); renderEditor(); save();
 }
-/* Moves all of group `a` so it sits just before group `b`. */
 function moveGroup(a, b) {
   withPrograms(() => {
     const block = state.programs.filter((p) => p.group === a), rest = state.programs.filter((p) => p.group !== a);
@@ -692,7 +673,7 @@ function renderEditor() {
   if (java) { $('code').value = p.code; $('code').scrollTop = 0; updateGutter(); }
   else { BBZ.Blocks.resetCursor(); BBZ.Blocks.render($('blocksRoot'), p, state.robot, blocksApi); refreshGenJava(); }
   placeErrLine();
-  try { window.dispatchEvent(new Event('bbz-editor')); } catch (e) { /* ignore */ }
+  try { window.dispatchEvent(new Event('bbz-editor')); } catch (e) {  }
 }
 const BLANK_JAVA = ['package org.firstinspires.ftc.teamcode;', '', 'import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;', 'import com.qualcomm.robotcore.eventloop.opmode.TeleOp;', '',
   '@TeleOp(name = "My OpMode")', 'public class MyOpMode extends LinearOpMode {', '', '    @Override', '    public void runOpMode() {',
@@ -788,7 +769,6 @@ function wireEditor() {
   });
 }
 
-/* ---------- driver station ---------- */
 function renderStation() {
   const c = state.robot;
   $('allianceRed').setAttribute('aria-pressed', String(c.alliance === 'red'));
@@ -808,8 +788,6 @@ function wireStation() {
   document.querySelectorAll('.speed').forEach((b) => b.addEventListener('click', () => { state.speed = +b.dataset.s || 1; renderStation(); save(); }));
 }
 
-/* ---------- build bot ---------- */
-/* Example op modes nobody has edited are rewritten whenever the bot changes, so they always fit its parts and names. */
 function refreshExamples() {
   let list = null, n = 0;
   state.programs.forEach((p) => {
@@ -820,7 +798,7 @@ function refreshExamples() {
     try {
       if (ex.lang === 'java') p.code = ex.make(); else p.blocks = BBZ.Blocks.sanitize(ex.make());
       p.desc = ex.desc; p.sig = sigOf(p); n++;
-    } catch (e) { /* keep the old copy if the example cannot be rebuilt */ }
+    } catch (e) {  }
   });
   return n;
 }
@@ -838,10 +816,9 @@ function applyRobot(rerenderBuild) {
   renderProgramLists();
   const p = openProg();
   if (p && p.lang === 'blocks') { BBZ.Blocks.render($('blocksRoot'), p, state.robot, blocksApi); refreshGenJava(); }
-  else if (p && $('code').value !== p.code) { $('code').value = p.code; updateGutter(); try { window.dispatchEvent(new Event('bbz-editor')); } catch (e) { /* ignore */ } }
+  else if (p && $('code').value !== p.code) { $('code').value = p.code; updateGutter(); try { window.dispatchEvent(new Event('bbz-editor')); } catch (e) {  } }
   save();
 }
-/* Where each device would plug in on a real Control Hub, to make the table read like the Configure Robot screen. */
 function portOf(d, i, kindIndex) {
   if (d.kind === 'motor') return kindIndex < 4 ? 'Control Hub motor ' + kindIndex : 'Expansion Hub motor ' + (kindIndex - 4);
   if (d.kind === 'servo') return 'Control Hub servo ' + kindIndex;
@@ -850,7 +827,6 @@ function portOf(d, i, kindIndex) {
   return 'USB';
 }
 const TYPE_LABEL = { motor: 'DcMotor', servo: 'Servo', imu: 'IMU', distance: 'DistanceSensor', camera: 'Webcam' };
-/* Changes a device name everywhere it is used: Java text and the dropdowns inside saved Blocks programs. */
 function renameEverywhere(from, to) {
   const re = new RegExp('(^|[^A-Za-z0-9_])' + from + '(?![A-Za-z0-9_])', 'g');
   let n = 0;
@@ -861,7 +837,7 @@ function renameEverywhere(from, to) {
     Object.keys(o).forEach((k) => { if (k !== 'fields') walk(o[k]); });
   };
   state.programs.forEach((p) => {
-    if (isPure(p)) return;                                   // untouched examples are rebuilt from scratch instead
+    if (isPure(p)) return;
     if (p.lang === 'java') { const next = p.code.replace(re, (m, a) => { n++; return a + to; }); p.code = next.slice(0, MAX_CODE); }
     else walk(p.blocks);
   });
@@ -884,9 +860,8 @@ function renderChecks() {
   if (!c.tools.launcher && !c.tools.lift) li('INFO', 'info', 'With no shooter and no lift, this bot can only push or carry pieces and park.');
 }
 
-/* The preview is also the layout editor, where parts are picked and dragged. */
 let pickKey = '', dragKey = '';
-const PREVIEW_SPAN = 26;                                    // inches shown across the preview
+const PREVIEW_SPAN = 26;
 function drawBot(cv, cfg, pick, label) {
   if (!col) readColors();
   const ctx = cv.getContext('2d'), px = cv.width, k = px / PREVIEW_SPAN;
@@ -898,7 +873,6 @@ function drawBot(cv, cfg, pick, label) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (label) { ctx.fillStyle = col.tileText; ctx.font = '600 ' + Math.round(px / 30) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('FRONT', px / 2, px / 24); }
 }
-/* The big picture shows either a 3D model you can turn, or the flat top view where parts are dragged about. */
 let view3d = true, turning = false, spinRaf = 0, spinAt = 0;
 const mainView = { yaw: -0.9, pitch: 0.62 };
 const has3d = () => !!(BBZ.Bot3D && view3d);
@@ -906,7 +880,6 @@ function drawPreview() {
   if (has3d()) { if (!col) readColors(); BBZ.Bot3D.draw($('preview'), state.robot, { yaw: mainView.yaw, pitch: mainView.pitch, pick: pickKey, label: true, colors: col }); }
   else drawBot($('preview'), state.robot, pickKey, true);
 }
-/* The 3D model turns slowly by itself while the Build Bot tab is open. */
 let calmMotion = false;
 try { calmMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { calmMotion = false; }
 function spinTick(ts) {
@@ -922,7 +895,6 @@ function setViewMode(on) {
   $('preview').style.cursor = on ? 'grab' : 'default';
   describePick(); drawPreview(); startSpin();
 }
-/* A small 3D picture that can be turned by dragging it. */
 function mini3d(cv, cfg, only) {
   if (!BBZ.Bot3D) { drawBot(cv, cfg, '', false); return; }
   const view = { yaw: -0.9, pitch: 0.6 };
@@ -930,7 +902,6 @@ function mini3d(cv, cfg, only) {
   BBZ.Bot3D.orbit(cv, view, paint);
   paint();
 }
-/* Turns a pointer position on the preview into robot inches (+x front, +y left). */
 function previewPoint(e) {
   const cv = $('preview'), r = cv.getBoundingClientRect(), k = r.width / PREVIEW_SPAN;
   const X = (e.clientX - r.left - r.width / 2) / k, Y = -(e.clientY - r.top - r.height / 2) / k;
@@ -981,7 +952,7 @@ function renderPresets() {
       h('button', { type: 'button', class: 'btn btn-small', 'aria-label': 'Use ' + p.name, onclick: () => {
         state.robot = BBZ.presetRobot(p.id, state.robot.alliance); pickKey = '';
         applyRobot(); notify('Loaded "' + p.name + '". Change anything you like, it is your bot now.');
-        try { $('view-build').scrollIntoView({ block: 'start' }); } catch (e) { /* ignore */ }
+        try { $('view-build').scrollIntoView({ block: 'start' }); } catch (e) {  }
       } }, 'Use this bot')));
     mini3d(cv, BBZ.presetRobot(p.id, state.robot.alliance));
   });
@@ -1042,13 +1013,12 @@ function renderBuild() {
       const n = renameEverywhere(c.names[d.role], v);
       msg.textContent = 'Renamed to "' + v + '".' + (n ? ' Your op modes were updated in ' + n + ' place' + (n === 1 ? '' : 's') + ' to match.' : ' Blocks and examples now use the new name.');
       c.names[d.role] = v; applyRobot();
-      const again = $('name-' + d.role); if (again) { try { again.focus(); } catch (e) { /* ignore */ } }
+      const again = $('name-' + d.role); if (again) { try { again.focus(); } catch (e) {  } }
     });
     tb.append(h('tr', null, h('td', { text: d.label }), h('td', { class: 'mono', text: TYPE_LABEL[d.kind] }), h('td', { class: 'hint', text: portOf(d, i, ki) }), h('td', null, inp)));
   });
   renderPartButtons(); describePick(); renderChecks(); drawPreview(); renderPresets();
 }
-/* Ready-made naming styles teams commonly use for the drive motors. */
 const NAME_SETS = {
   short: { fl: 'fl', fr: 'fr', bl: 'bl', br: 'br', left: 'leftDrive', right: 'rightDrive' },
   long: { fl: 'frontLeft', fr: 'frontRight', bl: 'backLeft', br: 'backRight', left: 'leftDrive', right: 'rightDrive' },
@@ -1071,7 +1041,6 @@ function wireBuild() {
     if (!set) return;
     const taken = BBZ.deviceList(c()).filter((d) => roles.indexOf(d.role) < 0).map((d) => d.name);
     if (roles.some((r) => taken.indexOf(set[r]) >= 0)) { $('nameMsg').textContent = 'One of those names is already used by another part, so nothing was changed.'; return; }
-    /* renames through temporary names so two swapped names cannot collide */
     let n = 0;
     roles.forEach((r, i) => { n += renameEverywhere(c().names[r], 'zzTmpName' + i); });
     roles.forEach((r, i) => { renameEverywhere('zzTmpName' + i, set[r]); c().names[r] = set[r]; });
@@ -1079,19 +1048,18 @@ function wireBuild() {
     applyRobot();
   }));
 
-  /* layout editor */
   const cv = $('preview');
   document.querySelectorAll('[data-vm]').forEach((b) => b.addEventListener('click', () => setViewMode(b.dataset.vm === '3d')));
   let turnX = 0, turnY = 0;
   cv.addEventListener('pointerdown', (e) => {
     if (has3d()) {
       turning = true; turnX = e.clientX; turnY = e.clientY; cv.style.cursor = 'grabbing';
-      try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+      try { cv.setPointerCapture(e.pointerId); } catch (x) {  }
       e.preventDefault(); return;
     }
     const key = partAt(previewPoint(e));
     pickKey = key; dragKey = key;
-    if (key) { try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } sfx('lift'); }
+    if (key) { try { cv.setPointerCapture(e.pointerId); } catch (x) {  } sfx('lift'); }
     renderPartButtons(); describePick(); drawPreview();
     e.preventDefault();
   });
@@ -1107,7 +1075,7 @@ function wireBuild() {
     movePart(dragKey, previewPoint(e)); drawPreview();
   });
   const drop = () => {
-    if (turning) { turning = false; cv.style.cursor = 'grab'; return; }      /* stays where you left it; it only spins again after a tab change */
+    if (turning) { turning = false; cv.style.cursor = 'grab'; return; }      
     if (!dragKey) return;
     dragKey = ''; sfx('snap'); applyRobot();
   };
@@ -1131,14 +1099,12 @@ function wireBuild() {
   $('btnResetLayout').addEventListener('click', () => { c().layout = BBZ.defaultLayout(); applyRobot(); notify('Every part is back in its usual place.'); });
 }
 
-/* ---------- navigation and the frame loop ---------- */
 const VIEWS = ['home', 'drive', 'build', 'lab', 'learn', 'tutorial', 'manual', 'legal'];
 function showView(name, fromHash) {
   if (VIEWS.indexOf(name) < 0) name = 'home';
   const was = VIEWS.find((v) => !$('view-' + v).hidden);
   VIEWS.forEach((v) => { $('view-' + v).hidden = v !== name; });
   if (was !== name) {
-    /* the new tab glides in from the side it sits on in the tab bar */
     const el = $('view-' + name);
     el.classList.remove('view-in', 'from-left');
     void el.offsetWidth;
@@ -1149,7 +1115,7 @@ function showView(name, fromHash) {
   if (name === 'build') { renderBuild(); startSpin(); }
   if (name === 'drive') { resizeField(); updateGutter(); }
   document.dispatchEvent(new CustomEvent('bbz:view', { detail: name }));
-  if (!fromHash) { try { history.replaceState(null, '', '#' + name); } catch (e) { /* ignore */ } }
+  if (!fromHash) { try { history.replaceState(null, '', '#' + name); } catch (e) {  } }
 }
 function resizeField() {
   const wrap = $('fieldWrap'), cv = $('field'), w = wrap.clientWidth;
@@ -1173,7 +1139,6 @@ function frame(ts) {
   }
 }
 
-/* Runs a program on a private copy of the field with nobody at the controls and reports what happened. */
 BBZ.dryRun = (src, cfg, mode, seconds, pads) => {
   const keep = { world, started, startAt, stopReq, robot: state.robot, pending: tele.pending, shown: tele.shown };
   const out = { error: null, finished: false };
@@ -1211,8 +1176,8 @@ function init() {
   showView((window.location.hash || '').replace('#', '') || 'home', true);
   if (window.ResizeObserver) new ResizeObserver(resizeField).observe($('fieldWrap')); else window.addEventListener('resize', resizeField);
   const retheme = () => { readColors(); if (!$('view-build').hidden) drawPreview(); };
-  try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme); } catch (e) { /* older browsers */ }
-  try { new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] }); } catch (e) { /* ignore */ }
+  try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme); } catch (e) {  }
+  try { new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] }); } catch (e) {  }
   window.requestAnimationFrame(frame);
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
