@@ -1,4 +1,3 @@
-/* Field, robot physics and scoring. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
@@ -22,19 +21,20 @@ const WHEELS = {
   w104: { label: '104 mm (4.09 in)', d: 4.09 },
   w120: { label: '120 mm (4.72 in)', d: 4.72 }
 };
-/* Drivetrains. */
+
 const DRIVES = {
   mecanum: { label: 'Mecanum', holo: true, kf: 1, ks: 0.85, blurb: '4 motors, roller wheels. Drives, turns and slides sideways.' },
   tank: { label: 'Tank', holo: false, kf: 1, ks: 0, blurb: '2 motors, grippy wheels. Simple and strong, but no sideways moves.' },
   xdrive: { label: 'X-drive', holo: true, kf: Math.SQRT2, ks: Math.SQRT2, blurb: '4 omni wheels at 45 degrees. Fastest, and slides at full speed, but easy to push around.' }
 };
 const PAINTS = { steel: '#9aa39a', honey: '#f2c230', orange: '#f26b21', green: '#3fae5a', teal: '#1fa7a0', blue: '#3d7bd9', purple: '#7c5cd6', red: '#d94f4f', black: '#3a3f46' };
-const MECH_MOTOR = { rpm: 312, tpr: 537.7 };          // intake and lift gearmotor
-const LAUNCH_MOTOR = { rpm: 6000, tpr: 28 };          // bare motor on the flywheel
+const MECH_MOTOR = { rpm: 312, tpr: 537.7 };
+const LAUNCH_MOTOR = { rpm: 6000, tpr: 28 };
 const LIFT_MAX_IN = 26, LIFT_SPOOL_IN = 1.5;
 const FLOWER_TOP_IN = 21.5, FLOWER_CAP = 7;
-const TIP_WEIGHT = 8, NECTAR_WEIGHT = 5 / 3;         // 8 pollen, or 3 pollen + 3 nectar, tips a hive
-const CATAPULT_RANGE = 54;                           // a catapult always throws about this far
+// hive tips at 8 pollen or 3 pollen + 3 necter
+const TIP_WEIGHT = 8, NECTAR_WEIGHT = 5 / 3;
+const CATAPULT_RANGE = 54;
 
 const ROLES = {
   fl: { kind: 'motor', label: 'Front left wheel', def: 'fl' },
@@ -63,7 +63,7 @@ const TOOLS = {
   distance: { label: 'Distance sensor', roles: ['distance'], blurb: 'Measures how far the nearest wall or the HIVE is from the side it points at.' },
   camera: { label: 'Webcam (AprilTags)', roles: ['camera'], blurb: 'Spots the AprilTags on the field and tells your code how far away and at what angle each one is.' }
 };
-/* The different versions of each mechanism. */
+
 const KITS = {
   intake: {
     roller: { label: 'Roller intake', roles: ['intake'], blurb: 'A spinning tube across the whole side. Reliable, about a third of a second per piece.' },
@@ -80,7 +80,7 @@ const KITS = {
     arm: { label: 'Swing arm', roles: ['lift', 'gate'], blurb: 'Swings up to 24 in in about half the time, with fewer encoder ticks per inch.' }
   }
 };
-/* Parts you can move in the Build Bot editor. */
+
 const PARTS = {
   intake: { label: 'Intake', tool: 'intake', edge: true, turns: true, u: 1, v: 0, face: 0, r: 2.2 },
   launcher: { label: 'Shooter', tool: 'launcher', turns: true, u: 0.05, v: 0, face: 0, r: 3.2 },
@@ -114,7 +114,7 @@ function defaultRobot() {
   };
 }
 
-/* Returns a clean config built only from known keys; anything unexpected falls back to the default. */
+
 function sanitizeRobot(o) {
   const d = defaultRobot();
   if (!o || typeof o !== 'object') return d;
@@ -155,31 +155,33 @@ function deviceList(cfg) {
   Object.keys(TOOLS).forEach((t) => { if (cfg.tools[t]) toolRoles(cfg, t).forEach((r) => roles.push(r)); });
   return roles.map((r) => ({ role: r, kind: ROLES[r].kind, label: ROLES[r].label, name: cfg.names[r] }));
 }
-/* K turns "degrees of robot turn" into "inches of wheel travel" for the encoder maths in the examples. */
+
 function turnK(cfg) {
   if (cfg.drive === 'xdrive') return Math.hypot((cfg.width - 3) / 2, (cfg.length - 3) / 2) * Math.SQRT2;
   return cfg.drive === 'mecanum' ? (cfg.width - 2) / 2 + (cfg.length - 5) / 2 : (cfg.width - 2) / 2;
 }
+// encoder ticks for one inch of drivng
 function ticksPerInch(cfg) { return MOTORS[cfg.motor].tpr / (Math.PI * WHEELS[cfg.wheel].d) / DRIVES[cfg.drive].kf; }
 function topSpeed(cfg) { return 0.85 * MOTORS[cfg.motor].rpm / 60 * Math.PI * WHEELS[cfg.wheel].d * DRIVES[cfg.drive].kf; }
 function liftMax(cfg) { return cfg && cfg.kit.lift === 'arm' ? 24 : LIFT_MAX_IN; }
 function liftTicksPerInch(cfg) { return cfg && cfg.kit.lift === 'arm' ? 60 : MECH_MOTOR.tpr / (Math.PI * LIFT_SPOOL_IN); }
 
-/* Where a movable part sits, in robot inches (+x is the front, +y is the left side). */
+
 function partPos(cfg, key) {
   const p = cfg.layout[key], hl = cfg.length / 2, hw = cfg.width / 2, face = p.face;
   if (PARTS[key].edge) { const d = (face % 2 === 0 ? hl : hw) - 0.75, a = face * Math.PI / 2; return { x: Math.cos(a) * d, y: Math.sin(a) * d, face }; }
   return { x: p.u * Math.max(1, hl - 2.6), y: p.v * Math.max(1, hw - 3.4), face };
 }
 function partList(cfg) {
+  const lenght = cfg.length;
   return Object.keys(PARTS).filter((k) => !PARTS[k].tool || cfg.tools[PARTS[k].tool]).map((k) => Object.assign({ key: k, label: PARTS[k].label, r: PARTS[k].r, edge: !!PARTS[k].edge, turns: !!PARTS[k].turns }, partPos(cfg, k)));
 }
-/* How hard a flywheel must spin to throw a piece `dist` inches (measured from the shooter itself). */
+
 function shotPower(dist) { return clamp(Math.sqrt(Math.max(0, dist - 12) / 78), 0, 1); }
-/* How far ahead of the robot's centre the shooter sits, along the way it points. */
+
 function shooterReach(cfg) { const p = partPos(cfg, 'launcher'), a = p.face * Math.PI / 2; return p.x * Math.cos(a) + p.y * Math.sin(a); }
 
-/* Ready-made robots for the Build Bot gallery (this site's own practice designs). */
+
 const PRESETS = [
   { id: 'bee', name: 'Starter Bee', style: 'SimYourCode default', blurb: 'Mecanum drive with every tool. The easiest bot to learn on.', cfg: {} },
   { id: 'revstyle', name: 'Orange Crate', style: 'In the style of a REV starter bot', blurb: 'Tank drive on 90 mm wheels with HD Hex motors, a roller intake and one flywheel. Simple to build and to code.',
@@ -204,7 +206,7 @@ function presetRobot(id, alliance) {
   return sanitizeRobot(o);
 }
 
-/* ----- field geometry (red side; blue is the same field turned 180 degrees) ----- */
+
 const HIVE_BOX = { x0: 47.27, y0: 52.5, x1: 96.73, y1: 91.5 };
 const CELL_Y = { aud: [56.6, 68.6], rear: [75.4, 87.4] };
 const HIVE_X = { R: [49.5, 69.5], B: [74.5, 94.5] };
@@ -221,7 +223,7 @@ const START_SPOTS = {
   garden: { label: 'Alliance wall, near your GARDEN' },
   zone: { label: 'Alliance wall, near your LOADING ZONE' }
 };
-/* Practice AprilTags: where each one is and which way it faces (the angle its front points at). */
+
 const TAGS = [
   { id: 1, name: 'Red HIVE, audience side', x: 59.5, y: HIVE_BOX.y0, a: -Math.PI / 2 },
   { id: 2, name: 'Red HIVE, rear side', x: 59.5, y: HIVE_BOX.y1, a: Math.PI / 2 },
@@ -245,7 +247,7 @@ function startPose(cfg) {
   return p;
 }
 
-/* ----- actuators ----- */
+
 class Motor {
   constructor(role, name, spec, opt) {
     opt = opt || {};
@@ -276,7 +278,7 @@ class Motor {
       if (this.mode === 'RUN_TO_POSITION') {
         const e = this.target - (this.raw - this.off) * this.dir;
         const lim = Math.abs(this.power);
-        /* Position controller: drives toward the target and slows as it arrives. */
+        
         cmd = this.dir * clamp(e * 6 / this.tpr - 2.2 * this.u * this.dir, -lim, lim);
       } else if (this.mode !== 'STOP_AND_RESET_ENCODER') cmd = this.power * this.dir;
     }
@@ -307,7 +309,7 @@ function segEnter(x0, y0, x1, y1, b) {
   let t0 = 0, t1 = 1;
   const dx = x1 - x0, dy = y1 - y0;
   const P = [-dx, dx, -dy, dy], Q = [x0 - b.x0, b.x1 - x0, y0 - b.y0, b.y1 - y0];
-  for (let i = 0; i < 4; i++) {
+  for(let i = 0; i < 4; i++) {
     if (P[i] === 0) { if (Q[i] < 0) return null; }
     else {
       const t = Q[i] / P[i];
@@ -360,10 +362,10 @@ class World {
     const mk = (type, st, x, y) => { const b = { id: this.nextId++, type, st, x: x || 0, y: y || 0, vx: 0, vy: 0, r: type === 'P' ? 1.4 : 1.8, air: null }; this.balls.push(b); return b; };
     this.mk = mk;
     this.flowers = FLOWER_SPOTS.map((f, i) => ({ id: i, x: f.x, y: f.y, tx: f.tx, ty: f.ty, box: { x0: f.x - 3, y0: f.y - 3, x1: f.x + 3, y1: f.y + 3 }, stack: [0, 1, 2, 3].map(() => mk('P', 'flower')) }));
-    for (let i = 0; i < 4; i++) { mk('P', 'floor', 1.4 + 2.8 * i, 1.4); mk('P', 'floor', FIELD - 1.4 - 2.8 * i, FIELD - 1.4); }
-    /* A claw needs one free space to grab into, so a claw bot starts with 3 POLLEN instead of 4. */
+    for(let i = 0; i < 4; i++) { mk('P', 'floor', 1.4 + 2.8 * i, 1.4); mk('P', 'floor', FIELD - 1.4 - 2.8 * i, FIELD - 1.4); }
+    
     const pre = (c.tools.intake && c.kit.intake === 'claw') ? 3 : 4;
-    for (let i = 0; i < pre; i++) this.robot.held.push(mk('P', 'held'));
+    for(let i = 0; i < pre; i++) this.robot.held.push(mk('P', 'held'));
     const three = (t) => [0, 1, 2].map(() => mk(t, 'cell'));
     this.hives = {
       R: { color: 'R', x0: HIVE_X.R[0], x1: HIVE_X.R[1], up: 'aud', cells: { aud: three('R'), rear: [] }, tipsAuto: 0, tipsTele: 0, flash: 0 },
@@ -376,7 +378,7 @@ class World {
   emit(kind, text) { this.events.push({ kind, text, t: this.time }); if (kind === 'foul') this.fouls++; }
   device(name) { return this.devices.get(name) || null; }
   newOpMode() { this.motorList.forEach((m) => m.resetSoft()); this.servoList.forEach((s) => s.resetSoft()); }
-  /* Ends a practice run. */
+  
   practiceDone() {
     if (this.mode === 'autotest') { this.autoLeave = this.offWall(); this.autoPark = this.inLoadingZone(); this.autoDone = true; }
     this.mode = 'idle';
@@ -385,18 +387,18 @@ class World {
 
   yawDeg() { let d = (this.robot.th - this.robot.th0) * 180 / Math.PI; d = ((d + 180) % 360 + 360) % 360 - 180; return d; }
   liftHeight() { return this.m.lift ? this.m.lift.raw / liftTicksPerInch(this.cfg) : 0; }
-  /* A point on one side of the robot (0 front, 1 left, 2 back, 3 right), `extra` inches further out and `lat` inches along that side. */
+  
   sidePoint(face, extra, lat) {
     const r = this.robot, a = r.th + face * Math.PI / 2, d = (face % 2 === 0 ? this.cfg.length : this.cfg.width) / 2 + (extra || 0), l = lat || 0;
     return { x: r.x + Math.cos(a) * d - Math.sin(a) * l, y: r.y + Math.sin(a) * d + Math.cos(a) * l, a };
   }
   frontPoint(extra) { return this.sidePoint(0, extra, 0); }
-  /* A movable part's place on the field and the way it points. */
+  
   partWorld(key) {
     const r = this.robot, p = this.pp[key], c = Math.cos(r.th), s = Math.sin(r.th);
     return { x: r.x + p.x * c - p.y * s, y: r.y + p.x * s + p.y * c, a: r.th + p.face * Math.PI / 2, face: p.face };
   }
-  /* Where the distance sensor's beam leaves the robot. */
+  
   sensorPoint() {
     const p = this.pp.distance, fa = p.face * Math.PI / 2;
     return this.sidePoint(p.face, 0, -p.x * Math.sin(fa) + p.y * Math.cos(fa));
@@ -410,7 +412,7 @@ class World {
     if (t !== null) best = Math.min(best, t * 250);
     return clamp(best, 0, 80);
   }
-  /* Every AprilTag the webcam can see right now, nearest first. */
+  
   tagDetections() {
     if (this.tagAt === this.time) return this.tagList;
     this.tagAt = this.time; this.tagList = [];
@@ -421,9 +423,9 @@ class World {
       if (range < 3 || range > CAM_RANGE) return;
       const bearing = wrap(Math.atan2(dy, dx) - cam.a);
       if (Math.abs(bearing) > CAM_FOV) return;
-      if ((-dx * Math.cos(t.a) - dy * Math.sin(t.a)) / range < 0.3) return;            // seen from behind or too edge-on
+      if ((-dx * Math.cos(t.a) - dy * Math.sin(t.a)) / range < 0.3) return;
       const hit = segEnter(cam.x, cam.y, t.x, t.y, HIVE_BOX);
-      if (hit !== null && hit * range < range - 1.5) return;                           // the HIVE is in the way
+      if (hit !== null && hit * range < range - 1.5) return;
       this.tagList.push({ id: t.id, name: t.name, tx: t.x, ty: t.y, range, bearing: bearing * 180 / Math.PI,
         yaw: wrap(t.a + Math.PI - cam.a) * 180 / Math.PI, x: -range * Math.sin(bearing), y: range * Math.cos(bearing) });
     });
@@ -446,11 +448,11 @@ class World {
   inLoadingZone() { return this.robotInBox(ZONES[this.me].load); }
   offWall() { return this.robotPoints().slice(0, 4).every((q) => q.x > 0.6 && q.x < FIELD - 0.6 && q.y > 0.6 && q.y < FIELD - 0.6); }
 
-  /* ----- one physics step ----- */
+  
   step(dt) {
     this.time += dt;
-    for (let i = 0; i < this.motorList.length; i++) this.motorList[i].update(dt, this.enabled);
-    for (let i = 0; i < this.servoList.length; i++) this.servoList[i].update(dt);
+    for(let i = 0; i < this.motorList.length; i++) this.motorList[i].update(dt, this.enabled);
+    for(let i = 0; i < this.servoList.length; i++) this.servoList[i].update(dt);
     this.driveStep(dt);
     this.mechStep(dt);
     this.ballStep(dt);
@@ -497,17 +499,17 @@ class World {
   collideRobot() {
     const r = this.robot, hl = this.cfg.length / 2, hw = this.cfg.width / 2;
     const pts = [[hl, hw], [hl, -hw], [-hl, hw], [-hl, -hw], [hl, 0], [-hl, 0], [0, hw], [0, -hw]];
-    for (let pass = 0; pass < 2; pass++) {
+    for(let pass = 0; pass < 2; pass++) {
       const c = Math.cos(r.th), s = Math.sin(r.th);
-      for (let i = 0; i < 4; i++) {
+      for(let i = 0; i < 4; i++) {
         const wx = r.x + pts[i][0] * c - pts[i][1] * s, wy = r.y + pts[i][0] * s + pts[i][1] * c;
         if (wx < 0) r.x -= wx; else if (wx > FIELD) r.x -= wx - FIELD;
         if (wy < 0) r.y -= wy; else if (wy > FIELD) r.y -= wy - FIELD;
       }
-      for (let k = 0; k < this.obstacles.length; k++) {
+      for(let k = 0; k < this.obstacles.length; k++) {
         const b = this.obstacles[k];
         if (Math.abs(r.x - (b.x0 + b.x1) / 2) > (b.x1 - b.x0) / 2 + 14 || Math.abs(r.y - (b.y0 + b.y1) / 2) > (b.y1 - b.y0) / 2 + 14) continue;
-        for (let i = 0; i < 8; i++) {
+        for(let i = 0; i < 8; i++) {
           const wx = r.x + pts[i][0] * c - pts[i][1] * s, wy = r.y + pts[i][0] * s + pts[i][1] * c;
           if (inBox(wx, wy, b)) {
             const dl = wx - b.x0, dr = b.x1 - wx, dd = wy - b.y0, du = b.y1 - wy, mn = Math.min(dl, dr, dd, du);
@@ -515,7 +517,7 @@ class World {
           }
         }
         const corners = [[b.x0, b.y0], [b.x1, b.y0], [b.x0, b.y1], [b.x1, b.y1]];
-        for (let i = 0; i < 4; i++) {
+        for(let i = 0; i < 4; i++) {
           const dx = corners[i][0] - r.x, dy = corners[i][1] - r.y, lx = dx * c + dy * s, ly = -dx * s + dy * c;
           if (Math.abs(lx) < hl && Math.abs(ly) < hw) {
             const px = hl - Math.abs(lx), py = hw - Math.abs(ly);
@@ -527,19 +529,19 @@ class World {
     }
   }
 
-  /* ----- mechanisms ----- */
-  /* The first floor piece (or FLOWER piece) the intake can reach on the side it is mounted on. */
+  
+  
   reachable(reach, mouth) {
     const r = this.robot, f = this.pp.intake.face, fa = r.th + f * Math.PI / 2, c = Math.cos(fa), s = Math.sin(fa);
     const D = (f % 2 === 0 ? this.cfg.length : this.cfg.width) / 2, W = (f % 2 === 0 ? this.cfg.width : this.cfg.length) / 2 * mouth;
-    for (let i = 0; i < this.balls.length; i++) {
+    for(let i = 0; i < this.balls.length; i++) {
       const b = this.balls[i];
       if (b.st !== 'floor') continue;
       const dx = b.x - r.x, dy = b.y - r.y, lx = dx * c + dy * s, ly = -dx * s + dy * c;
       if (lx > D - 0.5 && lx < D + b.r + reach && Math.abs(ly) < W - 0.5) return b;
     }
     const p = this.sidePoint(f, 0, 0);
-    for (let i = 0; i < this.flowers.length; i++) {
+    for(let i = 0; i < this.flowers.length; i++) {
       const fl = this.flowers[i];
       if (Math.hypot(p.x - fl.x, p.y - fl.y) < 8.5 && fl.stack.length && fl.stack[0].type === 'P') return fl.stack.shift();
     }
@@ -619,7 +621,7 @@ class World {
     ['R', 'B'].forEach((k) => {
       const h = this.hives[k], cy = CELL_Y[h.up];
       if (!(x1 > h.x0 && x1 < h.x1 && y1 > cy[0] && y1 < cy[1])) return;
-      /* A CELL only takes pieces thrown from the side of the field it faces. */
+      
       if (h.up === 'aud' ? o.y < HIVE_BOX.y0 : o.y > HIVE_BOX.y1) dest = h; else wrongSide = true;
     });
     if (!dest && inBox(x1, y1, HIVE_BOX)) {
@@ -631,13 +633,13 @@ class World {
     if (x1 < 2 || x1 > FIELD - 2 || y1 < 2 || y1 > FIELD - 2) { x1 = clamp(x1, 2, FIELD - 2); y1 = clamp(y1, 2, FIELD - 2); bvx = -dx * 8; bvy = -dy * 8; }
     b.st = 'air'; b.x = o.x; b.y = o.y;
     b.air = { x0: o.x, y0: o.y, x1, y1, t: 0, T: 0.3 + range / 150, dest, side: dest ? dest.up : null, vx: bvx, vy: bvy };
-    if (kit !== 'catapult') {                          // each shot takes energy out of the flywheel
+    if (kit !== 'catapult') {
       const keep = kit === 'dual' ? 0.93 : 0.86;
       this.m.launcher.u *= keep; if (this.m.launcher2) this.m.launcher2.u *= keep;
     }
   }
 
-  /* Lets go of one piece off a side of the robot: into a FLOWER if the lift is high enough, otherwise onto the floor. */
+  
   place(b, face, how) {
     const r = this.robot, p = this.sidePoint(face, 2, 0), h = this.liftHeight();
     let fl = null;
@@ -677,7 +679,7 @@ class World {
 
   releaseNectar(n) {
     const z = ZONES[this.me].load, k = Math.min(n, this.staged);
-    for (let i = 0; i < k; i++) {
+    for(let i = 0; i < k; i++) {
       const idx = 5 - this.staged;
       const x = this.me === 'R' ? z.x0 + 3 + (idx % 2) * 4.4 : z.x1 - 3 - (idx % 2) * 4.4;
       const y = z.y0 + 3 + Math.floor(idx / 2) * 5 + (idx % 2);
@@ -700,7 +702,7 @@ class World {
   ballStep(dt) {
     const r = this.robot, hl = this.cfg.length / 2, hw = this.cfg.width / 2, c = Math.cos(r.th), s = Math.sin(r.th);
     const floor = [];
-    for (let i = 0; i < this.balls.length; i++) {
+    for(let i = 0; i < this.balls.length; i++) {
       const b = this.balls[i];
       if (b.st === 'air') {
         const a = b.air; a.t += dt;
@@ -708,7 +710,7 @@ class World {
         b.x = a.x0 + (a.x1 - a.x0) * k; b.y = a.y0 + (a.y1 - a.y0) * k;
         if (k >= 1) {
           b.air = null;
-          /* if the HIVE tipped while this piece was in the air, the CELL it was aimed at has closed */
+          
           if (a.dest && a.dest.up === a.side) { b.st = 'cell'; a.dest.cells[a.dest.up].push(b); this.checkTip(a.dest); }
           else if (a.dest) { b.st = 'floor'; b.vx = -a.vx * 1.2; b.vy = -a.vy * 1.2; this.emit('info', 'The HIVE tipped while a piece was in the air, so it bounced off the closed CELL.'); }
           else { b.st = 'floor'; b.vx = a.vx; b.vy = a.vy; }
@@ -722,7 +724,7 @@ class World {
         const ns = sp - 30 * dt;
         if (ns <= 0.3) { b.vx = 0; b.vy = 0; } else { b.vx *= ns / sp; b.vy *= ns / sp; b.x += b.vx * dt; b.y += b.vy * dt; }
       }
-      /* pushed by the robot */
+      
       const dx = b.x - r.x, dy = b.y - r.y;
       if (Math.abs(dx) < 16 && Math.abs(dy) < 16) {
         const lx = dx * c + dy * s, ly = -dx * s + dy * c, cx = clamp(lx, -hl, hl), cy = clamp(ly, -hw, hw);
@@ -742,9 +744,9 @@ class World {
         }
       }
     }
-    for (let i = 0; i < floor.length; i++) {
+    for(let i = 0; i < floor.length; i++) {
       const a = floor[i];
-      for (let j = i + 1; j < floor.length; j++) {
+      for(let j = i + 1; j < floor.length; j++) {
         const b = floor[j], dx = b.x - a.x, dy = b.y - a.y, min = a.r + b.r;
         if (Math.abs(dx) >= min || Math.abs(dy) >= min) continue;
         const d = Math.hypot(dx, dy);
@@ -755,18 +757,18 @@ class World {
         if (rel < 0) { const j2 = -rel * 0.75; a.vx -= nx * j2; a.vy -= ny * j2; b.vx += nx * j2; b.vy += ny * j2; }
       }
     }
-    for (let i = 0; i < floor.length; i++) {
+    for(let i = 0; i < floor.length; i++) {
       const b = floor[i];
-      for (let k = 0; k < this.obstacles.length; k++) this.ballBox(b, this.obstacles[k]);
+      for(let k = 0; k < this.obstacles.length; k++) this.ballBox(b, this.obstacles[k]);
       if (b.x < b.r) { b.x = b.r; if (b.vx < 0) b.vx *= -0.35; } else if (b.x > FIELD - b.r) { b.x = FIELD - b.r; if (b.vx > 0) b.vx *= -0.35; }
       if (b.y < b.r) { b.y = b.r; if (b.vy < 0) b.vy *= -0.35; } else if (b.y > FIELD - b.r) { b.y = FIELD - b.r; if (b.vy > 0) b.vy *= -0.35; }
     }
   }
 
-  /* ----- scoring for the player's alliance ----- */
+  
   flowerInfo(f) {
     let owner = null, bottom = null;
-    for (let i = 1; i < f.stack.length; i++) { const t = f.stack[i].type; if (t !== 'P') { if (!bottom) bottom = t; owner = t; } }
+    for(let i = 1; i < f.stack.length; i++) { const t = f.stack[i].type; if (t !== 'P') { if (!bottom) bottom = t; owner = t; } }
     return { owner, bottom, count: Math.max(0, f.stack.length - 1) };
   }
   score() {
@@ -797,7 +799,7 @@ class World {
   }
 }
 
-/* ----- objects handed to student code ----- */
+
 const need = (v, what) => { if (typeof v !== 'number' || isNaN(v)) throw new Error(what + ' needs a number.'); return v; };
 function motorApi(m) {
   const M = Object.create(null);
@@ -847,7 +849,7 @@ function distanceApi(w) {
   return { __t: 'DistanceSensor', __m: M };
 }
 
-/* ----- drawing ----- */
+
 function text(ctx, str, x, y, size, color, align, rot) {
   ctx.save(); ctx.translate(x, y); ctx.scale(1, -1); if (rot) ctx.rotate(rot);
   ctx.font = '600 ' + size + 'px "Bahnschrift","DIN Alternate","Segoe UI",system-ui,sans-serif';
@@ -866,7 +868,7 @@ function rr(ctx, x, y, w, h, rad) {
 
 const PART = { rail: '#9aa39a', motor: '#d2a52c', intake: '#2f9a5f', intakeOn: '#63e39b', launcher: '#e8892b', lift: '#19a7b8',
   servo: '#8b63d9', hub: '#7f8892', battery: '#2d5da6', sensor: '#e0559a', imu: '#f4f4f0', camera: '#22b8cf' };
-/* Each movable part is drawn in its own frame: the origin is the part's spot and +x is the way it points. */
+
 const DRAW = {
   hub(ctx, cfg) {
     ctx.fillStyle = PART.hub; rr(ctx, -2.6, -1.5, 5.2, 3, 0.4); ctx.fill();
@@ -891,7 +893,7 @@ const DRAW = {
       ctx.beginPath(); ctx.arc(x, y, rad, 0, 6.2832); ctx.fillStyle = '#3b2a12'; ctx.fill();
       ctx.strokeStyle = PART.launcher; ctx.lineWidth = on ? 0.95 : 0.6; ctx.stroke();
       ctx.lineWidth = 0.45; ctx.beginPath();
-      for (let k = 0; k < 3; k++) { ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a + k * 2.094) * rad * 0.86, y + Math.sin(a + k * 2.094) * rad * 0.86); }
+      for(let k = 0; k < 3; k++) { ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a + k * 2.094) * rad * 0.86, y + Math.sin(a + k * 2.094) * rad * 0.86); }
       ctx.stroke();
       ctx.beginPath(); ctx.arc(x, y, rad * 0.25, 0, 6.2832); ctx.fillStyle = PART.launcher; ctx.fill();
     };
@@ -921,7 +923,7 @@ const DRAW = {
     ctx.strokeStyle = PART.lift; ctx.lineWidth = 0.35; ctx.strokeRect(-1.2, -3, 2.4, 6);
     ctx.fillStyle = PART.servo; rr(ctx, -0.9, 3.2, 1.8, 1.1, 0.3); ctx.fill();
   },
-  /* The intake hugs one side, so it is drawn across the whole of that side: `span` is that side's length. */
+  
   intake(ctx, cfg, st, col, span) {
     const kit = cfg.kit.intake, u = st.intake || 0;
     if (kit === 'claw') {
@@ -936,7 +938,7 @@ const DRAW = {
     if (kit === 'wheels') {
       const half = span / 2 * 0.62 - 0.4;
       ctx.fillRect(-0.3, -half, 0.6, half * 2);
-      for (let y = -half + 0.2; y <= half; y += (half * 2 - 0.4) / 3) {
+      for(let y = -half + 0.2; y <= half; y += (half * 2 - 0.4) / 3) {
         ctx.beginPath(); ctx.arc(0.7, y, 1.25, 0, 6.2832); ctx.fill();
         ctx.strokeStyle = col.body; ctx.lineWidth = 0.3; ctx.beginPath();
         ctx.moveTo(0.7, y); ctx.lineTo(0.7 + Math.cos(ph * 4) * 1.1, y + Math.sin(ph * 4) * 1.1); ctx.stroke();
@@ -946,23 +948,23 @@ const DRAW = {
     const half = span / 2 - 2.2;
     rr(ctx, -0.75, -half, 1.5, half * 2, 0.6); ctx.fill();
     ctx.strokeStyle = col.body; ctx.lineWidth = 0.3; ctx.beginPath();
-    for (let y = -half + 0.2 + ph; y < half - 0.2; y += 1.6) { ctx.moveTo(-0.65, y); ctx.lineTo(0.65, y); }
+    for(let y = -half + 0.2 + ph; y < half - 0.2; y += 1.6) { ctx.moveTo(-0.65, y); ctx.lineTo(0.65, y); }
     ctx.stroke();
   }
 };
 
-/* Robot drawn in its own frame: +x is the front. */
+
 function drawRobot(ctx, cfg, st, col, pick) {
   const hl = cfg.length / 2, hw = cfg.width / 2, ac = cfg.alliance === 'red' ? col.red : col.blue;
   const kind = cfg.drive, paint = PAINTS[cfg.paint] || PART.rail;
   ctx.lineJoin = 'round';
-  /* wheels */
+  
   if (kind === 'xdrive') {
     [[hl - 2.2, hw - 2.2, -1], [hl - 2.2, -hw + 2.2, 1], [-hl + 2.2, hw - 2.2, 1], [-hl + 2.2, -hw + 2.2, -1]].forEach((q) => {
       ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(q[2] * Math.PI / 4);
       ctx.fillStyle = col.wheel; rr(ctx, -2, -1, 4, 2, 0.5); ctx.fill();
       ctx.strokeStyle = col.wheelMark; ctx.lineWidth = 0.28; ctx.beginPath();
-      for (let k = 0; k < 4; k++) { ctx.moveTo(-1.5 + k, -0.8); ctx.lineTo(-1.5 + k, 0.8); }
+      for(let k = 0; k < 4; k++) { ctx.moveTo(-1.5 + k, -0.8); ctx.lineTo(-1.5 + k, 0.8); }
       ctx.stroke(); ctx.restore();
     });
   } else {
@@ -972,13 +974,13 @@ function drawRobot(ctx, cfg, st, col, pick) {
     wheels.forEach((q) => {
       ctx.fillStyle = col.wheel; rr(ctx, q[0], q[1], ww, 2, 0.5); ctx.fill();
       ctx.strokeStyle = col.wheelMark; ctx.lineWidth = 0.28; ctx.beginPath();
-      if (q[2]) for (let k = 0; k < 3; k++) { ctx.moveTo(q[0] + 0.6 + k * 1.2, q[1] + (q[2] > 0 ? 0.2 : 1.8)); ctx.lineTo(q[0] + 1.4 + k * 1.2, q[1] + (q[2] > 0 ? 1.8 : 0.2)); }
-      else for (let k = 0; k < 4; k++) { ctx.moveTo(q[0] + 0.8 + k * 1.2, q[1] + 0.2); ctx.lineTo(q[0] + 0.8 + k * 1.2, q[1] + 1.8); }
+      if (q[2]) for(let k = 0; k < 3; k++) { ctx.moveTo(q[0] + 0.6 + k * 1.2, q[1] + (q[2] > 0 ? 0.2 : 1.8)); ctx.lineTo(q[0] + 1.4 + k * 1.2, q[1] + (q[2] > 0 ? 1.8 : 0.2)); }
+      else for(let k = 0; k < 4; k++) { ctx.moveTo(q[0] + 0.8 + k * 1.2, q[1] + 0.2); ctx.lineTo(q[0] + 0.8 + k * 1.2, q[1] + 1.8); }
       ctx.stroke();
     });
     st._wheels = wheels; st._ww = ww;
   }
-  /* chassis plate, painted side rails and drive motors */
+  
   const inset = kind === 'xdrive' ? 0 : 0.9;
   if (kind === 'xdrive') {
     const cut = 3.2;
@@ -996,7 +998,7 @@ function drawRobot(ctx, cfg, st, col, pick) {
     if (kind === 'tank') { ctx.fillStyle = col.wheelMark; ctx.beginPath(); ctx.arc(hl - 2.4, hw - 3.4, 0.9, 0, 6.2832); ctx.fill(); ctx.beginPath(); ctx.arc(hl - 2.4, -hw + 3.4, 0.9, 0, 6.2832); ctx.fill(); ctx.fillStyle = PART.motor; }
     st._wheels.forEach((q) => { rr(ctx, q[0] + st._ww / 2 - 1.1, q[1] > 0 ? q[1] - 2.1 : q[1] + 2.9, 2.2, 1.2, 0.4); ctx.fill(); });
   }
-  /* the movable parts, each at its own spot and turned the way it points */
+  
   partList(cfg).forEach((p) => {
     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.face * Math.PI / 2);
     DRAW[p.key](ctx, cfg, st, col, p.face % 2 === 0 ? cfg.width : cfg.length);
@@ -1009,13 +1011,13 @@ function drawRobot(ctx, cfg, st, col, pick) {
     }
     ctx.restore();
   });
-  /* front marker in the alliance colour, then whatever the robot is carrying */
+  
   ctx.strokeStyle = ac; ctx.lineWidth = 0.75; ctx.lineCap = 'round'; ctx.beginPath();
   ctx.moveTo(hl - 4.6, 1.7); ctx.lineTo(hl - 3.4, 0); ctx.lineTo(hl - 4.6, -1.7); ctx.stroke(); ctx.lineCap = 'butt';
   const held = st.held || [];
-  /* the hopper tray the carried pieces sit in */
+  
   ctx.fillStyle = col.wheelMark; ctx.globalAlpha = 0.35; rr(ctx, -hl + 3.7, hw - 5.3, Math.min(11, cfg.length - 6.4), 2.8, 0.8); ctx.fill(); ctx.globalAlpha = 1;
-  for (let i = 0; i < held.length; i++) drawBall(ctx, -hl + 5.2 + i * Math.min(2.6, (cfg.length - 8.4) / 3.2), hw - 3.9, 1.15, held[i], col);
+  for(let i = 0; i < held.length; i++) drawBall(ctx, -hl + 5.2 + i * Math.min(2.6, (cfg.length - 8.4) / 3.2), hw - 3.9, 1.15, held[i], col);
 }
 
 function drawField(ctx, w, px, col) {
@@ -1025,10 +1027,10 @@ function drawField(ctx, w, px, col) {
   ctx.setTransform(k, 0, 0, -k, M * k, px - M * k);
   ctx.fillStyle = col.tile; ctx.fillRect(0, 0, FIELD, FIELD);
   ctx.strokeStyle = col.tileLine; ctx.lineWidth = 0.35; ctx.beginPath();
-  for (let i = 1; i < 6; i++) { ctx.moveTo(i * 24, 0); ctx.lineTo(i * 24, FIELD); ctx.moveTo(0, i * 24); ctx.lineTo(FIELD, i * 24); }
+  for(let i = 1; i < 6; i++) { ctx.moveTo(i * 24, 0); ctx.lineTo(i * 24, FIELD); ctx.moveTo(0, i * 24); ctx.lineTo(FIELD, i * 24); }
   ctx.stroke();
-  for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) text(ctx, 'ABCDEF'[i] + (j + 1), i * 24 + 3.6, j * 24 + 2.6, 2.6, col.tileText);
-  /* tape */
+  for(let i = 0; i < 6; i++) for(let j = 0; j < 6; j++) text(ctx, 'ABCDEF'[i] + (j + 1), i * 24 + 3.6, j * 24 + 2.6, 2.6, col.tileText);
+  
   [['R', col.red], ['B', col.blue]].forEach((z) => {
     const L = ZONES[z[0]].load, G = ZONES[z[0]].garden;
     ctx.globalAlpha = 0.16; ctx.fillStyle = z[1]; ctx.fillRect(L.x0, L.y0, L.x1 - L.x0, L.y1 - L.y0); ctx.globalAlpha = 1;
@@ -1037,14 +1039,14 @@ function drawField(ctx, w, px, col) {
     text(ctx, 'LOAD', (L.x0 + L.x1) / 2, (L.y0 + L.y1) / 2, 2.4, z[1]);
     text(ctx, 'GARDEN', (G.x0 + G.x1) / 2, z[0] === 'R' ? 5 : FIELD - 5, 2.4, z[1]);
   });
-  /* walls and side labels */
+  
   ctx.strokeStyle = col.wall; ctx.lineWidth = 1.4; ctx.strokeRect(-0.7, -0.7, FIELD + 1.4, FIELD + 1.4);
   ctx.strokeStyle = col.red; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(-0.7, 0); ctx.lineTo(-0.7, FIELD); ctx.stroke();
   ctx.strokeStyle = col.blue; ctx.beginPath(); ctx.moveTo(FIELD + 0.7, 0); ctx.lineTo(FIELD + 0.7, FIELD); ctx.stroke();
   text(ctx, 'RED ALLIANCE', -4, 72, 3, col.red, 'center', -Math.PI / 2);
   text(ctx, 'BLUE ALLIANCE', FIELD + 4, 72, 3, col.blue, 'center', Math.PI / 2);
   text(ctx, 'AUDIENCE', 72, -4, 3, col.muted);
-  /* hive */
+  
   ctx.fillStyle = col.hive; ctx.globalAlpha = 0.5; ctx.fillRect(HIVE_BOX.x0, HIVE_BOX.y0, HIVE_BOX.x1 - HIVE_BOX.x0, HIVE_BOX.y1 - HIVE_BOX.y0); ctx.globalAlpha = 1;
   ctx.strokeStyle = col.wall; ctx.lineWidth = 0.8; ctx.strokeRect(HIVE_BOX.x0, HIVE_BOX.y0, HIVE_BOX.x1 - HIVE_BOX.x0, HIVE_BOX.y1 - HIVE_BOX.y0);
   ['R', 'B'].forEach((key) => {
@@ -1066,21 +1068,21 @@ function drawField(ctx, w, px, col) {
     text(ctx, (key === 'R' ? 'RED' : 'BLUE') + ' HIVE', (h.x0 + h.x1) / 2, 72, 2.4, hc);
     if (h.flash > 0) { ctx.globalAlpha = Math.min(1, h.flash); ctx.strokeStyle = col.accent; ctx.lineWidth = 1.6; ctx.strokeRect(h.x0 - 1.5, HIVE_BOX.y0 - 1.5, h.x1 - h.x0 + 3, HIVE_BOX.y1 - HIVE_BOX.y0 + 3); ctx.globalAlpha = 1; }
   });
-  /* flowers */
+  
   w.flowers.forEach((f) => {
     const fi = w.flowerInfo(f), oc = fi.owner === 'R' ? col.red : fi.owner === 'B' ? col.blue : col.petal;
     ctx.fillStyle = oc; ctx.globalAlpha = 0.9;
-    for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(f.x + Math.cos(i * 1.0472) * 2.3, f.y + Math.sin(i * 1.0472) * 2.3, 1.25, 0, 6.2832); ctx.fill(); }
+    for(let i = 0; i < 6; i++) { ctx.beginPath(); ctx.arc(f.x + Math.cos(i * 1.0472) * 2.3, f.y + Math.sin(i * 1.0472) * 2.3, 1.25, 0, 6.2832); ctx.fill(); }
     ctx.globalAlpha = 1;
     ctx.beginPath(); ctx.arc(f.x, f.y, 1.7, 0, 6.2832); ctx.fillStyle = col.flowerCore; ctx.fill();
-    for (let i = 0; i < FLOWER_CAP; i++) {
+    for(let i = 0; i < FLOWER_CAP; i++) {
       const x = f.x + f.tx * (5.6 + i * 2.5), y = f.y + f.ty * (5.6 + i * 2.5) + (f.ty === 0 ? (f.y > 72 ? 0.6 : -0.6) : 0);
       const b = f.stack[i];
       if (b) drawBall(ctx, x, y, 1.05, b.type, col);
       else { ctx.beginPath(); ctx.arc(x, y, 0.95, 0, 6.2832); ctx.strokeStyle = col.tileText; ctx.lineWidth = 0.25; if (i === 0) ctx.setLineDash([0.6, 0.6]); ctx.stroke(); ctx.setLineDash([]); }
     }
   });
-  /* AprilTags: a small black-and-white plate with its ID, standing just inside the surface it is fixed to */
+  
   TAGS.forEach((t) => {
     const cx = t.x + Math.cos(t.a) * 0.7, cy = t.y + Math.sin(t.a) * 0.7, seen = cfg.tools.camera && w.tagDetections().some((d) => d.id === t.id);
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(t.a);
@@ -1090,9 +1092,9 @@ function drawField(ctx, w, px, col) {
     ctx.restore();
     text(ctx, String(t.id), t.x + Math.cos(t.a) * 3.4, t.y + Math.sin(t.a) * 3.4, 2.2, seen ? PART.camera : col.tileText);
   });
-  /* pieces on the floor */
+  
   w.balls.forEach((b) => { if (b.st === 'floor') drawBall(ctx, b.x, b.y, b.r, b.type, col); });
-  /* robot */
+  
   const r = w.robot;
   if (cfg.tools.distance && w.enabled) {
     const p = w.sensorPoint(), d = w.distanceIn();
@@ -1101,7 +1103,7 @@ function drawField(ctx, w, px, col) {
     ctx.setLineDash([]); ctx.globalAlpha = 1;
   }
   if (cfg.tools.camera) {
-    /* the webcam's field of view, and a line to every tag it can see */
+    
     const cam = w.partWorld('camera'), seen = w.tagDetections();
     ctx.globalAlpha = 0.07; ctx.fillStyle = PART.camera; ctx.beginPath(); ctx.moveTo(cam.x, cam.y);
     ctx.arc(cam.x, cam.y, 46, cam.a - CAM_FOV, cam.a + CAM_FOV); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
@@ -1113,7 +1115,7 @@ function drawField(ctx, w, px, col) {
   drawRobot(ctx, cfg, { intake: w.m.intake ? w.m.intake.u : 0, launcher: w.m.launcher ? w.m.launcher.u : 0, spin: r.spin, roll: r.roll, lift: w.liftHeight(),
     claw: w.s.claw ? w.s.claw.actual : 0, cata: r.cataShow, held: r.held.map((b) => b.type) }, col);
   ctx.restore();
-  /* pieces in the air */
+  
   w.balls.forEach((b) => {
     if (b.st !== 'air') return;
     const kk = Math.min(1, b.air.t / b.air.T), lift = Math.sin(kk * Math.PI);
