@@ -1,10 +1,9 @@
-/* White and black mode, and Java colouring. */
 (function () {
 'use strict';
 const $ = (id) => document.getElementById(id);
 const root = document.documentElement;
 
-/* ---------- appearance: white / black mode and font colour ---------- */
+
 const LOOK_KEY = 'bbz-look-v1';
 const MODES = ['auto', 'white', 'black'], INKS = ['', 'honey', 'sky', 'mint', 'rose', 'violet'];
 const look = { mode: 'auto', ink: '' };
@@ -14,15 +13,15 @@ try {
     if (MODES.indexOf(raw.mode) >= 0) look.mode = raw.mode;
     if (INKS.indexOf(raw.ink) >= 0) look.ink = raw.ink;
   }
-} catch (e) { /* storage may be blocked; the defaults are used */ }
+} catch (e) {  }
 function applyLook(save) {
   if (look.mode === 'auto') root.removeAttribute('data-look'); else root.setAttribute('data-look', look.mode);
   if (look.ink) root.setAttribute('data-ink', look.ink); else root.removeAttribute('data-ink');
-  /* the class change tells the simulator to re-read its canvas colours */
+  
   MODES.forEach((m) => root.classList.toggle('look-' + m, m === look.mode));
   document.querySelectorAll('[data-look]').forEach((b) => { if (b !== root) b.setAttribute('aria-pressed', String(b.dataset.look === look.mode)); });
   document.querySelectorAll('[data-ink]').forEach((b) => { if (b !== root) b.setAttribute('aria-pressed', String(b.dataset.ink === look.ink)); });
-  if (save) { try { window.localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch (e) { /* ignore */ } }
+  if (save) { try { window.localStorage.setItem(LOOK_KEY, JSON.stringify(look)); } catch (e) {  } }
 }
 const panel = $('lookPanel'), lookBtn = $('btnLook');
 if (panel && lookBtn) {
@@ -32,14 +31,14 @@ if (panel && lookBtn) {
 }
 applyLook(false);
 
-/* ---------- Java colouring ---------- */
+
 const KW = new Set(('abstract boolean break byte case catch char class continue default do double else enum extends final finally float for if implements import ' +
   'instanceof int interface long new package private protected public return short static super switch this throw throws try void volatile while').split(' '));
 const LIT = new Set(['true', 'false', 'null']);
 const isIdStart = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_' || c === '$';
 const isDigit = (c) => c >= '0' && c <= '9';
 
-/* Fills `el` with coloured spans for `code`. */
+
 function paint(el, code) {
   const frag = document.createDocumentFragment();
   let plain = '';
@@ -81,7 +80,7 @@ function paint(el, code) {
   el.append(frag);
 }
 
-/* editor: a coloured layer sits exactly behind the (transparent-text) typing box */
+
 const ta = $('code'), layer = $('hl'), inner = $('hlIn');
 if (ta && layer && inner) {
   let lastVal = null, queued = false;
@@ -97,12 +96,12 @@ if (ta && layer && inner) {
   ['progSel', 'newSel', 'btnDelete', 'btnToJava'].forEach((id) => { const el = $(id); if (el) { el.addEventListener('change', soon); el.addEventListener('click', soon); } });
   document.querySelectorAll('.tab, [data-go]').forEach((el) => el.addEventListener('click', soon));
   window.addEventListener('bbz-editor', soon);
-  setInterval(refresh, 250);                 /* safety net for any change made without an event */
+  setInterval(refresh, 250);                 
   refresh();
   layer.parentNode.parentNode.classList.add('hl-on');
 }
 
-/* the "Java these blocks make" box and the tutorial samples */
+
 const gen = $('genJava');
 if (gen && window.MutationObserver) {
   const obs = new MutationObserver(() => {
@@ -112,6 +111,6 @@ if (gen && window.MutationObserver) {
   });
   obs.observe(gen, { childList: true, characterData: true, subtree: true });
 }
-document.querySelectorAll('pre.java').forEach((p) => { try { paint(p, p.textContent); } catch (e) { /* leave it plain */ } });
+document.querySelectorAll('pre.java').forEach((p) => { try { paint(p, p.textContent); } catch (e) {  } });
 
 })();
