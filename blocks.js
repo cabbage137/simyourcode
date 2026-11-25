@@ -1,9 +1,8 @@
-/* Java example programs and code templates. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
 
-/* Safe element builder: text always goes in as text nodes, never as HTML. */
+
 function h(tag, attrs) {
   const e = document.createElement(tag);
   if (attrs) {
@@ -86,7 +85,7 @@ function makeBlock(type, cfg, f) {
   return b;
 }
 
-/* Rebuilds a block list from untrusted data (saved storage), keeping only known shapes. */
+
 function sanitize(list, depth, counter) {
   depth = depth || 0; counter = counter || { n: 0 };
   if (!Array.isArray(list) || depth > MAX_DEPTH) return [];
@@ -113,7 +112,7 @@ function sanitize(list, depth, counter) {
 }
 function countBlocks(list) { let n = 0; list.forEach((b) => { n += 1 + countBlocks(b.body) + countBlocks(b.els); }); return n; }
 
-/* ---------- Java generation ---------- */
+
 const str = (s) => '"' + String(s).replace(/[\u0000-\u001f]/g, ' ').replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
 const num = (v) => String(+(+v).toFixed(3));
 function className(name) {
@@ -246,7 +245,7 @@ function helperLines(name, cfg) {
 }
 
 const TYPE_OF = { motor: 'DcMotor', servo: 'Servo', imu: 'IMU', distance: 'DistanceSensor' };
-/* Builds a full OpMode class around `body`. */
+
 function scaffold(o) {
   const cfg = o.cfg, n = cfg.names, all = BBZ.deviceList(cfg);
   const use = new Set(o.use || []), consts = new Set(o.consts || []);
@@ -405,13 +404,13 @@ function generate(prog, cfg) {
   });
 }
 
-/* ---------- editor ---------- */
-let cursor = null;                         // { list, idx } where the next block lands
-let openCat = 'drive';                     // toolbox category whose blocks are showing
-let snapId = null;                         // id of the block that just connected, so it can play its snap
-let swallow = false;                       // true for a moment after a drag so the mouse-up is not treated as a click
-const fx = (name) => { try { if (BBZ.Sound) BBZ.Sound.play(name); } catch (e) { /* sound is optional */ } };
-/* How many levels of nested lists a block carries inside it (0 for a plain block). */
+
+let cursor = null;
+let openCat = 'drive';
+let snapId = null;
+let swallow = false;
+const fx = (name) => { try { if (BBZ.Sound) BBZ.Sound.play(name); } catch (e) {  } };
+
 function innerDepth(b) {
   if (!SPEC[b.type].body) return 0;
   let d = 0;
@@ -424,7 +423,7 @@ function listReachable(root, target) {
 }
 function clone(b) { return { id: newId(), type: b.type, f: JSON.parse(JSON.stringify(b.f)), body: b.body.map(clone), els: b.els.map(clone) }; }
 
-/* Draws the palette and workspace into `root`. */
+
 function render(root, prog, cfg, api) {
   root.textContent = '';
   if (!cursor || !listReachable(prog.blocks, cursor.list)) cursor = { list: prog.blocks, idx: prog.blocks.length };
@@ -448,8 +447,8 @@ function render(root, prog, cfg, api) {
     redraw();
   };
 
-  /* ----- drag and drop: pick a block up from the flyout or the workspace and drop it on a gap ----- */
-  const slotInfo = new WeakMap();           // gap element -> { list, idx }
+  
+  const slotInfo = new WeakMap();
   function dropBlock(src, info) {
     const list = info.list;
     let idx = info.idx, made;
@@ -477,7 +476,7 @@ function render(root, prog, cfg, api) {
     if (e.button !== undefined && e.button !== 0) return;
     const x0 = e.clientX, y0 = e.clientY, pid = e.pointerId;
     let ghost = null, target = null, active = false;
-    /* a block cannot be dropped inside itself */
+    
     const allowed = (info) => !src.block || !(listReachable(src.block.body, info.list) || listReachable(src.block.els, info.list));
     const pick = (x, y) => {
       let best = null, bd = 1e9;
@@ -534,7 +533,7 @@ function render(root, prog, cfg, api) {
     window.addEventListener('pointercancel', end);
   }
 
-  /* toolbox: a column of categories; the open one shows its blocks in a flyout beside it */
+  
   const pal = h('div', { class: 'toolbox', role: 'group', 'aria-label': 'Block categories' });
   CATS.forEach((cat) => {
     const on = openCat === cat.id;
@@ -571,7 +570,7 @@ function render(root, prog, cfg, api) {
     if (p.t === 'text') {
       return h('input', { type: 'text', class: 'f-text', value: f[p.f], maxlength: 30, 'aria-label': 'caption', oninput: (e) => { f[p.f] = e.target.value.slice(0, 30); api.changed(); } });
     }
-    /* condition */
+    
     const c = f[p.f], wrap = h('span', { class: 'f-cond' });
     const notSel = h('button', { type: 'button', class: 'f-not', 'aria-pressed': String(c.not), title: 'Flip this condition (not)', onclick: () => { c.not = !c.not; notSel.setAttribute('aria-pressed', String(c.not)); api.changed(); } }, 'not');
     const kind = h('select', { class: 'f-sel', 'aria-label': 'condition', onchange: (e) => { c.kind = e.target.value; redraw(); } }, COND.map((o) => h('option', { value: o[0] }, o[1])));
@@ -612,8 +611,8 @@ function render(root, prog, cfg, api) {
     row.append(tools);
     const el = h('div', { class: 'blk cat-' + sp.cat, 'data-id': b.id }, row);
     row.addEventListener('pointerdown', (e) => {
-      if (e.target.closest('input, select, button')) return;                  // typing and the arrow buttons still work
-      if (e.pointerType === 'touch' && !e.target.closest('.blk-grip')) return; // on touch, drag by the grip so the page can still scroll
+      if (e.target.closest('input, select, button')) return;
+      if (e.pointerType === 'touch' && !e.target.closest('.blk-grip')) return;
       e.preventDefault();
       beginDrag(e, { block: b, list }, sp.title, sp.cat, el);
     });
@@ -624,23 +623,23 @@ function render(root, prog, cfg, api) {
 
   const ws = h('div', { class: 'ws' }, h('div', { class: 'ws-hat', text: 'when START is pressed' }), listEl(prog.blocks));
   root.append(h('div', { class: 'bk' }, pal, fly, ws));
-  if (!root.bbzDragWired) {                  /* once per workspace: ignore the click that ends a drag */
+  if (!root.bbzDragWired) {                  
     root.bbzDragWired = true;
     root.addEventListener('click', (e) => { if (swallow) { e.stopPropagation(); e.preventDefault(); } }, true);
   }
-  if (snapId) {                              /* the block that just connected pops into place with a click */
+  if (snapId) {                              
     const done = root.querySelector('[data-id="' + snapId + '"]');
     snapId = null;
     if (done) {
       done.classList.add('snap');
-      try { done.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignore */ }
+      try { done.scrollIntoView({ block: 'nearest' }); } catch (e) {  }
       fx('snap');
     }
   }
 }
 
-/* ---------- example programs ---------- */
-/* How long to hold a power to cover a distance or an angle. */
+
+
 const timing = (function () {
   const TAU = 0.1, BRAKE = 0.06;
   const solve = (amount, rate, chained) => {
@@ -658,15 +657,15 @@ const timing = (function () {
   };
 })();
 
-/* Facts about the current bot that every example needs: which mechanisms it has and the numbers that fit it. */
+
 function botFacts(cfg) {
   const n = cfg.names, T = cfg.tools, kit = cfg.kit, hl = cfg.length / 2;
   const shooter = T.launcher ? kit.launcher : null, face = cfg.layout.launcher.face;
   const reach = shooter ? BBZ.shooterReach(cfg) : 0;
   const wheels = shooter === 'dual' ? [n.launcher, n.launcher2] : shooter === 'flywheel' ? [n.launcher] : [];
-  /* Every autonomous starts by driving to the line in front of its HIVE. */
+  
   const startY = cfg.start === 'hive' ? hl + 0.05 : 36;
-  /* A catapult cannot change its range, so the robot itself moves until the CELL is exactly one throw away. */
+  
   let shift = 0;
   if (shooter === 'catapult') {
     shift = Math.round((Math.max(62.6 - BBZ.CATAPULT_RANGE - reach, hl + 0.05) - startY) * 2) / 2;
@@ -674,21 +673,21 @@ function botFacts(cfg) {
   }
   const shootY = startY + shift, hiveShot = 62.6 - shootY - reach;
   const half = (v) => Math.round(v * 2) / 2;
-  /* The list of moves for "tip the HIVE, then park". */
+  
   const route = (slides) => {
     const s = [], toHive = half(59.5 - hl - 0.05);
     if (cfg.start === 'garden') s.push(['D', toHive], ['T', 90]);
     else if (cfg.start === 'zone') {
-      /* a FLOWER stands on the wall here, so the route leaves the wall first */
+      
       if (slides) s.push(['D', 9], ['S', -48], ['D', toHive - 9], ['T', 90]);
       else s.push(['D', 9], ['T', -90], ['D', 48], ['T', 90], ['D', toHive - 9], ['T', 90]);
     }
     let y = startY;
     if (shooter) { if (shift) { s.push(['D', shift]); y = shootY; } s.push(['SHOOT']); }
-    const last = half(13.5 - hl);                                  /* stops about 6 inches short of the wall, inside the LOADING ZONE */
+    const last = half(13.5 - hl);                                  
     if (slides) s.push(['S', 40], ['D', half(108.5 - y)], ['S', last]);
     else {
-      const pre = Math.max(0, Math.round(hl + 8 - y));           /* get clear of the wall before turning */
+      const pre = Math.max(0, Math.round(hl + 8 - y));           
       if (pre) s.push(['D', pre]);
       s.push(['T', 90], ['D', 40], ['T', -90], ['D', half(108.5 - y - pre)], ['T', 90], ['D', last]);
     }
@@ -747,7 +746,7 @@ function javaSample(mode, cfg) {
     return scaffold({ cfg, mode, title: 'Full TeleOp', cls: 'FullTeleOp', body, use, constLines,
       intro: ['Full TeleOp: drive with the gamepad and work every tool on your bot.'] });
   }
-  /* Quarter turns that point the shooter's side at the HIVE (dir 1) and back again (dir -1). */
+  
   const aim = (dir) => (f.face === 2 ? [90, 90] : [f.face === 1 ? -90 : 90]).map((d) => 'turnLeft(' + d * dir + ', 0.4);');
   const steps = f.route(false), shootAt = steps.findIndex((s) => s[0] === 'SHOOT');
   const move = (s) => s[0] === 'D' ? 'driveInches(' + s[1] + ', ' + (Math.abs(s[1]) >= 30 ? '0.7' : '0.5') + ');' : 'turnLeft(' + s[1] + ', 0.5);';
@@ -781,7 +780,7 @@ function javaSample(mode, cfg) {
 }
 
 BBZ.Blocks = { SPEC, render, generate, sanitize, makeBlock, countBlocks, className, resetCursor: () => { cursor = null; } };
-/* The example library: every entry has a name, a one-line description and a maker for the current bot. */
+
 function exampleList(cfg) {
   const f = botFacts(cfg), n = f.n;
   const J = (o) => () => scaffold(Object.assign({ cfg, intro: [o.title + ': ' + o.about] }, o));
@@ -790,11 +789,11 @@ function exampleList(cfg) {
   const mix = f.four
     ? [n.fl + '.setPower(y + x + turn);', n.fr + '.setPower(y - x - turn);', n.bl + '.setPower(y - x + turn);', n.br + '.setPower(y + x - turn);']
     : [n.left + '.setPower(y + turn);', n.right + '.setPower(y - turn);'];
-  /* Some examples drive forward toward what a sensor sees, so they only make sense when it looks out of the front. */
+  
   const frontOnly = (part, label) => (cfg.tools[part] && cfg.layout[part].face) ? 'the ' + label + ' pointing out of the front' : null;
   const tagRange = 34, camReach = cfg.tools.camera ? BBZ.partPos(cfg, 'camera').x : 0;
-  const tagShot = tagRange + 10.1 + camReach - f.reach;                      // from the shooter to the middle of the CELL
-  const cataRange = Math.round(BBZ.CATAPULT_RANGE - 10.1 - camReach + f.reach) - 4;      // a little close, so the wall behind is never in the way
+  const tagShot = tagRange + 10.1 + camReach - f.reach;
+  const cataRange = Math.round(BBZ.CATAPULT_RANGE - 10.1 - camReach + f.reach) - 4;
   return [
     { id: 'java-drive', name: 'Drive Only TeleOp', lang: 'java', mode: 'teleop', why: null,
       desc: 'The simplest TeleOp: the sticks drive the robot and nothing else. Start here.',
