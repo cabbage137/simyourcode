@@ -1,4 +1,3 @@
-/* Tutorial tab pictures. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, B = window.Blockly;
@@ -18,8 +17,8 @@ const bot = (over) => {
 };
 const withCam = () => bot({ tools: { camera: true } });
 
-/* ---------- drawing helpers ---------- */
-/* The page's own text colour, so labels inside a picture stay readable in white mode and black mode. */
+
+
 const inkOf = (cv) => { try { return getComputedStyle(cv).color || '#888'; } catch (e) { return '#888'; } };
 function badge(ctx, x, y, label, col) {
   ctx.beginPath(); ctx.arc(x, y, 15, 0, 6.2832); ctx.fillStyle = col.accent; ctx.fill();
@@ -40,7 +39,7 @@ function arrow(ctx, x0, y0, x1, y1, col) {
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x1 - Math.cos(a - 0.5) * 13, y1 - Math.sin(a - 0.5) * 13); ctx.lineTo(x1 - Math.cos(a + 0.5) * 13, y1 - Math.sin(a + 0.5) * 13); ctx.closePath(); ctx.fill();
   ctx.lineCap = 'butt';
 }
-/* A piece of the real field. */
+
 function fieldScene(cv, o) {
   const col = BBZ.colors(), w = new BBZ.World(o.cfg || bot());
   if (o.setup) o.setup(w);
@@ -55,7 +54,7 @@ function fieldScene(cv, o) {
   (o.marks || []).forEach((m) => badge(ctx, px(m[0]), py(m[1]), m[2], col));
   (o.notes || []).forEach((m) => caption(ctx, px(m[0]), py(m[1]), m[2], col));
 }
-/* One or more robots in a row. */
+
 function botRow(cv, items) {
   const col = BBZ.colors(), ctx = cv.getContext('2d'), n = items.length, cell = cv.width / n, k = Math.min(cell, cv.height - 44) / 25;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = col.tile; ctx.fillRect(0, 0, cv.width, cv.height);
@@ -84,25 +83,25 @@ function gamepad(cv) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = col.tile; ctx.fillRect(0, 0, W, H);
   const box = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
   const text = (s, x, y, size, c, weight) => { ctx.fillStyle = c; ctx.font = (weight || 600) + ' ' + size + 'px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y); };
-  /* body */
+  
   box(110, 110, 540, 230, 90); ctx.fillStyle = col.body; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = col.wall; ctx.stroke();
-  /* bumpers and triggers */
+  
   [[150, 'LB', 'Q', 'LT', 'Z'], [480, 'RB', 'E', 'RT', 'C']].forEach((s) => {
     box(s[0], 78, 130, 30, 10); ctx.fillStyle = col.wheel; ctx.fill(); text(s[1] + '  ·  key ' + s[2], s[0] + 65, 93, 14, col.accent);
     box(s[0] + 15, 40, 100, 30, 10); ctx.fillStyle = col.wheel; ctx.fill(); text(s[3] + '  ·  key ' + s[4], s[0] + 65, 55, 14, col.accent);
   });
-  /* sticks */
+  
   [[230, 190, 'Left stick', 'W A S D'], [450, 270, 'Right stick', 'arrow keys']].forEach((s) => {
     ctx.beginPath(); ctx.arc(s[0], s[1], 44, 0, 6.2832); ctx.fillStyle = col.wheel; ctx.fill();
     ctx.beginPath(); ctx.arc(s[0], s[1], 24, 0, 6.2832); ctx.fillStyle = col.accent; ctx.fill();
     text(s[2], s[0], s[1] + 62, 14, inkOf(cv)); text(s[3], s[0], s[1] + 80, 14, col.accent, 700);
   });
-  /* d-pad */
+  
   const dx = 310, dy = 270;
   ctx.fillStyle = col.wheel; box(dx - 14, dy - 44, 28, 88, 6); ctx.fill(); box(dx - 44, dy - 14, 88, 28, 6); ctx.fill();
   text('T', dx, dy - 30, 14, col.accent, 700); text('G', dx, dy + 30, 14, col.accent, 700); text('F', dx - 30, dy, 14, col.accent, 700); text('H', dx + 30, dy, 14, col.accent, 700);
   text('D-pad', dx, dy + 62, 14, inkOf(cv));
-  /* face buttons */
+  
   const fx = 540, fy = 190;
   [[0, -34, 'Y', 'I'], [0, 34, 'A', 'K'], [-34, 0, 'X', 'J'], [34, 0, 'B', 'L']].forEach((b) => {
     ctx.beginPath(); ctx.arc(fx + b[0], fy + b[1], 18, 0, 6.2832); ctx.fillStyle = col.wheel; ctx.fill();
@@ -112,7 +111,7 @@ function gamepad(cv) {
   text('Yellow letters and words are the keyboard keys', W / 2, H - 22, 15, inkOf(cv));
 }
 
-/* ---------- the pictures ---------- */
+
 const FIGS = {
   field: (cv) => fieldScene(cv, { cfg: withCam(), marks: [[46, 9, 1], [72, 97, 2], [12, 60, 3], [17, 108, 4], [29, 5, 5], [80, 6, 6]] }),
   pad: gamepad,
@@ -142,7 +141,7 @@ const FIGS = {
     setup: (w) => { const r = w.robot; r.x = 52; r.y = 17; r.th = Math.PI / 2 - 0.12; },
     notes: [[59.5, 47, 'Tag 1'], [84.5, 47, 'Tag 3'], [80, 28, 'range = inches along a blue line']] })
 };
-/* ---------- more pictures: step-by-step strips, screen guides and diagrams ---------- */
+
 const FONT = 'system-ui, sans-serif';
 function txt(ctx, s, x, y, size, color, align, weight) {
   ctx.fillStyle = color; ctx.font = (weight || 600) + ' ' + size + 'px ' + FONT; ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
@@ -153,7 +152,7 @@ function rbox(ctx, x, y, w, h, r, fill, stroke) {
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
 }
 function clear(cv, col) { const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = col.tile; ctx.fillRect(0, 0, cv.width, cv.height); return ctx; }
-/* Several pieces of the field side by side, each with a title underneath. */
+
 function strip(cv, panels) {
   const col = BBZ.colors(), ctx = clear(cv, col), n = panels.length, gap = 10, w = (cv.width - gap * (n + 1)) / n, h = cv.height - 44;
   panels.forEach((p, i) => {
@@ -166,9 +165,9 @@ function strip(cv, panels) {
 }
 const run = (w, n) => { for (let i = 0; i < n; i++) w.step(1 / 120); };
 const pose = (w, x, y, th) => { const r = w.robot; r.x = x; r.y = y; r.th = th; };
-/* Places pieces in the upward CELL of the red HIVE. */
+
 const fill = (w, n) => { const h = w.hives.R; for (let i = 0; i < n; i++) { const b = w.mk('P', 'cell'); h.cells[h.up].push(b); } };
-/* Small arrows beside each wheel of a mecanum bot: +1 forward, -1 backward, 0 none. */
+
 function wheelArrows(dirs, names) {
   return (ctx, at, k, col) => {
     const hl = 8.5, hw = 8.5, spots = [[hl - 2.6, hw + 2.2], [hl - 2.6, -hw - 2.2], [-hl + 2.6, hw + 2.2], [-hl + 2.6, -hw - 2.2]];
@@ -181,7 +180,7 @@ function wheelArrows(dirs, names) {
 const plain = () => bot({ tools: { intake: false, launcher: false, lift: false, distance: false } });
 
 Object.assign(FIGS, {
-  /* ----- tour ----- */
+  
   screen(cv) {
     const col = BBZ.colors(), ctx = clear(cv, col), ink = inkOf(cv), W = cv.width;
     const part = (x, y, w, h, n, label, sub) => { rbox(ctx, x, y, w, h, 10, col.body, col.wall); badge(ctx, x + 24, y + 24, n, col); txt(ctx, label, x + w / 2 + 10, y + h / 2 - (sub ? 9 : 0), 17, ink); if (sub) txt(ctx, sub, x + w / 2 + 10, y + h / 2 + 13, 13, col.muted, 'center', 500); };
@@ -249,7 +248,7 @@ Object.assign(FIGS, {
     panel(10, 180, 'SCORE SHEET', ['LEAVE the wall (AUTO)      1 × 3 = 3', 'HIVE TIPS in AUTO            1 × 20 = 20', 'Total                                         23']);
     panel(20 + w, 180, 'MATCH LOG', ['12.4s  HIVE TIP! +20 points', '30.0s  AUTO is over', '38.0s  TELEOP: you have control']);
   },
-  /* ----- driving ----- */
+  
   firstdrive: (cv) => strip(cv, [
     { title: 'Hold C, tap K three times', at: [59.5, 33], span: 62, setup: (w) => { w.m.launcher.u = 0.74; w.launch(); run(w, 22); } },
     { title: 'Touch a FLOWER, hold E', at: [20, 60], span: 46, setup: (w) => { pose(w, 6.4 + 8.5, 60, Math.PI); w.m.intake.u = 1; } },
@@ -257,7 +256,7 @@ Object.assign(FIGS, {
   reverse: (cv) => botRow(cv, [
     { cfg: plain(), title: 'Same power, left motors not reversed: it spins', overlay: wheelArrows([-1, 1, -1, 1]) },
     { cfg: plain(), title: 'Left motors set to REVERSE: it drives straight', overlay: wheelArrows([1, 1, 1, 1]) }]),
-  /* ----- the game ----- */
+  
   timeline(cv) {
     const col = BBZ.colors(), ctx = clear(cv, col), ink = inkOf(cv), x0 = 30, full = cv.width - 60, total = 158;
     const seg = (from, len, fill, label, sub) => {
@@ -307,7 +306,7 @@ Object.assign(FIGS, {
     ctx.fillStyle = col.red; ctx.globalAlpha = 0.14; ctx.fillRect(x, M * k, FIELD / 2 * k, FIELD * k); ctx.globalAlpha = 1;
     ctx.strokeStyle = col.accent; ctx.lineWidth = 4; ctx.setLineDash([14, 10]); ctx.beginPath(); ctx.moveTo(x, M * k); ctx.lineTo(x, (FIELD + M) * k); ctx.stroke(); ctx.setLineDash([]);
   },
-  /* ----- robot parts ----- */
+  
   robot3d(cv) { if (BBZ.Bot3D) BBZ.Bot3D.draw(cv, withCam(), { yaw: 2.35, pitch: 0.42 }); },
   actuators(cv) {
     const col = BBZ.colors(), ctx = clear(cv, col), ink = inkOf(cv);
@@ -343,7 +342,7 @@ Object.assign(FIGS, {
   sides: (cv) => strip(cv, [
     { title: 'Shooter on the front: shoots ahead', at: [59.5, 23.5], span: 70, setup: (w) => { w.m.launcher.u = 0.74; w.launch(); run(w, 20); } },
     { title: 'Shooter turned left: the robot must turn', at: [59.5, 23.5], span: 70, cfg: bot({ layout: { launcher: { face: 1 } } }), setup: (w) => { pose(w, 59.5, 12, 0); w.m.launcher.u = 0.72; w.launch(); run(w, 20); } }]),
-  /* ----- build bot ----- */
+  
   build3d(cv) {
     const col = BBZ.colors(), ctx = clear(cv, col), h = cv.height - 40, a = document.createElement('canvas'), b = document.createElement('canvas');
     a.width = a.height = h; b.width = b.height = h;
@@ -357,7 +356,7 @@ Object.assign(FIGS, {
     { cfg: plain(), title: 'Mecanum or X-drive: four motors', overlay: wheelArrows(null, ['fl', 'fr', 'bl', 'br']) },
     { cfg: bot({ drive: 'tank', tools: { intake: false, launcher: false, lift: false, distance: false } }), title: 'Tank: two motors',
       overlay: (ctx, at, k, col) => { let p = at(-2.6, 12.4); caption(ctx, p[0], p[1], 'leftDrive', col); p = at(-2.6, -12.4); caption(ctx, p[0], p[1], 'rightDrive', col); } }]),
-  /* ----- java ----- */
+  
   mix: (cv) => botRow(cv, [
     { cfg: plain(), title: 'forward: all four the same', overlay: wheelArrows([1, 1, 1, 1]) },
     { cfg: plain(), title: 'strafe right: corners in pairs', overlay: wheelArrows([1, -1, -1, 1]) },
@@ -375,7 +374,7 @@ Object.assign(FIGS, {
     txt(ctx, '= ' + Math.round(20 * tpi) + ' ticks to travel', 520, 144, 17, col.accent, 'center', 700);
     txt(ctx, 'setTargetPosition → RUN_TO_POSITION → wait while isBusy() → stop', cv.width / 2, 206, 14, ink, 'center', 500);
   },
-  /* ----- sensors and AprilTags ----- */
+  
   sensors: (cv) => fieldScene(cv, { view: [14.5, -4, 104.5, 57.6], setup: (w) => { pose(w, 59.5, 16, Math.PI / 2 + 0.5); w.robot.th0 = Math.PI / 2; w.enabled = true; },
     notes: [[40, 44, 'dashed line = what the distance sensor reads'], [84, 12, 'IMU heading: about 29 degrees left']] }),
   tagmap: (cv) => fieldScene(cv, { cfg: withCam(), marks: BBZ.TAGS.map((t) => [t.x + Math.cos(t.a) * 9, t.y + Math.sin(t.a) * 9, t.id]) })
@@ -385,13 +384,13 @@ function drawFigs(root) {
   root.querySelectorAll('canvas[data-fig]').forEach((cv) => {
     const fn = FIGS[cv.dataset.fig];
     if (!fn) return;
-    try { fn(cv); cv.removeAttribute('data-err'); } catch (e) { cv.setAttribute('data-err', String(e && e.message)); /* a picture that fails to draw must never break the lesson text */ }
+    try { fn(cv); cv.removeAttribute('data-err'); } catch (e) { cv.setAttribute('data-err', String(e && e.message));  }
   });
 }
 
-/* ---------- pictures of real blocks ---------- */
+
 let blockFigs = [];
-function clearBlocks() { blockFigs.forEach((ws) => { try { ws.dispose(); } catch (e) { /* ignore */ } }); blockFigs = []; }
+function clearBlocks() { blockFigs.forEach((ws) => { try { ws.dispose(); } catch (e) {  } }); blockFigs = []; }
 function drawBlocks(root) {
   clearBlocks();
   if (!B || !BBZ.Blocks || !BBZ.Blocks.ready) return;
@@ -405,7 +404,7 @@ function drawBlocks(root) {
       const ws = B.inject(el, { readOnly: true, media: 'blockly/media/', sounds: false, renderer: 'geras', theme: BBZ.Blocks.theme(), move: { scrollbars: false, drag: false, wheel: false }, zoom: { controls: false, wheel: false, startScale: 0.7 } });
       B.Events.disable();
       try { B.serialization.workspaces.load(state, ws); } finally { B.Events.enable(); }
-      /* sizes the picture to fit the blocks */
+      
       const box = ws.getBlocksBoundingBox(), bw = Math.max(1, box.right - box.left), bh = Math.max(1, box.bottom - box.top);
       const s = Math.min(0.8, (el.clientWidth - 28) / bw);
       el.style.height = Math.ceil(bh * s + 28) + 'px';
@@ -414,11 +413,11 @@ function drawBlocks(root) {
       blockFigs.push(ws);
     } catch (e) { el.textContent = 'Open the Blocks tab on Drive & Code to see these blocks.'; }
   });
-  /* restores the editor's dropdowns to the student's own bot */
-  try { BBZ.Samples.list(BBZ.currentRobot()); } catch (e) { /* ignore */ }
+  
+  try { BBZ.Samples.list(BBZ.currentRobot()); } catch (e) {  }
 }
 
-/* ---------- categories ---------- */
+
 let current = 'tour';
 function show(name) {
   if (CATS.indexOf(name) < 0) name = 'tour';
@@ -436,10 +435,10 @@ function refresh() {
   drawFigs(sec); drawBlocks(sec);
 }
 document.querySelectorAll('[data-tut]').forEach((b) => b.addEventListener('click', () => show(b.dataset.tut)));
-/* redraws when the Tutorial tab opens or the colours change */
+
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { if (t.dataset.view === 'tutorial') setTimeout(refresh, 0); else clearBlocks(); }));
 document.querySelectorAll('[data-go="tutorial"]').forEach((t) => t.addEventListener('click', () => setTimeout(refresh, 0)));
-try { new MutationObserver(() => setTimeout(refresh, 60)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-look', 'data-ink'] }); } catch (e) { /* ignore */ }
+try { new MutationObserver(() => setTimeout(refresh, 60)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-look', 'data-ink'] }); } catch (e) {  }
 
 const tt = $('tagTable');
 if (tt && BBZ.TAGS) BBZ.TAGS.forEach((t) => {
