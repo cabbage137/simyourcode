@@ -1,10 +1,9 @@
-/* Blocks editor and Blocks examples. */
 (function () {
 'use strict';
 const BBZ = window.BBZ, h = BBZ.h, legacy = BBZ.Blocks, B = window.Blockly;
 const ok = !!(B && B.inject && B.serialization && B.Generator);
-let cfg = BBZ.defaultRobot();                 // the bot whose device names fill the dropdowns
-const fx = (name) => { try { if (BBZ.Sound) BBZ.Sound.play(name); } catch (e) { /* sound is optional */ } };
+let cfg = BBZ.defaultRobot();
+const fx = (name) => { try { if (BBZ.Sound) BBZ.Sound.play(name); } catch (e) {  } };
 const names = (kind) => BBZ.deviceList(cfg).filter((d) => d.kind === kind).map((d) => d.name);
 const SET = 147, GET = 151, FN = 289, NOTE = 200;
 
@@ -12,7 +11,7 @@ const PAD_NUM = { LeftStickX: 'left_stick_x', LeftStickY: 'left_stick_y', RightS
 const PAD_BOOL = { A: 'a', B: 'b', X: 'x', Y: 'y', DpadUp: 'dpad_up', DpadDown: 'dpad_down', DpadLeft: 'dpad_left', DpadRight: 'dpad_right', LeftBumper: 'left_bumper', RightBumper: 'right_bumper', Start: 'start', Back: 'back' };
 const pairs = (list) => list.map((x) => [x, x]);
 
-/* ---------- block shapes ---------- */
+
 function defineBlocks() {
   const dd = (list) => new B.FieldDropdown(pairs(list));
   const dev = (kind, i) => {
@@ -113,7 +112,7 @@ function defineBlocks() {
     this.appendDummyInput().appendField('call').appendField(dev('distance'), 'DEVICE').appendField('.').appendField('getDistance').appendField(dd(['INCH', 'CM']), 'UNIT');
     this.setOutput(true, 'Number'); this.setColour(FN);
   });
-  /* AprilTag blocks. */
+  
   def('aprilTag_isVisible', function () {
     this.appendValueInput('ID').setCheck('Number').appendField('call').appendField('AprilTag').appendField('.').appendField('isTagVisible').appendField('id');
     this.setOutput(true, 'Boolean'); this.setColour(FN); this.setTooltip('True while the webcam can see the AprilTag with this ID number.');
@@ -146,7 +145,7 @@ function defineBlocks() {
   });
 }
 
-/* ---------- toolbox, laid out like the FTC Blocks palette ---------- */
+
 function toolbox() {
   const n = (v) => ({ shadow: { type: 'math_number', fields: { NUM: v } } });
   const t = (v) => ({ shadow: { type: 'text', fields: { TEXT: v } } });
@@ -180,7 +179,7 @@ function toolbox() {
   ] };
 }
 
-/* ---------- building block programs in code (blank program and examples) ---------- */
+
 function builder() {
   const vars = [];
   const V = (name) => { if (vars.indexOf(name) < 0) vars.push(name); return { id: 'var_' + name }; };
@@ -201,7 +200,7 @@ function builder() {
   const get = (name) => blk('variables_get', { VAR: V(name) });
   const set = (name, v) => blk('variables_set', { VAR: V(name) }, { VALUE: v });
   const active = () => blk('linearOpMode_opModeIsActive');
-  const who = { pad: 'gamepad1' };                 /* which gamepad the next gamepad blocks read */
+  const who = { pad: 'gamepad1' };                 
   const padN = (p) => blk('gamepad_getProperty_Number', { GAMEPAD: who.pad, PROP: p });
   const padB = (p) => blk('gamepad_getProperty_Boolean', { GAMEPAD: who.pad, PROP: p });
   const power = (m, v) => blk('dcMotor_setProperty_Number', { DEVICE: m, PROP: 'Power' }, { VALUE: v });
@@ -216,7 +215,7 @@ function builder() {
   const sleep = (ms) => blk('linearOpMode_sleep', null, { MS: num(ms) });
   const loopWhile = (cond, body) => blk('controls_whileUntil', { MODE: 'WHILE' }, { BOOL: cond, DO: chain(body) });
   const repeat = (times, body) => blk('controls_repeat_ext', null, { TIMES: num(times), DO: chain(body) });
-  /* arms: [[condition, [blocks...]], ...]; other: blocks for the final else (or null) */
+  
   const iff = (arms, other) => {
     const o = { type: 'controls_if', inputs: {} };
     if (arms.length > 1 || other) o.extraState = { elseIfCount: arms.length - 1, hasElse: !!other };
@@ -233,7 +232,7 @@ function builder() {
   });
   return { who, blk, chain, num, txt, note, op, cmp, and, neg, get, set, active, padN, padB, power, powers, servo, reverse, pos, sleep, loopWhile, repeat, iff, numData, update, program };
 }
-/* The starting point for a new op mode: the same skeleton FTC Blocks gives you. */
+
 function blank() {
   const b = builder();
   return b.program([
@@ -246,9 +245,9 @@ function blank() {
   ]);
 }
 
-/* ---------- Java generator ---------- */
+
 const O = { ATOMIC: 0, UNARY: 2, MULT: 3, ADD: 4, REL: 6, EQ: 7, AND: 11, OR: 12, NONE: 99 };
-let G = null, gen = null;                     // gen holds per-run state (errors, loop counter, variable names)
+let G = null, gen = null;
 function defineGenerator() {
   G = new B.Generator('Java');
   G.INDENT = '    ';
@@ -382,7 +381,7 @@ function generate(prog, c) {
     B.serialization.workspaces.load(validState(prog.blocks) ? prog.blocks : blank(), ws);
     const root = ws.getTopBlocks(true).find((b) => b.type === 'ftc_runOpMode');
     if (!root) throw new Error('This program has no "to runOpMode" block, so there is nothing to run.');
-    /* variables: each one gets a Java name and a type */
+    
     const devNames = new Set(BBZ.deviceList(c).map((d) => d.name)), used = new Set(), info = new Map();
     ws.getAllVariables().forEach((v) => {
       let nm = String(v.name).replace(/[^A-Za-z0-9_]/g, '_');
@@ -406,7 +405,7 @@ function generate(prog, c) {
     const body = G.statementToCode(root, 'DO');
     if (gen.errs.length) throw new Error(gen.errs[0]);
 
-    /* Like the Java that FTC Blocks exports, only the devices the blocks really use are declared. */
+    
     const mentions = (word) => new RegExp('(^|[^A-Za-z0-9_])' + word + '([^A-Za-z0-9_]|$)').test(body);
     const all = BBZ.deviceList(c), devs = all.filter((d) => d.kind !== 'camera' && mentions(d.name)), has = (kind) => devs.some((d) => d.kind === kind);
     const vision = gen.vis.size > 0, cam = all.find((d) => d.kind === 'camera');
@@ -452,7 +451,7 @@ function generate(prog, c) {
   } finally { ws.dispose(); gen = null; }
 }
 
-/* Cleans saved Blocks data by loading it and saving it back out. */
+
 function sanitize(s) {
   if (!validState(s)) return blank();
   let copy;
@@ -466,7 +465,7 @@ function sanitize(s) {
   } catch (e) { return blank(); } finally { ws.dispose(); }
 }
 
-/* ---------- the editor ---------- */
+
 let ws = null, holder = null, cur = null, quietUntil = 0, darkTheme = null;
 const isDark = () => { try { return getComputedStyle(document.documentElement).colorScheme.indexOf('dark') >= 0; } catch (e) { return false; } };
 function theme() {
@@ -498,8 +497,8 @@ function render(root, prog, c, api) {
     ws.addChangeListener(onChange);
     if (window.ResizeObserver) new ResizeObserver(() => { if (ws) B.svgResize(ws); }).observe(holder);
     const retheme = () => { if (ws) ws.setTheme(theme()); };
-    try { new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-look', 'class'] }); } catch (e) { /* ignore */ }
-    try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme); } catch (e) { /* ignore */ }
+    try { new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-look', 'class'] }); } catch (e) {  }
+    try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme); } catch (e) {  }
   }
   quietUntil = Date.now() + 600;
   B.Events.disable();
@@ -513,25 +512,25 @@ function render(root, prog, c, api) {
   ws.scroll(10, 10);
 }
 
-/* ---------- Blocks examples ---------- */
-/* Short Blocks examples built from timed moves. */
+
+
 function examples(c) {
   const S = BBZ.Samples, f = S.facts(c), n = f.n, T = f.T, four = f.four, time = S.timing;
   const drive = BBZ.driveRoles(c).map((r) => n[r]);
   const leftSide = four ? [n.fl, n.bl] : [n.left];
 
-  /* shared pieces */
+  
   const init = (b) => c.realistic ? leftSide.map((m) => b.reverse(m)) : [b.note('Put initialization blocks here.')];
   const set = (b, vals) => b.powers(drive, vals.map((v) => b.num(v)));
   const fwd = (b, p) => set(b, drive.map(() => p));
-  const spin = (b, p) => set(b, four ? [-p, p, -p, p] : [-p, p]);                 // + turns left
-  const slide = (b, p) => set(b, [-p, p, p, -p]);                                  // + slides left
+  const spin = (b, p) => set(b, four ? [-p, p, -p, p] : [-p, p]);
+  const slide = (b, p) => set(b, [-p, p, p, -p]);
   const teleop = (b, loop) => b.program(init(b).concat([
     b.blk('linearOpMode_waitForStart'),
     b.iff([[b.active(), [b.loopWhile(b.active(), loop.concat([b.update()]))]]])
   ]));
   const auto = (b, steps) => b.program(init(b).concat([b.blk('linearOpMode_waitForStart'), b.iff([[b.active(), steps]])]));
-  /* One piece through the shooter, whichever kind the bot has. */
+  
   const fire = (b) => f.shooter === 'catapult'
     ? [b.servo(n.catapult, b.num(1)), b.sleep(300), b.servo(n.catapult, b.num(0)), b.sleep(700)]
     : [b.servo(n.feeder, b.num(1)), b.sleep(300), b.servo(n.feeder, b.num(0)), b.sleep(700)];
@@ -549,7 +548,7 @@ function examples(c) {
   list.push({ id: 'blocks-drive', name: 'Blocks Drive Only', lang: 'blocks', mode: 'teleop', why: null,
     desc: 'The classic first program: the left stick drives' + (four ? ' and slides' : '') + ', the right stick turns.',
     make: () => { const b = builder(); return teleop(b, stickMix(b)); } });
-  /* The whole TeleOp. */
+  
   const fullBlocks = (second) => {
       const b = builder(), loop = stickMix(b);
       if (second) b.who.pad = 'gamepad2';
@@ -576,7 +575,7 @@ function examples(c) {
   list.push({ id: 'blocks-leave', name: 'Blocks Leave Only', lang: 'blocks', mode: 'auto', why: null,
     desc: 'Three blocks: drive forward, wait, stop. That is enough for the 3 LEAVE points.',
     make: () => { const b = builder(); return auto(b, [fwd(b, 0.4), b.sleep(600), fwd(b, 0)]); } });
-  /* Turns a list of moves into timed blocks: set the powers, wait, stop, pause. */
+  
   const timed = (b, s) => {
     const p = s[0] === 'T' ? 0.4 : (Math.abs(s[1]) >= 30 ? 0.9 : 0.5), dir = s[1] < 0 ? -1 : 1;
     if (s[0] === 'D') return [fwd(b, dir * p), b.sleep(time.drive(c, s[1], p)), fwd(b, 0), b.sleep(150)];
