@@ -1,9 +1,8 @@
-/* Shooter Lab 3D view: a small WebGL renderer for STL meshes, wheels, balls, the HIVE and shot paths. World is z-up, metres. */
 (function () {
 'use strict';
 const BBZ = window.BBZ = window.BBZ || {};
 
-/* ---------- 4x4 matrices, column-major ---------- */
+
 const M = {
   ident: () => new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
   mul(a, b) {
@@ -23,7 +22,7 @@ const M = {
     return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0,
       -dot(x, e), -dot(y, e), -dot(z, e), 1]);
   },
-  /* translate to p, rotate by angle about unit axis a, then scale by s */
+  
   trs(p, a, ang, s) {
     const c = Math.cos(ang || 0), sn = Math.sin(ang || 0), t = 1 - c, [x, y, z] = a || [0, 0, 1];
     s = s == null ? 1 : s;
@@ -39,7 +38,7 @@ function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
 function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
 function norm(a) { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
 
-/* ---------- geometry builders: each returns { p, n, c } flat arrays ---------- */
+
 function fromTris(tris, col) {
   const n = tris.length / 9, p = new Float32Array(tris), nn = new Float32Array(tris.length), cc = new Float32Array(tris.length);
   for (let i = 0; i < n; i++) {
@@ -50,7 +49,7 @@ function fromTris(tris, col) {
   return { p, n: nn, c: cc };
 }
 
-/* A wheel along the y axis, radius 1 and half-width 1 (scaled by the model matrix), with light and dark tread bands so the spin shows. */
+
 function wheelGeo(dark, light, hub) {
   const P = [], N = [], C = [], seg = 48;
   const put = (p, n, c) => { P.push(...p); N.push(...n); C.push(...c); };
@@ -68,11 +67,11 @@ function wheelGeo(dark, light, hub) {
   return { p: new Float32Array(P), n: new Float32Array(N), c: new Float32Array(C) };
 }
 
-/* A unit sphere with darker spots where the game piece has its cut-outs. */
+
 function ballGeo() {
   const P = [], N = [], C = [], rings = 14, segs = 24;
   const holes = [];
-  for (let i = 0; i < 14; i++) {                         // spread hole centres evenly (golden spiral)
+  for (let i = 0; i < 14; i++) {
     const y = 1 - (i + 0.5) / 7, r = Math.sqrt(Math.max(0, 1 - y * y)), t = i * 2.39996;
     holes.push([Math.cos(t) * r, Math.sin(t) * r, y]);
   }
@@ -92,7 +91,7 @@ function boxGeo() {
   return fromTris(t, [1, 1, 1]);
 }
 
-/* ---------- the view ---------- */
+
 const VS = `attribute vec3 aP; attribute vec3 aN; attribute vec3 aC;
 uniform mat4 uM; uniform mat4 uVP; uniform vec4 uTint;
 varying vec3 vN; varying vec3 vC; varying float vA;
@@ -105,6 +104,7 @@ void main() {
   gl_FragColor = vec4(vC * mix(1.0, l, uLit), vA);
 }`;
 
+// webgl renderer for the shooter lab  
 function create(canvas) {
   const gl = canvas.getContext('webgl', { antialias: true, alpha: false }) || canvas.getContext('experimental-webgl');
   if (!gl) return null;
@@ -125,7 +125,7 @@ function create(canvas) {
     geos[key] = { bufs, count: g.p.length / 3, mode: mode || gl.TRIANGLES };
   }
   view.setTris = (key, tris, col) => upload(key, fromTris(tris, col || [1, 1, 1]));
-  /* Many parts in one buffer, each with its own colour: [{ tris, color }] */
+  
   view.setParts = (key, parts) => {
     const n = parts.reduce((a, q) => a + q.tris.length, 0), P = new Float32Array(n), N = new Float32Array(n), C = new Float32Array(n);
     let k = 0;
@@ -143,7 +143,7 @@ function create(canvas) {
   upload('ball', ballGeo());
   upload('box', boxGeo());
 
-  /* items: [{ geo, m (model matrix), tint [r,g,b,a], lit (default true) }] */
+  
   view.draw = function (items) {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const w = Math.max(1, Math.round(canvas.clientWidth * dpr)), h = Math.max(1, Math.round(canvas.clientHeight * dpr));
@@ -176,7 +176,7 @@ function create(canvas) {
     gl.depthMask(true);
   };
 
-  /* A ray from the camera through a point on the canvas, for picking and dragging parts. */
+  
   view.ray = function (cx, cy) {
     const b = view.basis; if (!b) return null;
     const r = canvas.getBoundingClientRect(), t = Math.tan(0.4);
@@ -184,8 +184,7 @@ function create(canvas) {
     return { o: b.eye, d: norm([-b.z[0] + b.x[0] * nx + b.y[0] * ny, -b.z[1] + b.x[1] * nx + b.y[1] * ny, -b.z[2] + b.x[2] * nx + b.y[2] * ny]) };
   };
 
-  /* Drag a part when the press lands on one (view.pick returns a handle), otherwise turn the camera.
-     Scroll or pinch zooms, right-drag or shift-drag pans. */
+  
   const pts = new Map();
   let last = null, grab = null;
   canvas.addEventListener('pointerdown', (e) => {
